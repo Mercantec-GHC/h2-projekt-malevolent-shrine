@@ -1,6 +1,8 @@
 using System.Reflection;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
+using API.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace API;
 
@@ -42,6 +44,11 @@ public class Program
                         .WithExposedHeaders("Content-Disposition");
                 }
             );
+        });
+        
+        builder.Services.AddDbContext<AppDBContext>(options =>
+        {
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
         });
 
         // Tilføj basic health checks
