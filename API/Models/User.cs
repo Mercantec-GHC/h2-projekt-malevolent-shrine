@@ -19,5 +19,7 @@ namespace API.Models
         //Adding Role
         public int RoleId { get; set; }
         public Role Role { get; set; }
+        
+        public UserInfo? Info { get; set; } // 1:1 navigation
     }
 }

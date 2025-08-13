@@ -39,6 +39,14 @@ namespace API.Data
             modelBuilder.Entity<Role>().Property(r => r.UpdatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<User>().Property(u => u.CreatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<User>().Property(u => u.UpdatedAt).HasDefaultValueSql("now()");
+            
+            modelBuilder.Entity<UserInfo>()
+                .HasKey(i => i.UserId); // Shared PK
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Info)
+                .WithOne(i => i.User)
+                .HasForeignKey<UserInfo>(i => i.UserId);
         }
     }
 }

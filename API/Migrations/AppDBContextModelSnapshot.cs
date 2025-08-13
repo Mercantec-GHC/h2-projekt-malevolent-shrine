@@ -140,6 +140,34 @@ namespace API.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("API.Models.UserInfo", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("City")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserInfo");
+                });
+
             modelBuilder.Entity("API.Models.VipRoom", b =>
                 {
                     b.Property<int>("Id")
@@ -179,6 +207,22 @@ namespace API.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("VipRoom");
+                });
+
+            modelBuilder.Entity("API.Models.UserInfo", b =>
+                {
+                    b.HasOne("API.Models.User", "User")
+                        .WithOne("Info")
+                        .HasForeignKey("API.Models.UserInfo", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("API.Models.User", b =>
+                {
+                    b.Navigation("Info");
                 });
 #pragma warning restore 612, 618
         }
