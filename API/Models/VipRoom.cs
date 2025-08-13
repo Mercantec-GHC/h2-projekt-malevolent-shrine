@@ -1,10 +1,11 @@
 namespace API.Models;
 
-public class VipRoom
+public class VipRoom: Room
 {
-    public int Id { get; set; }
-    public string RoomNumber { get; set; }
-    public string Description { get; set; }
-    public int Floor { get; set; }
-    // Другие свойства комнаты
+    public required string VipServiceDescription { get; set; }
+    
+    
+    public List<string> ExtraAmenities { get; set; } 
+    
+    public List<DateTime> BookedDates { get; set; }
 }

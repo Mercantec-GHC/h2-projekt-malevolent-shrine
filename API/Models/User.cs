@@ -21,5 +21,7 @@ namespace API.Models
         public Role Role { get; set; }
         
         public UserInfo? Info { get; set; } // 1:1 navigation
+
+        private List<Booking> Bookings { get; set; } = new();
     }
 }
