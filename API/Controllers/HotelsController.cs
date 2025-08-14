@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using API.Data;
 using API.Models;
+using API.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
@@ -33,6 +34,85 @@ namespace API.Controllers
             }
 
             return hotel; // Возвращаем отель
+        }
+        
+        [HttpPost]
+        public async Task<ActionResult<HotelReadDto>> PostHotel(HotelCreateDto hotelDto)
+        {
+            var hotel = new Hotel
+            {
+                Name = hotelDto.Name,
+                Address = hotelDto.Address
+            };
+
+            _context.Hotels.Add(hotel);
+            await _context.SaveChangesAsync();
+
+            var hotelReadDto = new HotelReadDto
+            {
+                Id = hotel.Id,
+                Name = hotel.Name,
+                Address = hotel.Address
+            };
+
+            return CreatedAtAction(nameof(GetHotel), new { id = hotelReadDto.Id }, hotelReadDto);
+        }
+        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutHotel(int id, HotelUpdateDto hotelDto)
+        {
+            if (id != hotelDto.Id)
+            {
+                return BadRequest();
+            }
+
+            var hotel = new Hotel
+            {
+                Id = hotelDto.Id,
+                Name = hotelDto.Name,
+                Address = hotelDto.Address,
+               
+            };
+
+            _context.Entry(hotel).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!HotelExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+        private bool HotelExists(int id)
+        {
+            return _context.Hotels.Any(e => e.Id == id);
+        }
+        
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteHotel(int id)
+        {
+            var hotel = await _context.Hotels.FindAsync(id);
+            if (hotel == null)
+                
+            {
+                return NotFound();
+            }
+
+            _context.Hotels.Remove(hotel);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

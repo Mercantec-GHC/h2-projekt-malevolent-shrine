@@ -48,7 +48,7 @@ namespace API.Data
                 .HasKey(i => i.UserId); // Shared PK
 
             modelBuilder.Entity<User>()
-                .HasOne(u => u.Info)
+                .HasOne(u => u.UserInfo)
                 .WithOne(i => i.User)
                 .HasForeignKey<UserInfo>(i => i.UserId);
         }
