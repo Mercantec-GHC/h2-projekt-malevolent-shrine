@@ -36,6 +36,24 @@ namespace API.Data
                 new Role { Id = 4, Name = "Kunde", CreatedAt = seedDate, UpdatedAt = seedDate },
                 new Role { Id = 5, Name = "InfiniteVoid", CreatedAt = seedDate, UpdatedAt = seedDate }
             );
+            
+            // Наш Сатору Годжо как супер-админ
+            modelBuilder.Entity<User>().HasData(
+                new User 
+                { 
+                    Id = 1, 
+                    FirstName = "Satoru", 
+                    LastName = "Gojo",
+                    Username = "superadmin",
+                    Email = "admin@system.com",
+                    HashedPassword = System.Text.Encoding.UTF8.GetBytes("$2a$11$hashed_password_here"), // замени на реальный хэш
+                    RoleId = 5, // InfiniteVoid роль
+                    CreatedAt = seedDate, 
+                    UpdatedAt = seedDate,
+                    DateOfBirth = new DateTime(1990, 1, 1),
+                    IsVIP = true
+                }
+            );
 
             //  чтобы он сам ставил текущее время, HasDefaultValueSql - автоматически заполняет поле
             // текущей датой и временем при добавлении новой записи
