@@ -2,6 +2,10 @@ namespace API.Models
 {
     public class User : Common
     {
+        public required string FirstName { get; set; }
+        public required string LastName { get; set; }
+        
+        
         public string Email { get; set; }
         public string Username { get; set; }
         public byte[] HashedPassword { get; set; }
@@ -20,7 +24,7 @@ namespace API.Models
         public int RoleId { get; set; }
         public Role Role { get; set; }
         
-        public UserInfo? Info { get; set; } // 1:1 navigation
+        public UserInfo? UserInfo { get; set; }
 
         private List<Booking> Bookings { get; set; } = new();
     }

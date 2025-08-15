@@ -1,7 +1,6 @@
 using API.Data;
 using API.Models;
 using Microsoft.AspNetCore.Mvc;
-using BCrypt.Net;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
@@ -35,8 +34,10 @@ namespace API.Controllers
             {
                 Username = request.Username,
                 HashedPassword = System.Text.Encoding.UTF8.GetBytes(hashedPassword),
-                Email = request.Email, // без этого поля не получится зарегистрироваться
-                RoleId = 4, // Присваиваем роль "Kunde" (клиент) по умолчанию
+                Email = request.Email,
+                FirstName = request.FirstName, // из DTO
+                LastName = request.LastName,   // из DTO
+                RoleId = 4,
             };
 
             // Добавляем пользователя в базу данных

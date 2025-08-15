@@ -14,5 +14,8 @@ namespace API.Models
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Invalid email address")]
         public string Email { get; set; }
+        
+        public required string FirstName { get; set; } 
+        public required string LastName { get; set; }
     }
 }
