@@ -46,7 +46,7 @@ namespace API.Data
                     LastName = "Gojo",
                     Username = "superadmin",
                     Email = "admin@system.com",
-                    HashedPassword = System.Text.Encoding.UTF8.GetBytes("$2a$11$hashed_password_here"), // замени на реальный хэш
+                    HashedPassword = "$2a$11$hashed_password_here", // строка вместо реального хеша
                     RoleId = 5, // InfiniteVoid роль
                     CreatedAt = seedDate, 
                     UpdatedAt = seedDate,

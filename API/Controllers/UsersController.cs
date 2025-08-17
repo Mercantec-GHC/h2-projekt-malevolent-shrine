@@ -3,6 +3,10 @@ using API.Data;
 using API.Models;
 using API.DTOs;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+
 
 
 namespace API.Controllers
@@ -12,12 +16,18 @@ namespace API.Controllers
     public class UsersController : ControllerBase
     {
         private readonly AppDBContext _context;
+        private readonly JwtService _jwtService;
+        private readonly PasswordHasher<User> _passwordHasher;
+       
 
-        public UsersController(AppDBContext context)
+        public UsersController(AppDBContext context, JwtService jwtService, PasswordHasher<User> passwordHasher)
         {
             _context = context;
-        }
-
+            _jwtService = jwtService;
+            _passwordHasher = passwordHasher;
+        } 
+        
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsers()
         {
@@ -38,6 +48,7 @@ namespace API.Controllers
             return Ok(userReadDtos);
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<UserReadDto>> GetUser(int id)
         {
@@ -63,6 +74,7 @@ namespace API.Controllers
             return Ok(userReadDto);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<UserReadDto>> PostUser(UserCreateDto userDto)
 
@@ -92,6 +104,7 @@ namespace API.Controllers
             return CreatedAtAction(nameof(GetUser), new { id = userReadDto.Id }, userReadDto);
         }
 
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UserUpdateDto userDto)
         {
@@ -143,6 +156,7 @@ namespace API.Controllers
             return _context.Users.Any(e => e.Id == id);
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -157,5 +171,8 @@ namespace API.Controllers
 
             return NoContent();
         }
+        
+        
     }
+    
 }

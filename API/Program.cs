@@ -3,9 +3,14 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using API.Data;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Identity;
+using API.Models;
+
 
 namespace API;
-
 public class Program
 {
     public static void Main(string[] args)
@@ -54,9 +59,31 @@ public class Program
         // Tilføj basic health checks
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), ["live"]);
-
+        
+        // JWT Authentication
+        builder.Services.AddScoped<JwtService>();
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!))
+                };
+            });
+        builder.Services.AddAuthorization();
+        builder.Services.AddScoped<PasswordHasher<User>>();
+        
+        
         var app = builder.Build();
-
+            
+        
         // Brug CORS - skal være før anden middleware
         app.UseCors("AllowSpecificOrigins");
 
@@ -84,7 +111,8 @@ public class Program
         {
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
         });
-
+        
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();

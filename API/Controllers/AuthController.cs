@@ -2,6 +2,9 @@ using API.Data;
 using API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
+using Microsoft.AspNetCore.Identity;
+
 
 namespace API.Controllers
 {
@@ -10,10 +13,14 @@ namespace API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AppDBContext _context;
+        private readonly JwtService _jwtService;
+        private readonly PasswordHasher<User> _passwordHasher;
 
-        public AuthController(AppDBContext context)
+        public AuthController(AppDBContext context, JwtService jwtService, PasswordHasher<User> passwordHasher)
         {
             _context = context;
+            _jwtService = jwtService;
+            _passwordHasher = passwordHasher;
         }
 
         [HttpPost("register")]
@@ -33,7 +40,7 @@ namespace API.Controllers
             var newUser = new User
             {
                 Username = request.Username,
-                HashedPassword = System.Text.Encoding.UTF8.GetBytes(hashedPassword),
+                HashedPassword = hashedPassword,
                 Email = request.Email,
                 FirstName = request.FirstName, // из DTO
                 LastName = request.LastName,   // из DTO
@@ -60,13 +67,17 @@ namespace API.Controllers
             }
 
             // совпадает ли пароль
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, System.Text.Encoding.UTF8.GetString(user.HashedPassword)))
+            var passwordResult = _passwordHasher.VerifyHashedPassword(user, user.HashedPassword, request.Password);
+            if (passwordResult == PasswordVerificationResult.Failed)
             {
                 return BadRequest("Неверный логин или пароль.");
             }
+            
+            // Генерируем JWT токен если все ок
+            var token = _jwtService.GenerateToken(user);
 
-            // Если все хорошо, возвращаем сообщение об успехе
-            return Ok("Вход выполнен успешно!");
+            // Возвращаем токен клиенту
+            return Ok(new { Message = "Вход выполнен успешно!", Token = token });
         }
     }
         
