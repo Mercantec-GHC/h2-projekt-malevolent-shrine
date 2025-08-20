@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-
+using System.Security.Claims;
 
 
 namespace API.Controllers
@@ -171,8 +171,42 @@ namespace API.Controllers
 
             return NoContent();
         }
-        
-        
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdClaim == null)
+            {
+                return Unauthorized("Пользователь не найден в токене.");
+            }
+
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return BadRequest("Неверный формат ID пользователя.");
+            }
+
+            var user = await _context.Users
+                .Include(u => u.Role) // У вас Role (единственное число), а не Roles
+                .Include(u => u.UserInfo)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return NotFound("Пользователь не найден в базе данных.");
+
+            return Ok(new
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                CreatedAt = user.CreatedAt,
+                Role = user.Role?.Name, 
+                ProfilePicture = user.ProfilePicture
+            });
+        }
+
     }
-    
 }

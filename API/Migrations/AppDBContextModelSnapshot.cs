@@ -240,6 +240,9 @@ namespace API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("ProfilePicture")
+                        .HasColumnType("text");
+
                     b.Property<int>("RoleId")
                         .HasColumnType("integer");
 
