@@ -15,6 +15,11 @@ namespace API.Data
         public DbSet<Room> Rooms { get; set; }
         public DbSet<VipRoom> VipRooms { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

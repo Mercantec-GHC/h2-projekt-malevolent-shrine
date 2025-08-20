@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
 using API.Models;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure; // Добавьте эту строку
 
 
 namespace API;
@@ -51,10 +52,6 @@ public class Program
             );
         });
         
-        builder.Services.AddDbContext<AppDBContext>(options =>
-        {
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-        });
 
         // Tilføj basic health checks
         builder.Services.AddHealthChecks()
@@ -80,7 +77,10 @@ public class Program
         builder.Services.AddAuthorization();
         builder.Services.AddScoped<PasswordHasher<User>>();
         
-        
+        builder.Services.AddDbContext<AppDBContext>(options =>
+        {
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+        });
         var app = builder.Build();
             
         

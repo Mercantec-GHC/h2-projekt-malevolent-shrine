@@ -3,6 +3,7 @@ using API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Services;
+using API.DTOs;
 using Microsoft.AspNetCore.Identity;
 
 
@@ -55,28 +56,23 @@ namespace API.Controllers
         }
         
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] AuthDto request)
+        public async Task<ActionResult<string>> Login(UserLoginDto request)
         {
-            // ищу пользователя в базе данных по имени
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
-
-            // проверка что пользователь существует
+            // Ищите по Email, а не по Username
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+    
             if (user == null)
             {
                 return BadRequest("Неверный логин или пароль.");
             }
 
-            // совпадает ли пароль
-            var passwordResult = _passwordHasher.VerifyHashedPassword(user, user.HashedPassword, request.Password);
-            if (passwordResult == PasswordVerificationResult.Failed)
+            // Проверка пароля
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.HashedPassword))
             {
                 return BadRequest("Неверный логин или пароль.");
             }
-            
-            // Генерируем JWT токен если все ок
-            var token = _jwtService.GenerateToken(user);
 
-            // Возвращаем токен клиенту
+            var token = _jwtService.GenerateToken(user);
             return Ok(new { Message = "Вход выполнен успешно!", Token = token });
         }
     }
