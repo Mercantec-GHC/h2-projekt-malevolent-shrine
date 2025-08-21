@@ -27,7 +27,7 @@ Aspire er vores hosting platform, den er koblet op til vores API og Blazor. Det 
 Vi udforsker forskellige hosting muligheder på H2 - men vil helst vores lokale datacenter. På H2 bruger vi Windows Server 2022 som platform - det introducerede vi senere i forløbet.
 
 
-Oleh Reflection 
+### Oleh Reflection 
 Test af registrering og login (Swagger og Postman)
 Registrering og login blev testet i Swagger UI og Postman. Begge endpoints giver de rigtige svar, og ved succesfuld login bliver der udstedt et JWT-token.
 Test af JWT-beskyttet adgang til /me
