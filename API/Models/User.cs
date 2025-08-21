@@ -29,5 +29,6 @@ namespace API.Models
         public string? ProfilePicture { get; set; }
 
         private List<Booking> Bookings { get; set; } = new();
+        
     }
 }

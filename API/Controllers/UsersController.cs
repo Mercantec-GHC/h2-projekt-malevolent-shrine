@@ -11,6 +11,9 @@ using System.Security.Claims;
 
 namespace API.Controllers
 {
+    /// <summary>
+    /// Controller til brugere.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
@@ -19,7 +22,7 @@ namespace API.Controllers
         private readonly JwtService _jwtService;
         private readonly PasswordHasher<User> _passwordHasher;
        
-
+      
         public UsersController(AppDBContext context, JwtService jwtService, PasswordHasher<User> passwordHasher)
         {
             _context = context;
@@ -27,6 +30,12 @@ namespace API.Controllers
             _passwordHasher = passwordHasher;
         } 
         
+       /// <summary>    
+       /// Henter alle brugere
+       /// Kun for autoriserede brugere
+       /// </summary>
+       /// <returns>En liste af UserReadDto</returns>
+      
         [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsers()
@@ -48,7 +57,13 @@ namespace API.Controllers
             return Ok(userReadDtos);
         }
 
-        [Authorize]
+       /// <summary>
+       ///  Hentér en specifik bruger
+       ///  Kun for autoriserede brugere med roller Admin eller Manager
+       /// </summary>
+       /// <param name="id">Users unikke ID</param>
+       /// <returns>En UserReadDTO hvis brugeren findes</returns>
+        [Authorize (Roles = "Admin,Manager")] // Только для администраторов и менеджеров
         [HttpGet("{id}")]
         public async Task<ActionResult<UserReadDto>> GetUser(int id)
         {
@@ -74,7 +89,13 @@ namespace API.Controllers
             return Ok(userReadDto);
         }
 
-        [Authorize]
+        /// <summary>
+        ///  Opretter en ny bruger
+        ///  Kun for autoriserede brugere med roller Admin eller Manager
+        /// </summary>
+        /// <param name="userDto"></param>
+        /// <returns>Returnerer en UserReadDto med oprettede brugerens ID og detaljer</returns>
+        [Authorize(Roles = "Admin,Manager")] 
         [HttpPost]
         public async Task<ActionResult<UserReadDto>> PostUser(UserCreateDto userDto)
 
@@ -103,8 +124,15 @@ namespace API.Controllers
             };
             return CreatedAtAction(nameof(GetUser), new { id = userReadDto.Id }, userReadDto);
         }
-
-        [Authorize]
+        
+        /// <summary>
+        /// Opdaterer en eksisterende bruger
+        /// Kun for autoriserede brugere med roller Admin eller Manager
+        /// </summary>
+        /// <param name="id">Brugerens unikke ID</param>
+        /// <param name="userDto">Brugerens opdaterede data</param>
+        /// <returns>Returnerer NoContent hvis opdateringen lykkedes</returns>
+        [Authorize(Roles = "Admin,Manager")] // Только для администраторов и менеджеров
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UserUpdateDto userDto)
         {
@@ -151,12 +179,20 @@ namespace API.Controllers
             return NoContent();
         }
 
+        
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.Id == id);
         }
-
-        [Authorize]
+        
+        /// <summary>
+        /// Sletter en eksisterende bruger
+        /// Kun for autoriserede brugere med roller Admin eller Manager
+        /// </summary>
+        /// <param name="id">Brugerens unikke ID</param>
+        /// <returns>Returnerer NoContent hvis sletningen lykkedes</returns>
+      
+        [Authorize (Roles = "Admin,Manager")] // Только для администраторов и менеджеров
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -172,6 +208,16 @@ namespace API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        ///  Henter den aktuelle bruger
+        ///  Kun for autoriserede brugere
+        ///  </summary>
+        /// <returns>En UserReadDto med den aktuelle brugers detaljer</returns>
+        /// <remarks>
+        /// Dette endpoint henter information om den nuværende bruger ved at bruge ClaimTypes.NameIdentifier fra autorisationstokenet.
+        /// Hvis brugerens ID ikke kan konverteres til int, returneres status 400 BadRequest.
+        /// Hvis brugeren findes, returneres status 200 OK med information om brugeren.
+        /// </remarks>
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
