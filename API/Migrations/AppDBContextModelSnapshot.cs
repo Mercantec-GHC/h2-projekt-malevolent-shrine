@@ -277,7 +277,7 @@ namespace API.Migrations
                             DateOfBirth = new DateTime(1990, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@system.com",
                             FirstName = "Satoru",
-                            HashedPassword = "$2a$11$hashed_password_here",
+                            HashedPassword = "$2a$11$XvW7nt9K.oF9nK7nMGqXnOHzCzEEwQm6HZJV8KfODaI3kJWkQkQaK",
                             IsVIP = true,
                             LastName = "Gojo",
                             RoleId = 5,

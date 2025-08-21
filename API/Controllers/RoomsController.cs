@@ -3,6 +3,7 @@ using API.Data;
 using API.Models;
 using API.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization; // Добавляем для авторизации
 
 namespace API.Controllers
 {
@@ -17,13 +18,13 @@ namespace API.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        [HttpGet] // Чтение комнат доступно всем
         public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
         {
             return await _context.Rooms.ToListAsync();
         }
         
-        [HttpGet("{id}")]
+        [HttpGet("{id}")] // Чтение конкретной комнаты доступно всем
         public async Task<ActionResult<Room>> GetRoom(int id)
         {
             var room = await _context.Rooms.FindAsync(id);
@@ -36,6 +37,7 @@ namespace API.Controllers
             return room;
         }
         
+        [Authorize(Roles = "Admin,Manager,Receptionist,InfiniteVoid")] // Админы, менеджеры, ресепшн и Годжо могут создавать комнаты
         [HttpPost]
         public async Task<ActionResult<RoomReadDto>> PostRoom(RoomCreateDto roomDto)
         {
@@ -66,6 +68,7 @@ namespace API.Controllers
             return CreatedAtAction(nameof(GetRoom), new { id = roomReadDto.Id }, roomReadDto);
         }
         
+        [Authorize(Roles = "Admin,Manager,Receptionist,InfiniteVoid")] // Админы, менеджеры, ресепшн и Годжо могут обновлять комнаты
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRoom(int id, RoomUpdateDto roomDto)
         {
@@ -110,6 +113,7 @@ namespace API.Controllers
             return _context.Rooms.Any(e => e.Id == id);
         }
         
+        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы, менеджеры и Годжо могут удалять комнаты
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRoom(int id)
         {

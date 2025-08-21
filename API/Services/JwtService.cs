@@ -30,13 +30,13 @@ namespace API.Services
                                        Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES") ?? "60");
         }
         
-        public string GenerateToken(User user)
+        public string GenerateToken(User user, string? roleName = null)
         {
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role.Name) //у User есть свойство Role
+                new Claim(ClaimTypes.Role, roleName ?? "Kunde") // Используем переданную роль или значение по умолчанию
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));

@@ -58,8 +58,10 @@ namespace API.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserLoginDto request)
         {
-            // Ищите по Email, а не по Username
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            // Ищем пользователя с ролью
+            var user = await _context.Users
+                .Include(u => u.Role) // Загружаем роль для JWT
+                .FirstOrDefaultAsync(u => u.Email == request.Email);
     
             if (user == null)
             {
@@ -72,7 +74,7 @@ namespace API.Controllers
                 return BadRequest("Неверный логин или пароль.");
             }
 
-            var token = _jwtService.GenerateToken(user);
+            var token = _jwtService.GenerateToken(user, user.Role?.Name);
             return Ok(new { Message = "Вход выполнен успешно!", Token = token });
         }
     }

@@ -3,6 +3,7 @@ using API.Data;
 using API.Models;
 using API.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization; // Добавляем для авторизации
 
 namespace API.Controllers
 {
@@ -17,13 +18,13 @@ namespace API.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        [HttpGet] // Чтение отелей доступно всем
         public async Task<ActionResult<IEnumerable<Hotel>>> GetHotels()
         {
             return await _context.Hotels.ToListAsync();
         }
         
-        [HttpGet("{id}")]
+        [HttpGet("{id}")] // Чтение конкретного отеля доступно всем
         public async Task<ActionResult<Hotel>> GetHotel(int id)
         {
             var hotel = await _context.Hotels.FindAsync(id);
@@ -36,6 +37,7 @@ namespace API.Controllers
             return hotel; // Возвращаем отель
         }
         
+        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы и Годжо могут создавать отели
         [HttpPost]
         public async Task<ActionResult<HotelReadDto>> PostHotel(HotelCreateDto hotelDto)
         {
@@ -58,6 +60,7 @@ namespace API.Controllers
             return CreatedAtAction(nameof(GetHotel), new { id = hotelReadDto.Id }, hotelReadDto);
         }
         
+        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы и Годжо могут обновлять отели
         [HttpPut("{id}")]
         public async Task<IActionResult> PutHotel(int id, HotelUpdateDto hotelDto)
         {
@@ -99,6 +102,7 @@ namespace API.Controllers
             return _context.Hotels.Any(e => e.Id == id);
         }
         
+        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы и Годжо могут удалять отели
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteHotel(int id)
         {

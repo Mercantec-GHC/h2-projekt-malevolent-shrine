@@ -47,7 +47,7 @@ namespace API.Controllers
        /// </summary>
        /// <returns>En liste af UserReadDto</returns>
       
-        [Authorize]
+        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsers()
         {
@@ -74,7 +74,7 @@ namespace API.Controllers
        /// </summary>
        /// <param name="id">Users unikke ID</param>
        /// <returns>En UserReadDTO hvis brugeren findes</returns>
-        [Authorize (Roles = "Admin,Manager")] // Только для администраторов и менеджеров
+        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
         [HttpGet("{id}")]
         public async Task<ActionResult<UserReadDto>> GetUser(int id)
         {
@@ -106,7 +106,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="userDto"></param>
         /// <returns>Returnerer en UserReadDto med oprettede brugerens ID og detaljer</returns>
-        [Authorize(Roles = "Admin,Manager")] 
+        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
         [HttpPost]
         public async Task<ActionResult<UserReadDto>> PostUser(UserCreateDto userDto)
 
@@ -143,7 +143,7 @@ namespace API.Controllers
         /// <param name="id">Brugerens unikke ID</param>
         /// <param name="userDto">Brugerens opdaterede data</param>
         /// <returns>Returnerer NoContent hvis opdateringen lykkedes</returns>
-        [Authorize(Roles = "Admin,Manager")] // Только для администраторов и менеджеров
+        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UserUpdateDto userDto)
         {
@@ -203,7 +203,7 @@ namespace API.Controllers
         /// <param name="id">Brugerens unikke ID</param>
         /// <returns>Returnerer NoContent hvis sletningen lykkedes</returns>
       
-        [Authorize (Roles = "Admin,Manager")] // Только для администраторов и менеджеров
+        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -229,7 +229,7 @@ namespace API.Controllers
         /// Hvis brugerens ID ikke kan konverteres til int, returneres status 400 BadRequest.
         /// Hvis brugeren findes, returneres status 200 OK med information om brugeren.
         /// </remarks>
-        [Authorize]
+        [Authorize] // Этот endpoint доступен всем авторизованным пользователям
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
         {
@@ -268,5 +268,125 @@ namespace API.Controllers
             });
         }
 
+        /// <summary>
+        /// Ændrer en brugers rolle
+        /// Kun for autoriserede brugere med rolle Admin
+        /// </summary>
+        /// <param name="userId">ID af brugeren hvis rolle skal ændres</param>
+        /// <param name="roleId">ID af den nye rolle</param>
+        /// <returns>Returnerer NoContent hvis ændringen lykkedes</returns>
+        [Authorize(Roles = "Admin,InfiniteVoid")] // Только для администраторов
+        [HttpPut("{userId}/role/{roleId}")]
+        public async Task<IActionResult> ChangeUserRole(int userId, int roleId)
+        {
+            // Проверяем существование пользователя
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+            
+            if (user == null)
+            {
+                return NotFound("Пользователь не найден.");
+            }
+
+            // Проверяем существование роли
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
+            if (role == null)
+            {
+                return NotFound("Роль не найдена.");
+            }
+
+            // Запрещаем назначать роль InfiniteVoid (только для Сатору Годжо)
+            if (roleId == 5 && userId != 1)
+            {
+                return BadRequest("Роль InfiniteVoid может быть только у Сатору Годжо.");
+            }
+
+            // Изменяем роль пользователя
+            user.RoleId = roleId;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new { Message = $"Роль пользователя {user.FirstName} {user.LastName} изменена на {role.Name}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Ошибка при изменении роли пользователя.");
+            }
+        }
+
+        /// <summary>
+        /// Ændrer en brugers rolle (POST version)
+        /// Kun for autoriserede brugere med rolle Admin
+        /// </summary>
+        /// <param name="roleUpdateDto">DTO med bruger ID og ny rolle ID</param>
+        /// <returns>Returnerer besked om succes eller fejl</returns>
+        [Authorize(Roles = "Admin,InfiniteVoid")]
+        [HttpPost("change-role")]
+        public async Task<IActionResult> ChangeUserRoleByDto([FromBody] UserRoleUpdateDto roleUpdateDto)
+        {
+            // Проверяем существование пользователя
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == roleUpdateDto.UserId);
+            
+            if (user == null)
+            {
+                return NotFound("Пользователь не найден.");
+            }
+
+            // Проверяем существование роли
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleUpdateDto.RoleId);
+            if (role == null)
+            {
+                return NotFound("Роль не найдена.");
+            }
+
+            // Запрещаем назначать роль InfiniteVoid кому-то кроме Сатору Годжо
+            if (roleUpdateDto.RoleId == 5 && roleUpdateDto.UserId != 1)
+            {
+                return BadRequest("Роль InfiniteVoid может быть только у Сатору Годжо.");
+            }
+
+            var oldRoleName = user.Role?.Name ?? "Неизвестная роль";
+            
+            // Изменяем роль пользователя
+            user.RoleId = roleUpdateDto.RoleId;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new 
+                { 
+                    Message = $"Роль пользователя {user.FirstName} {user.LastName} изменена с '{oldRoleName}' на '{role.Name}'",
+                    UserId = user.Id,
+                    OldRole = oldRoleName,
+                    NewRole = role.Name
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Ошибка при изменении роли пользователя.");
+            }
+        }
+
+        /// <summary>
+        /// Henter alle tilgængelige roller
+        /// Kun for autoriserede brugere med rolle Admin eller Manager
+        /// </summary>
+        /// <returns>Liste af alle roller</returns>
+        [Authorize(Roles = "Admin,Manager,InfiniteVoid")]
+        [HttpGet("roles")]
+        public async Task<ActionResult<IEnumerable<object>>> GetAllRoles()
+        {
+            var roles = await _context.Roles
+                .Select(r => new { r.Id, r.Name })
+                .ToListAsync();
+
+            return Ok(roles);
+        }
     }
 }
