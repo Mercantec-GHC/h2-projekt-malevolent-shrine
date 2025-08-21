@@ -258,14 +258,9 @@ namespace API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("VipRoomId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("RoleId");
-
-                    b.HasIndex("VipRoomId");
 
                     b.ToTable("Users");
 
@@ -318,10 +313,6 @@ namespace API.Migrations
                 {
                     b.HasBaseType("API.Models.Room");
 
-                    b.PrimitiveCollection<List<DateTime>>("BookedDates")
-                        .IsRequired()
-                        .HasColumnType("timestamp without time zone[]");
-
                     b.PrimitiveCollection<List<string>>("ExtraAmenities")
                         .IsRequired()
                         .HasColumnType("text[]");
@@ -369,13 +360,7 @@ namespace API.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("API.Models.VipRoom", "VipRoom")
-                        .WithMany()
-                        .HasForeignKey("VipRoomId");
-
                     b.Navigation("Role");
-
-                    b.Navigation("VipRoom");
                 });
 
             modelBuilder.Entity("API.Models.UserInfo", b =>

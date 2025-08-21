@@ -17,8 +17,6 @@ namespace API.Models
         
         //for VIP users
         public bool IsVIP { get; set; }
-        public int? VipRoomId { get; set; }
-        public VipRoom VipRoom { get; set; }
         
         //Adding Role
         public int RoleId { get; set; }
