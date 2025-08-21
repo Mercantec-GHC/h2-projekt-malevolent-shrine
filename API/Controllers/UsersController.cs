@@ -23,6 +23,17 @@ namespace API.Controllers
         private readonly PasswordHasher<User> _passwordHasher;
        
       
+        /// <summary>
+        /// Initialiserer UsersController med nødvendige services.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="jwtService"></param>
+        /// <param name="passwordHasher"></param>
+        /// /// <remarks>
+        /// Dette er konstruktøren for UsersController, der bruger Dependency Injection til at få
+        ///  AppDBContext, JwtService og PasswordHasher<User>.
+        /// </remarks>
+        /// <returns> </returns>
         public UsersController(AppDBContext context, JwtService jwtService, PasswordHasher<User> passwordHasher)
         {
             _context = context;
@@ -244,13 +255,16 @@ namespace API.Controllers
 
             return Ok(new
             {
-                Id = user.Id,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                CreatedAt = user.CreatedAt,
-                Role = user.Role?.Name, 
-                ProfilePicture = user.ProfilePicture
+                // Старый способ new { Id = user.Id }
+                // Новый способ (сокращенный)
+                
+                user.Id,
+                user.Email,
+                user.FirstName,
+                user.LastName,
+                user.CreatedAt,
+                Role = user.Role?.Name, // Извлекаем только Name из объекта Role
+                user.ProfilePicture
             });
         }
 
