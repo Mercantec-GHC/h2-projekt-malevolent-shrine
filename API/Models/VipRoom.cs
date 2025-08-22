@@ -1,6 +1,6 @@
 namespace API.Models;
 
-public class VipRoom: Room
+public class VipRoom:Room
 {
     public required string VipServiceDescription { get; set; }
     
