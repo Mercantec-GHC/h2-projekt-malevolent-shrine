@@ -21,25 +21,36 @@ namespace API.Controllers
         private readonly AppDBContext _context;
         private readonly JwtService _jwtService;
         private readonly PasswordHasher<User> _passwordHasher;
-       
-      
+        private readonly ILogger<UsersController> _logger;
+        
+        
         /// <summary>
         /// Initialiserer UsersController med nødvendige services.
         /// </summary>
         /// <param name="context"></param>
         /// <param name="jwtService"></param>
         /// <param name="passwordHasher"></param>
+        /// <param name="logger"></param>
         /// /// <remarks>
         /// Dette er konstruktøren for UsersController, der bruger Dependency Injection til at få
         ///  AppDBContext, JwtService og PasswordHasher<User>.
+        ///  logger bruges til at logge informationer og fejl.
+        ///  Dette sikrer, at controlleren har adgang til databasen, JWT-tjenesten og
+        ///  password hasheren for at håndtere brugerautentificering og
+        ///  autorisation.
+        ///  Denne controller håndterer CRUD-operationer for brugere, herunder oprettelse,
+        ///  læsning, opdatering og sletning af brugere.
+        ///  Den er også ansvarlig for at hente den aktuelle bruger og ændre brugerroller
+        ///  samt hente alle tilgængelige roller.
         /// </remarks>
-        /// <returns> </returns>
-        public UsersController(AppDBContext context, JwtService jwtService, PasswordHasher<User> passwordHasher)
+        /// <returns> </returns>    
+        public UsersController(AppDBContext context, JwtService jwtService, PasswordHasher<User> passwordHasher, ILogger<UsersController> logger)
         {
             _context = context;
             _jwtService = jwtService;
-            _passwordHasher = passwordHasher;
-        } 
+            _passwordHasher = passwordHasher; // Ты уже добавил это
+            _logger = logger;
+        }
         
        /// <summary>    
        /// Henter alle brugere
@@ -51,53 +62,76 @@ namespace API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsers()
         {
-            var users = await _context.Users
-                .Include(u => u.UserInfo) // Загружаем связанные данные!
-                .ToListAsync();
-
-            var userReadDtos = users.Select(u => new UserReadDto
+            try
             {
-                Id = u.Id,
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                Email = u.Email,
-                PhoneNumber = u.UserInfo?.PhoneNumber ?? "", // Через UserInfo!
-                Address = u.UserInfo?.Address ?? "" // Через UserInfo!
-            }).ToList();
+                var users = await _context.Users
+                    .Include(u => u.UserInfo) // Загружаем связанные данные!
+                    .ToListAsync();
 
-            return Ok(userReadDtos);
+                var userReadDtos = users.Select(u => new UserReadDto
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    PhoneNumber = u.UserInfo?.PhoneNumber ?? "", // Через UserInfo!
+                    Address = u.UserInfo?.Address ?? "" // Через UserInfo!
+                }).ToList();
+
+                return Ok(userReadDtos);
+            }
+            catch (Exception ex)
+            {
+                // Используем наш "журналист" (_logger)
+                _logger.LogError(ex, "Ошибка при получении списка пользователей.");
+
+                // Возвращаем пользователю понятную ошибку
+                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+            }
+            
         }
 
-       /// <summary>
-       ///  Hentér en specifik bruger
-       ///  Kun for autoriserede brugere med roller Admin eller Manager
-       /// </summary>
-       /// <param name="id">Users unikke ID</param>
-       /// <returns>En UserReadDTO hvis brugeren findes</returns>
+        /// <summary>
+        ///  Hentér en specifik bruger
+        ///  Kun for autoriserede brugere med roller Admin eller Manager
+        /// </summary>
+        /// <param name="id">Users unikke ID</param>
+        /// <returns>En UserReadDTO hvis brugeren findes</returns>
         [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
         [HttpGet("{id}")]
         public async Task<ActionResult<UserReadDto>> GetUser(int id)
         {
-            var user = await _context.Users
-                .Include(u => u.UserInfo) // Загружаем связанные данные!
-                .FirstOrDefaultAsync(u => u.Id == id);
-
-            if (user == null)
+            try
             {
-                return NotFound();
+                var user = await _context.Users
+                    .Include(u => u.UserInfo) // Загружаем связанные данные!
+                    .FirstOrDefaultAsync(u => u.Id == id);
+
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                var userReadDto = new UserReadDto
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    PhoneNumber = user.UserInfo?.PhoneNumber ?? "", // Через UserInfo!
+                    Address = user.UserInfo?.Address ?? "" // Через UserInfo!
+                };
+
+                return Ok(userReadDto);
             }
-
-            var userReadDto = new UserReadDto
+            catch (Exception ex)
             {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                PhoneNumber = user.UserInfo?.PhoneNumber ?? "", // Через UserInfo!
-                Address = user.UserInfo?.Address ?? "" // Через UserInfo!
-            };
+                // Используем наш "журналист" (_logger)
+                _logger.LogError(ex, "Ошибка при получении пользователя с ID {UserId}.", id);
 
-            return Ok(userReadDto);
+                // Возвращаем пользователю понятную ошибку
+                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+            }
         }
 
         /// <summary>
@@ -111,29 +145,42 @@ namespace API.Controllers
         public async Task<ActionResult<UserReadDto>> PostUser(UserCreateDto userDto)
 
         {
-            var user = new User
+            
+            try
             {
-                FirstName = userDto.FirstName,
-                LastName = userDto.LastName,
-                Email = userDto.Email,
-                UserInfo = new UserInfo
+                var user = new User
                 {
-                    PhoneNumber = userDto.PhoneNumber,
-                    Address = userDto.Address // Создаем UserInfo с данными из DTO
-                }
-            };
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            var userReadDto = new UserReadDto
+                    FirstName = userDto.FirstName,
+                    LastName = userDto.LastName,
+                    Email = userDto.Email,
+                    UserInfo = new UserInfo
+                    {
+                        PhoneNumber = userDto.PhoneNumber,
+                        Address = userDto.Address // Создаем UserInfo с данными из DTO
+                    }
+                };
+                
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                var userReadDto = new UserReadDto
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    PhoneNumber = user.UserInfo.PhoneNumber, // Через UserInfo!
+                    Address = user.UserInfo.Address // Через UserInfo!
+                };
+                return CreatedAtAction(nameof(GetUser), new { id = userReadDto.Id }, userReadDto);
+            }
+            catch (Exception ex)
             {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                PhoneNumber = user.UserInfo.PhoneNumber, // Через UserInfo!
-                Address = user.UserInfo.Address // Через UserInfo!
-            };
-            return CreatedAtAction(nameof(GetUser), new { id = userReadDto.Id }, userReadDto);
+                // Используем наш "журналист" (_logger)
+                _logger.LogError(ex, "Ошибка при создании пользователя.");
+
+                // Возвращаем пользователю понятную ошибку
+                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+            }
         }
         
         /// <summary>
@@ -207,16 +254,28 @@ namespace API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
+            try
             {
-                return NotFound();
+                var user = await _context.Users.FindAsync(id);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
+            catch (Exception ex)
+            {
+                // Используем наш "журналист" (_logger)
+                _logger.LogError(ex, "Ошибка при удалении пользователя.");
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+                // Возвращаем пользователю понятную ошибку
+                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+            }
+            
         }
 
         /// <summary>
@@ -233,39 +292,51 @@ namespace API.Controllers
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (userIdClaim == null)
+            try
             {
-                return Unauthorized("Пользователь не найден в токене.");
-            }
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
-                return BadRequest("Неверный формат ID пользователя.");
-            }
+                if (userIdClaim == null)
+                {
+                    return Unauthorized("Пользователь не найден в токене.");
+                }
 
-            var user = await _context.Users
-                .Include(u => u.Role) // У вас Role (единственное число), а не Roles
-                .Include(u => u.UserInfo)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return BadRequest("Неверный формат ID пользователя.");
+                }
 
-            if (user == null)
-                return NotFound("Пользователь не найден в базе данных.");
+                var user = await _context.Users
+                    .Include(u => u.Role) // У вас Role (единственное число), а не Roles
+                    .Include(u => u.UserInfo)
+                    .FirstOrDefaultAsync(u => u.Id == userId);
 
-            return Ok(new
-            {
-                // Старый способ new { Id = user.Id }
-                // Новый способ (сокращенный)
+                if (user == null)
+                    return NotFound("Пользователь не найден в базе данных.");
+
+                return Ok(new
+                {
+                    // Старый способ new { Id = user.Id }
+                    // Новый способ (сокращенный)
                 
-                user.Id,
-                user.Email,
-                user.FirstName,
-                user.LastName,
-                user.CreatedAt,
-                Role = user.Role?.Name, // Извлекаем только Name из объекта Role
-                user.ProfilePicture
-            });
+                    user.Id,
+                    user.Email,
+                    user.FirstName,
+                    user.LastName,
+                    user.CreatedAt,
+                    Role = user.Role?.Name, // Извлекаем только Name из объекта Role
+                    user.ProfilePicture
+                });  
+            }
+            catch (Exception ex)
+            {
+                // Используем наш "журналист" (_logger)
+                _logger.LogError(ex, "Ошибка при получении текущего пользователя.");
+
+                // Возвращаем пользователю понятную ошибку
+                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+            }
         }
 
         /// <summary>
@@ -382,11 +453,22 @@ namespace API.Controllers
         [HttpGet("roles")]
         public async Task<ActionResult<IEnumerable<object>>> GetAllRoles()
         {
-            var roles = await _context.Roles
-                .Select(r => new { r.Id, r.Name })
-                .ToListAsync();
+            try
+            {
+                var roles = await _context.Roles
+                    .Select(r => new { r.Id, r.Name })
+                    .ToListAsync();
 
-            return Ok(roles);
+                return Ok(roles);
+            }
+            catch (Exception ex)
+            {
+                // Используем наш "журналист" (_logger)
+                _logger.LogError(ex, "Ошибка при получении списка ролей.");
+
+                // Возвращаем пользователю понятную ошибку
+                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+            }
         }
     }
 }
