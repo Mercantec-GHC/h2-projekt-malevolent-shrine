@@ -96,6 +96,8 @@ namespace API.Services
             }
 
             // Здесь мы добавим код для сохранения в базу...
+            _context.Hotels.AddRange(hotels);
+            await _context.SaveChangesAsync();
 
             return hotels;
         }
