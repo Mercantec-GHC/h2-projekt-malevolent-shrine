@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using API.Data; 
 
 namespace API.Controllers
 {
@@ -6,6 +7,14 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class StatusController : ControllerBase
     {
+        private readonly AppDBContext _context;
+
+        // Внедрение DbContext через DI
+        public StatusController(AppDBContext context)
+        {
+            _context = context;
+        }
+
         /// <summary>
         /// Tjekker om API'en kører korrekt.
         /// </summary>
@@ -18,28 +27,29 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Tjekker om databasen er tilgængelig (dummy indtil EFCore er sat op).
+        /// Tjekker om databasen er tilgængelig via EFCore.
         /// </summary>
         /// <returns>Status og besked om databaseforbindelse.</returns>
-        /// <response code="200">Database er kørende eller fejlbesked gives.</response>
-    
+        /// <response code="200">Database er kørende.</response>
+        /// <response code="500">Der er en fejl med databaseforbindelsen.</response>
         [HttpGet("dbhealthcheck")]
         public IActionResult DBHealthCheck()
         {
-            // Indtil vi har opsat EFCore, returnerer vi bare en besked
-
-            try {
-                // using (var context = new ApplicationDbContext())
-                // {
-                //     context.Database.CanConnect();
-                // }
-                throw new Exception("I har endnu ikke lært at opsætte EFCore! Det kommer senere!");
+            try
+            {
+                if (_context.Database.CanConnect())
+                {
+                    return Ok(new { status = "OK", message = "Database er kørende!" });
+                }
+                else
+                {
+                    return StatusCode(500, new { status = "Error", message = "Kan ikke forbinde til databasen." });
+                }
             }
             catch (Exception ex)
             {
-                return Ok(new { status = "Error", message = "Fejl ved forbindelse til database: " + ex.Message });
+                return StatusCode(500, new { status = "Error", message = "Fejl ved forbindelse til database: " + ex.Message });
             }
-            return Ok(new { status = "OK", message = "Database er kørende!" });
         }
 
         /// <summary>

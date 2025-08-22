@@ -17,15 +17,16 @@ namespace API.Models
         
         //for VIP users
         public bool IsVIP { get; set; }
-        public int? VipRoomId { get; set; }
-        public VipRoom VipRoom { get; set; }
         
         //Adding Role
         public int RoleId { get; set; }
         public Role Role { get; set; }
         
         public UserInfo? UserInfo { get; set; }
+        
+        public string? ProfilePicture { get; set; }
 
         private List<Booking> Bookings { get; set; } = new();
+        
     }
 }

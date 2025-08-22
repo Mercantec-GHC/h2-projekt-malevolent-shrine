@@ -3,21 +3,34 @@ using Microsoft.EntityFrameworkCore;
 using API.Data;
 using API.Models;
 using API.DTOs;
+using Microsoft.AspNetCore.Authorization; // Добавляем для авторизации
 
 namespace API.Controllers;
 
+/// <summary>
+/// Kontroller til håndtering af bookingoperationer (oprettelse, hentning, opdatering, sletning).
+/// </summary>
 [Route("api/[controller]")]
 [ApiController]
 public class BookingsController : ControllerBase
 {
     private readonly AppDBContext _context;
 
+    /// <summary>
+    /// Initialiserer en ny instans af BookingsController.
+    /// </summary>
+    /// <param name="context">Databasekontekst til håndtering af bookinger.</param>
     public BookingsController(AppDBContext context)
     {
         _context = context;
     }
 
-    // GET: api/bookings
+    /// <summary>
+    /// Henter alle bookinger.
+    /// Kun personalet (Admin, Manager, Receptionist) og InfiniteVoid har adgang.
+    /// </summary>
+    /// <returns>En liste over alle bookinger.</returns>
+    [Authorize(Roles = "Admin,Manager,Receptionist,InfiniteVoid")] // Только персонал и Годжо могут видеть все бронирования
     [HttpGet]
     public async Task<ActionResult<IEnumerable<BookingReadDto>>> GetBookings()
     {
@@ -42,7 +55,13 @@ public class BookingsController : ControllerBase
         return Ok(bookingReadDtos);
     }
 
-    // GET: api/bookings/5
+    /// <summary>
+    /// Henter en specifik booking baseret på ID.
+    /// Kun personalet (Admin, Manager, Receptionist) og InfiniteVoid har adgang.
+    /// </summary>
+    /// <param name="id">Bookingens unikke ID.</param>
+    /// <returns>Bookingens data, hvis den findes.</returns>
+    [Authorize(Roles = "Admin,Manager,Receptionist,InfiniteVoid")] // Только персонал и Годжо могут видеть конкретное бронирование
     [HttpGet("{id}")]
     public async Task<ActionResult<BookingReadDto>> GetBooking(int id)
     {
@@ -72,7 +91,13 @@ public class BookingsController : ControllerBase
         return Ok(bookingReadDto);
     }
 
-    // POST: api/bookings
+    /// <summary>
+    /// Opretter en ny booking.
+    /// Alle autoriserede brugere kan oprette bookinger.
+    /// </summary>
+    /// <param name="bookingCreateDto">DTO med oplysninger om den nye booking.</param>
+    /// <returns>Oplysninger om den oprettede booking.</returns>
+    [Authorize] // Любой авторизованный пользователь может создавать бронирования
     [HttpPost]
     public async Task<ActionResult<BookingReadDto>> CreateBooking(BookingCreateDto bookingCreateDto)
     {
@@ -104,7 +129,14 @@ public class BookingsController : ControllerBase
         return CreatedAtAction(nameof(GetBooking), new { id = booking.Id }, bookingReadDto);
     }
 
-    // PUT: api/bookings/5
+    /// <summary>
+    /// Opdaterer en eksisterende booking.
+    /// Kun personalet (Admin, Manager, Receptionist) og InfiniteVoid har adgang.
+    /// </summary>
+    /// <param name="id">Bookingens unikke ID.</param>
+    /// <param name="bookingUpdateDto">DTO med opdaterede oplysninger.</param>
+    /// <returns>Ingen indhold, hvis opdateringen er vellykket.</returns>
+    [Authorize(Roles = "Admin,Manager,Receptionist,InfiniteVoid")] // Только персонал и Годжо могут обновлять бронирования
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateBooking(int id, BookingUpdateDto bookingUpdateDto)
     {
@@ -142,7 +174,13 @@ public class BookingsController : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/bookings/5
+    /// <summary>
+    /// Sletter en booking.
+    /// Kun Admin, Manager og InfiniteVoid har adgang.
+    /// </summary>
+    /// <param name="id">Bookingens unikke ID.</param>
+    /// <returns>Ingen indhold, hvis sletningen er vellykket.</returns>
+    [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы, менеджеры и Годжо могут удалять бронирования
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBooking(int id)
     {
@@ -158,6 +196,11 @@ public class BookingsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Tjekker om en booking eksisterer ud fra ID.
+    /// </summary>
+    /// <param name="id">Bookingens unikke ID.</param>
+    /// <returns>True, hvis booking findes; ellers false.</returns>
     private bool BookingExists(int id)
     {
         return _context.Bookings.Any(e => e.Id == id);
