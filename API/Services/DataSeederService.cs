@@ -101,5 +101,15 @@ namespace API.Services
 
             return hotels;
         }
+        
+        public async Task ClearAllDataAsync()
+        {
+            _context.Bookings.RemoveRange(_context.Bookings);
+            _context.Rooms.RemoveRange(_context.Rooms);
+            _context.Hotels.RemoveRange(_context.Hotels);
+            _context.Users.RemoveRange(_context.Users);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("All data cleared from Bookings, Rooms, Hotels, and Users tables.");
+        }
     }
 }

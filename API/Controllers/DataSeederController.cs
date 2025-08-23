@@ -43,6 +43,13 @@ namespace API.Controllers
             return Ok(new { Message = $"База данных успешно заполнена {count} пользователями и отелями." });
         }
         
-        
+        [HttpPost("clear-all")]
+        public async Task<IActionResult> ClearAllData()
+        {
+            _logger.LogInformation("Начинаем очистку базы данных.");
+            await _dataSeederService.ClearAllDataAsync();
+            _logger.LogInformation("Очистка базы данных завершена.");
+            return Ok(new { Message = "База данных успешно очищена." });
+        }
     }
 }
