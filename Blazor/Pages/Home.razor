@@ -21,11 +21,6 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-12">
-        <WeatherTable WeatherForecasts="@weatherForecasts" />
-    </div>
-</div>
 
 <div class="row">
     <div class="col-12">
@@ -36,12 +31,10 @@
 @code {
     HealthCheckResponse? healthCheck;
     HealthCheckResponse? dbHealthCheck;
-    WeatherForecast[]? weatherForecasts;
 
     protected override async Task OnInitializedAsync()
     {
         healthCheck = await ApiService.GetHealthCheckAsync();
         dbHealthCheck = await ApiService.GetDBHealthCheckAsync();
-        weatherForecasts = await ApiService.GetWeatherAsync(5);
     }
 }
