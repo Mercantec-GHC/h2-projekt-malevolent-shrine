@@ -78,8 +78,23 @@ public class BookingsController : ControllerBase
     // POST: api/bookings
     [Authorize] // Любой авторизованный пользователь может создавать бронирования
     [HttpPost]
+    [ProducesResponseType(typeof(BookingReadDto), 201)]
     public async Task<ActionResult<BookingReadDto>> CreateBooking(BookingCreateDto bookingCreateDto)
     {
+        // Проверяем, существует ли комната
+        var roomExists = await _context.Rooms.AnyAsync(r => r.Id == bookingCreateDto.RoomId);
+        if (!roomExists)
+        {
+            return BadRequest($"Комната с ID {bookingCreateDto.RoomId} не существует!");
+        }
+
+        // Проверяем, существует ли пользователь  
+        var userExists = await _context.Users.AnyAsync(u => u.Id == bookingCreateDto.UserId);
+        if (!userExists)
+        {
+            return BadRequest($"Пользователь с ID {bookingCreateDto.UserId} не существует!");
+        }
+        
         var booking = new Booking
         {
             UserId = bookingCreateDto.UserId,
@@ -92,6 +107,8 @@ public class BookingsController : ControllerBase
 
         _context.Bookings.Add(booking);
         await _context.SaveChangesAsync();
+        
+        
 
         var bookingReadDto = new BookingReadDto
         {
@@ -122,6 +139,20 @@ public class BookingsController : ControllerBase
         if (booking == null)
         {
             return NotFound();
+        }
+
+        // Проверяем, существует ли комната
+        var roomExists = await _context.Rooms.AnyAsync(r => r.Id == bookingUpdateDto.RoomId);
+        if (!roomExists)
+        {
+            return BadRequest($"Комната с ID {bookingUpdateDto.RoomId} не существует!");
+        }
+
+        // Проверяем, существует ли пользователь  
+        var userExists = await _context.Users.AnyAsync(u => u.Id == bookingUpdateDto.UserId);
+        if (!userExists)
+        {
+            return BadRequest($"Пользователь с ID {bookingUpdateDto.UserId} не существует!");
         }
 
         booking.UserId = bookingUpdateDto.UserId;

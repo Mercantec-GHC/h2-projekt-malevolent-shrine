@@ -37,7 +37,9 @@ namespace API.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<int>("RoomId")
                         .HasColumnType("integer");
@@ -50,7 +52,9 @@ namespace API.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -77,14 +81,18 @@ namespace API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("now()");
 
                     b.HasKey("Id");
 
@@ -167,7 +175,9 @@ namespace API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -194,7 +204,9 @@ namespace API.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("now()");
 
                     b.HasKey("Id");
 

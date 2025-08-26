@@ -107,6 +107,12 @@ namespace API.Data
             modelBuilder.Entity<Role>().Property(r => r.UpdatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<User>().Property(u => u.CreatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<User>().Property(u => u.UpdatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<Booking>().Property(b => b.CreatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<Booking>().Property(b => b.UpdatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<Hotel>().Property(h => h.CreatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<Hotel>().Property(h => h.UpdatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<Room>().Property(r => r.CreatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<Room>().Property(r => r.UpdatedAt).HasDefaultValueSql("now()");
             
             modelBuilder.Entity<UserInfo>()
                 .HasKey(i => i.UserId); // Shared PK
