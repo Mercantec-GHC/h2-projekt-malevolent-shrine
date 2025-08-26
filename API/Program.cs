@@ -30,6 +30,32 @@ public class Program
             {
                 c.IncludeXmlComments(xmlPath);
             }
+            
+            // Добавляем поддержку JWT аутентификации в Swagger
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Введите JWT токен в формате: Bearer {ваш токен}"
+            });
+            
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] {}
+                }
+            });
         });
 
         // Tilføj CORS for specifikke Blazor WASM domæner
