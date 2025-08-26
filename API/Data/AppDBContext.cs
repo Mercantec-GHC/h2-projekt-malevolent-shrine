@@ -115,6 +115,20 @@ namespace API.Data
                 .HasOne(u => u.UserInfo)
                 .WithOne(i => i.User)
                 .HasForeignKey<UserInfo>(i => i.UserId);
+                
+            // Конфигурация для VipRoom - создание отдельной таблицы (Table-per-Type)
+            modelBuilder.Entity<VipRoom>()
+                .ToTable("VipRooms") // Создаем отдельную таблицу VipRooms
+                .Property(vr => vr.ExtraAmenities)
+                .HasConversion(
+                    v => string.Join(',', v), // Преобразование List<string> в строку для БД
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList() // Обратное преобразование
+                )
+                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<List<string>>(
+                    (c1, c2) => c1.SequenceEqual(c2), // Сравнение списков
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())), // Вычисление хеша
+                    c => c.ToList() // Создание снимка
+                ));
         }
     }
 }

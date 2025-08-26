@@ -32,11 +32,17 @@ namespace API.Services
         
         public string GenerateToken(User user, string? roleName = null)
         {
+            // Если роль не передана или пустая, это ошибка - не должно быть роли по умолчанию
+            if (string.IsNullOrEmpty(roleName))
+            {
+                throw new InvalidOperationException($"Роль пользователя {user.Email} не загружена. Проверьте Include(u => u.Role) в запросе.");
+            }
+
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, roleName ?? "Kunde") // Используем переданную роль или значение по умолчанию
+                new Claim(ClaimTypes.Role, roleName) // Используем только переданную роль
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));

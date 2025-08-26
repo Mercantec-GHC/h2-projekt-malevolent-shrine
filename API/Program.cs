@@ -43,7 +43,11 @@ public class Program
                         .WithOrigins(
                             "http://localhost:5085",
                             "http://localhost:8052",
-                            "https://h2.mercantec.tech"
+                            "https://h2.mercantec.tech",
+                            "http://localhost:3000",    // React dev server
+                            "http://localhost:3001",    // React альтернативный порт
+                            "http://127.0.0.1:3000",    // React альтернативный хост
+                            "http://127.0.0.1:3001"     // React альтернативный хост
                         )
                         .AllowAnyMethod()
                         .AllowAnyHeader()
