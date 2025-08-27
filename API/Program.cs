@@ -3,9 +3,15 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using API.Data;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Identity;
+using API.Models;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure; // Добавьте эту строку
+
 
 namespace API;
-
 public class Program
 {
     public static void Main(string[] args)
@@ -24,6 +30,32 @@ public class Program
             {
                 c.IncludeXmlComments(xmlPath);
             }
+            
+            // Добавляем поддержку JWT аутентификации в Swagger
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Введите JWT токен в формате: Bearer {ваш токен}"
+            });
+            
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] {}
+                }
+            });
         });
 
         // Tilføj CORS for specifikke Blazor WASM domæner
@@ -37,7 +69,18 @@ public class Program
                         .WithOrigins(
                             "http://localhost:5085",
                             "http://localhost:8052",
-                            "https://h2.mercantec.tech"
+                            "https://h2.mercantec.tech",
+                            "http://localhost:3000",    // React dev server
+                            "http://localhost:3001",    // React альтернативный порт
+                            "http://127.0.0.1:3000",    // React альтернативный хост
+                            "http://localhost:5173",    // Vite стандартный порт
+                            "http://localhost:5174",    // Vite альтернативный порт
+                            "https://localhost:5173",   // HTTPS версии
+                            "https://localhost:5174",
+                            "http://localhost:3000",    // React dev server альтернативный
+                            "http://127.0.0.1:5173",    // localhost через IP
+                            "http://127.0.0.1:5174",
+                            "http://127.0.0.1:3001"     // React альтернативный хост
                         )
                         .AllowAnyMethod()
                         .AllowAnyHeader()
@@ -46,6 +89,8 @@ public class Program
             );
         });
         
+
+
         IConfiguration Configuration = builder.Configuration;
 
         string connectionString = Configuration.GetConnectionString("DefaultConnection")
@@ -55,12 +100,38 @@ public class Program
                 options.UseNpgsql(connectionString));
        
 
+
         // Tilføj basic health checks
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), ["live"]);
-
+        
+        // JWT Authentication
+        builder.Services.AddScoped<JwtService>();
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!))
+                };
+            });
+        builder.Services.AddAuthorization();
+        builder.Services.AddScoped<PasswordHasher<User>>();
+        
+        builder.Services.AddDbContext<AppDBContext>(options =>
+        {
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+        });
         var app = builder.Build();
-
+            
+        
         // Brug CORS - skal være før anden middleware
         app.UseCors("AllowSpecificOrigins");
 
@@ -88,7 +159,8 @@ public class Program
         {
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
         });
-
+        
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();

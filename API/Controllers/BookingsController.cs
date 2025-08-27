@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using API.Data;
 using API.Models;
 using API.DTOs;
+using Microsoft.AspNetCore.Authorization; // Добавляем для авторизации
+using Microsoft.Extensions.Logging; // Добавляем для логирования
 
 namespace API.Controllers;
 
@@ -11,38 +13,55 @@ namespace API.Controllers;
 public class BookingsController : ControllerBase
 {
     private readonly AppDBContext _context;
+    private readonly ILogger<BookingsController> _logger;
 
-    public BookingsController(AppDBContext context)
+    public BookingsController(AppDBContext context, ILogger<BookingsController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     // GET: api/bookings
+    [Authorize(Roles = "Admin,Manager,Receptionist,InfiniteVoid")] // Только персонал и Годжо могут видеть все бронирования
     [HttpGet]
     public async Task<ActionResult<IEnumerable<BookingReadDto>>> GetBookings()
     {
-        var bookings = await _context.Bookings
-            .Include(b => b.User)
-            .Include(b => b.Room)
-            .ThenInclude(r => r.Hotel)
-            .ToListAsync();
-
-        var bookingReadDtos = bookings.Select(b => new BookingReadDto
+        try
         {
-            Id = b.Id,
-            UserId = b.UserId,
-            RoomId = b.RoomId,
-            CheckInDate = b.CheckInDate,
-            CheckOutDate = b.CheckOutDate,
-            TotalPrice = b.TotalPrice,
-            Status = b.Status,
-            CreatedAt = b.CreatedAt
-        }).ToList();
+            var bookings = await _context.Bookings
+                .Include(b => b.User)
+                .Include(b => b.Room)
+                .ThenInclude(r => r.Hotel)
+                .ToListAsync();
 
-        return Ok(bookingReadDtos);
+            if (!bookings.Any())
+            {
+                return Ok(new List<BookingReadDto>());
+            }
+
+            var bookingReadDtos = bookings.Select(b => new BookingReadDto
+            {
+                Id = b.Id,
+                UserId = b.UserId,
+                RoomId = b.RoomId,
+                CheckInDate = b.CheckInDate,
+                CheckOutDate = b.CheckOutDate,
+                TotalPrice = b.TotalPrice,
+                Status = b.Status ?? string.Empty,
+                CreatedAt = b.CreatedAt
+            }).ToList();
+
+            return Ok(bookingReadDtos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при получении списка бронирований");
+            return StatusCode(500, "Внутренняя ошибка сервера");
+        }
     }
 
     // GET: api/bookings/5
+    [Authorize(Roles = "Admin,Manager,Receptionist,InfiniteVoid")] // Только персонал и Годжо могут видеть конкретное бронирование
     [HttpGet("{id}")]
     public async Task<ActionResult<BookingReadDto>> GetBooking(int id)
     {
@@ -73,9 +92,25 @@ public class BookingsController : ControllerBase
     }
 
     // POST: api/bookings
+    [Authorize] // Любой авторизованный пользователь может создавать бронирования
     [HttpPost]
+    [ProducesResponseType(typeof(BookingReadDto), 201)]
     public async Task<ActionResult<BookingReadDto>> CreateBooking(BookingCreateDto bookingCreateDto)
     {
+        // Проверяем, существует ли комната
+        var roomExists = await _context.Rooms.AnyAsync(r => r.Id == bookingCreateDto.RoomId);
+        if (!roomExists)
+        {
+            return BadRequest($"Комната с ID {bookingCreateDto.RoomId} не существует!");
+        }
+
+        // Проверяем, существует ли пользователь  
+        var userExists = await _context.Users.AnyAsync(u => u.Id == bookingCreateDto.UserId);
+        if (!userExists)
+        {
+            return BadRequest($"Пользователь с ID {bookingCreateDto.UserId} не существует!");
+        }
+        
         var booking = new Booking
         {
             UserId = bookingCreateDto.UserId,
@@ -88,6 +123,8 @@ public class BookingsController : ControllerBase
 
         _context.Bookings.Add(booking);
         await _context.SaveChangesAsync();
+        
+        
 
         var bookingReadDto = new BookingReadDto
         {
@@ -105,6 +142,7 @@ public class BookingsController : ControllerBase
     }
 
     // PUT: api/bookings/5
+    [Authorize(Roles = "Admin,Manager,Receptionist,InfiniteVoid")] // Только персонал и Годжо могут обновлять бронирования
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateBooking(int id, BookingUpdateDto bookingUpdateDto)
     {
@@ -117,6 +155,20 @@ public class BookingsController : ControllerBase
         if (booking == null)
         {
             return NotFound();
+        }
+
+        // Проверяем, существует ли комната
+        var roomExists = await _context.Rooms.AnyAsync(r => r.Id == bookingUpdateDto.RoomId);
+        if (!roomExists)
+        {
+            return BadRequest($"Комната с ID {bookingUpdateDto.RoomId} не существует!");
+        }
+
+        // Проверяем, существует ли пользователь  
+        var userExists = await _context.Users.AnyAsync(u => u.Id == bookingUpdateDto.UserId);
+        if (!userExists)
+        {
+            return BadRequest($"Пользователь с ID {bookingUpdateDto.UserId} не существует!");
         }
 
         booking.UserId = bookingUpdateDto.UserId;
@@ -143,6 +195,7 @@ public class BookingsController : ControllerBase
     }
 
     // DELETE: api/bookings/5
+    [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы, менеджеры и Годжо могут удалять бронирования
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBooking(int id)
     {

@@ -2,6 +2,10 @@ using API.Data;
 using API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
+using API.DTOs;
+using Microsoft.AspNetCore.Identity;
+
 
 namespace API.Controllers
 {
@@ -10,10 +14,14 @@ namespace API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AppDBContext _context;
+        private readonly JwtService _jwtService;
+        private readonly PasswordHasher<User> _passwordHasher;
 
-        public AuthController(AppDBContext context)
+        public AuthController(AppDBContext context, JwtService jwtService, PasswordHasher<User> passwordHasher)
         {
             _context = context;
+            _jwtService = jwtService;
+            _passwordHasher = passwordHasher;
         }
 
         [HttpPost("register")]
@@ -33,7 +41,7 @@ namespace API.Controllers
             var newUser = new User
             {
                 Username = request.Username,
-                HashedPassword = System.Text.Encoding.UTF8.GetBytes(hashedPassword),
+                HashedPassword = hashedPassword,
                 Email = request.Email,
                 FirstName = request.FirstName, // из DTO
                 LastName = request.LastName,   // из DTO
@@ -48,25 +56,26 @@ namespace API.Controllers
         }
         
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] AuthDto request)
+        public async Task<ActionResult<string>> Login(UserLoginDto request)
         {
-            // ищу пользователя в базе данных по имени
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
-
-            // проверка что пользователь существует
+            // Ищем пользователя с ролью
+            var user = await _context.Users
+                .Include(u => u.Role) // Загружаем роль для JWT
+                .FirstOrDefaultAsync(u => u.Email == request.Email);
+    
             if (user == null)
             {
                 return BadRequest("Неверный логин или пароль.");
             }
 
-            // совпадает ли пароль
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, System.Text.Encoding.UTF8.GetString(user.HashedPassword)))
+            // Проверка пароля
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.HashedPassword))
             {
                 return BadRequest("Неверный логин или пароль.");
             }
 
-            // Если все хорошо, возвращаем сообщение об успехе
-            return Ok("Вход выполнен успешно!");
+            var token = _jwtService.GenerateToken(user, user.Role?.Name);
+            return Ok(new { Message = "Вход выполнен успешно!", Token = token });
         }
     }
         
