@@ -89,6 +89,13 @@ public class Program
             );
         });
         
+        IConfiguration Configuration = builder.Configuration;
+
+        string connectionString = Configuration.GetConnectionString("DefaultConnection")
+        ?? Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
+
+        builder.Services.AddDbContext<AppDBContext>(options =>
+                options.UseNpgsql(connectionString));
 
         // Tilføj basic health checks
         builder.Services.AddHealthChecks()
