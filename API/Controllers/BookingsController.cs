@@ -4,6 +4,7 @@ using API.Data;
 using API.Models;
 using API.DTOs;
 using Microsoft.AspNetCore.Authorization; // Добавляем для авторизации
+using Microsoft.Extensions.Logging; // Добавляем для логирования
 
 namespace API.Controllers;
 
@@ -12,10 +13,12 @@ namespace API.Controllers;
 public class BookingsController : ControllerBase
 {
     private readonly AppDBContext _context;
+    private readonly ILogger<BookingsController> _logger;
 
-    public BookingsController(AppDBContext context)
+    public BookingsController(AppDBContext context, ILogger<BookingsController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     // GET: api/bookings
@@ -23,25 +26,38 @@ public class BookingsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<BookingReadDto>>> GetBookings()
     {
-        var bookings = await _context.Bookings
-            .Include(b => b.User)
-            .Include(b => b.Room)
-            .ThenInclude(r => r.Hotel)
-            .ToListAsync();
-
-        var bookingReadDtos = bookings.Select(b => new BookingReadDto
+        try
         {
-            Id = b.Id,
-            UserId = b.UserId,
-            RoomId = b.RoomId,
-            CheckInDate = b.CheckInDate,
-            CheckOutDate = b.CheckOutDate,
-            TotalPrice = b.TotalPrice,
-            Status = b.Status,
-            CreatedAt = b.CreatedAt
-        }).ToList();
+            var bookings = await _context.Bookings
+                .Include(b => b.User)
+                .Include(b => b.Room)
+                .ThenInclude(r => r.Hotel)
+                .ToListAsync();
 
-        return Ok(bookingReadDtos);
+            if (bookings == null || !bookings.Any())
+            {
+                return Ok(new List<BookingReadDto>());
+            }
+
+            var bookingReadDtos = bookings.Select(b => new BookingReadDto
+            {
+                Id = b.Id,
+                UserId = b.UserId,
+                RoomId = b.RoomId,
+                CheckInDate = b.CheckInDate,
+                CheckOutDate = b.CheckOutDate,
+                TotalPrice = b.TotalPrice,
+                Status = b.Status ?? string.Empty,
+                CreatedAt = b.CreatedAt
+            }).ToList();
+
+            return Ok(bookingReadDtos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при получении списка бронирований");
+            return StatusCode(500, "Внутренняя ошибка сервера");
+        }
     }
 
     // GET: api/bookings/5
