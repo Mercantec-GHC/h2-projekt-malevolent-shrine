@@ -34,7 +34,7 @@ public class BookingsController : ControllerBase
                 .ThenInclude(r => r.Hotel)
                 .ToListAsync();
 
-            if (bookings == null || !bookings.Any())
+            if (!bookings.Any())
             {
                 return Ok(new List<BookingReadDto>());
             }
