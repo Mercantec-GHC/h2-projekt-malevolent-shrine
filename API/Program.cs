@@ -73,6 +73,13 @@ public class Program
                             "http://localhost:3000",    // React dev server
                             "http://localhost:3001",    // React альтернативный порт
                             "http://127.0.0.1:3000",    // React альтернативный хост
+                            "http://localhost:5173",    // Vite стандартный порт
+                            "http://localhost:5174",    // Vite альтернативный порт
+                            "https://localhost:5173",   // HTTPS версии
+                            "https://localhost:5174",
+                            "http://localhost:3000",    // React dev server альтернативный
+                            "http://127.0.0.1:5173",    // localhost через IP
+                            "http://127.0.0.1:5174",
                             "http://127.0.0.1:3001"     // React альтернативный хост
                         )
                         .AllowAnyMethod()
