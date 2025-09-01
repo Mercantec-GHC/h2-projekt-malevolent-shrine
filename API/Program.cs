@@ -99,15 +99,12 @@ public class Program
         ?? Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
 
         Console.WriteLine("connectionString: " + connectionString);
-
-        builder.Services.AddDbContext<AppDBContext>(options =>
-                options.UseNpgsql(connectionString));
        
 
 
         // Tilføj basic health checks
         builder.Services.AddHealthChecks()
-            .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), ["live"]);
+            .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), new[] { "live" });
         
         // JWT Authentication
         builder.Services.AddScoped<JwtService>();
@@ -120,14 +117,19 @@ public class Program
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? Environment.GetEnvironmentVariable("JWT_Issuer"),
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? Environment.GetEnvironmentVariable("Jwt_Issuer"),
                     ValidAudience = builder.Configuration["Jwt:Audience"] ?? Environment.GetEnvironmentVariable("Jwt_Audience"),
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt_SecretKey"]!)) ?? new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("Jwt_SecretKey")!))
+                        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? Environment.GetEnvironmentVariable("Jwt_SecretKey")!))
                 };
             });
         builder.Services.AddAuthorization();
         builder.Services.AddScoped<PasswordHasher<User>>();
+        
+        builder.Services.AddDbContext<AppDBContext>(options =>
+        {
+            options.UseNpgsql(connectionString);
+        });
         var app = builder.Build();
             
         
