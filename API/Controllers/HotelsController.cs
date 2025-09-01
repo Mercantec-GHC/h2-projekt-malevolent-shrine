@@ -37,7 +37,7 @@ namespace API.Controllers
             return hotel; // Возвращаем отель
         }
         
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы и Годжо могут создавать отели
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Только админы и Годжо могут создавать отели
         [HttpPost]
         public async Task<ActionResult<HotelReadDto>> PostHotel(HotelCreateDto hotelDto)
         {

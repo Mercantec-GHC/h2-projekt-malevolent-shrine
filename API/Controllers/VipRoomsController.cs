@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using API.Data;
 using API.Models;
 using API.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
@@ -28,6 +29,7 @@ namespace API.Controllers
         /// Get all VIP rooms
         /// </summary>
         /// <returns>List of all VIP rooms</returns>
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<VipRoomReadDto>>> GetVipRooms()
         {
@@ -111,6 +113,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="vipRoomDto">VIP room creation data</param>
         /// <returns>Created VIP room</returns>
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]
         [HttpPost]
         public async Task<ActionResult<VipRoomReadDto>> CreateVipRoom(VipRoomCreateDto vipRoomDto)
         {
@@ -182,6 +185,8 @@ namespace API.Controllers
         /// <param name="id">VIP room ID</param>
         /// <param name="vipRoomDto">Updated VIP room data</param>
         /// <returns>Updated VIP room</returns>
+        ///
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]
         [HttpPut("{id}")]
         public async Task<ActionResult<VipRoomReadDto>> UpdateVipRoom(int id, VipRoomUpdateDto vipRoomDto)
         {
@@ -261,6 +266,8 @@ namespace API.Controllers
         /// </summary>
         /// <param name="id">VIP room ID</param>
         /// <returns>Success message</returns>
+        ///
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteVipRoom(int id)
         {

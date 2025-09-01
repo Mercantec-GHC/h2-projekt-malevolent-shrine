@@ -250,7 +250,7 @@ namespace API.Controllers
         /// <param name="id">Brugerens unikke ID</param>
         /// <returns>Returnerer NoContent hvis sletningen lykkedes</returns>
       
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -346,7 +346,7 @@ namespace API.Controllers
         /// <param name="userId">ID af brugeren hvis rolle skal ændres</param>
         /// <param name="roleId">ID af den nye rolle</param>
         /// <returns>Returnerer NoContent hvis ændringen lykkedes</returns>
-        [Authorize(Roles = "Admin,InfiniteVoid")] // Только для администраторов
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)] // Только для администраторов
         [HttpPut("{userId}/role/{roleId}")]
         public async Task<IActionResult> ChangeUserRole(int userId, int roleId)
         {
@@ -394,7 +394,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="roleUpdateDto">DTO med bruger ID og ny rolle ID</param>
         /// <returns>Returnerer besked om succes eller fejl</returns>
-        [Authorize(Roles = "Admin,InfiniteVoid")]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)]
         [HttpPost("change-role")]
         public async Task<IActionResult> ChangeUserRoleByDto([FromBody] UserRoleUpdateDto roleUpdateDto)
         {

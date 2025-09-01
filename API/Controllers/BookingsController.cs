@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
@@ -196,7 +197,7 @@ public class BookingsController : ControllerBase
     }
 
     // DELETE: api/bookings/5
-    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Только админы, менеджеры и Годжо могут удалять бронирования
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBooking(int id)
     {
@@ -204,6 +205,24 @@ public class BookingsController : ControllerBase
         if (booking == null)
         {
             return NotFound();
+        }
+
+        // Получаем id и роль текущего пользователя
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Forbid();
+        }
+
+        // Если не админ/менеджер/InfiniteVoid, то можно удалять только своё бронирование
+        if (role != RoleNames.Admin && role != RoleNames.Manager && role != RoleNames.InfiniteVoid)
+        {
+            if (booking.UserId != userId)
+            {
+                return Forbid();
+            }
         }
 
         _context.Bookings.Remove(booking);

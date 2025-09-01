@@ -1,9 +1,12 @@
+using API.Models;
 using Microsoft.AspNetCore.Mvc;
 using API.Services;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace API.Controllers
 {
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)] 
     [ApiController]
     [Route("api/[controller]")]
     public class DataSeederController : ControllerBase

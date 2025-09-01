@@ -18,7 +18,7 @@ namespace API.Controllers
             _context = context;
         }
 
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Персонал и Годжо могут просматривать роли
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Персонал и Годжо могут просматривать роли
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RoleReadDto>>> GetRoles()
         {
@@ -35,7 +35,7 @@ namespace API.Controllers
             return Ok(roleReadDtos);
         }
 
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Персонал и Годжо могут просматривать конкретную роль
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Персонал и Годжо могут просматривать конкретную роль
         [HttpGet("{id}")]
         public async Task<ActionResult<RoleReadDto>> GetRole(int id)
         {
@@ -57,7 +57,7 @@ namespace API.Controllers
             return Ok(roleReadDto);
         }
 
-        [Authorize(Roles = "Admin,InfiniteVoid")] // Только админы и Годжо могут создавать роли
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)] // Только админы и Годжо могут создавать роли
         [HttpPost]
         public async Task<ActionResult<RoleReadDto>> PostRole(RoleCreateDto roleDto)
         {
@@ -80,7 +80,7 @@ namespace API.Controllers
             return CreatedAtAction(nameof(GetRole), new { id = roleReadDto.Id }, roleReadDto);
         }
 
-        [Authorize(Roles = "Admin,InfiniteVoid")] // Только админы и Годжо могут обновлять роли
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)]// Только админы и Годжо могут обновлять роли
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRole(int id, RoleUpdateDto roleDto)
         {
@@ -119,7 +119,7 @@ namespace API.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Admin,InfiniteVoid")] // Только админы и Годжо могут удалять роли
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)] // Только админы и Годжо могут удалять роли
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRole(int id)
         {
