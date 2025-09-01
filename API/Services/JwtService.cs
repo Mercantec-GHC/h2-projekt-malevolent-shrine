@@ -18,16 +18,16 @@ namespace API.Services
         {
             _configuration = configuration;
             _secretKey = _configuration["Jwt:SecretKey"] ??
-                         Environment.GetEnvironmentVariable("Jwt_SecretKey") ??
+                         Environment.GetEnvironmentVariable("Jwt__SecretKey") ??
                          "MyVerySecureSecretKeyThatIsAtLeast32CharactersLong123456789";
             _issuer = _configuration["Jwt:Issuer"] ??
-                      Environment.GetEnvironmentVariable("JWT_Issuer") ??
+                      Environment.GetEnvironmentVariable("Jwt__Issuer") ??
                       "H2-2025-API";
             _audience = _configuration["Jwt:Audience"] ??
-                        Environment.GetEnvironmentVariable("Jwt_Audience") ??
+                        Environment.GetEnvironmentVariable("Jwt__Audience") ??
                         "H2-2025-Client";
             _expiryMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"] ??
-                                       Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES") ?? "60");
+                                       Environment.GetEnvironmentVariable("Jwt__ExpiryMinutes") ?? "60");
         }
         
         public string GenerateToken(User user, string? roleName = null)

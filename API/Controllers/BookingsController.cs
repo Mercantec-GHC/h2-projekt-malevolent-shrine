@@ -6,6 +6,7 @@ using API.DTOs;
 using Microsoft.AspNetCore.Authorization; // Добавляем для авторизации
 using Microsoft.Extensions.Logging; // Добавляем для логирования
 
+
 namespace API.Controllers;
 
 [Route("api/[controller]")]
@@ -22,7 +23,7 @@ public class BookingsController : ControllerBase
     }
 
     // GET: api/bookings
-    [Authorize(Roles = "Admin,Manager,Receptionist,InfiniteVoid")] // Только персонал и Годжо могут видеть все бронирования
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Только персонал и Годжо могут видеть все бронирования
     [HttpGet]
     public async Task<ActionResult<IEnumerable<BookingReadDto>>> GetBookings()
     {
@@ -61,7 +62,7 @@ public class BookingsController : ControllerBase
     }
 
     // GET: api/bookings/5
-    [Authorize(Roles = "Admin,Manager,Receptionist,InfiniteVoid")] // Только персонал и Годжо могут видеть конкретное бронирование
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Только персонал и Годжо могут видеть конкретное бронирование
     [HttpGet("{id}")]
     public async Task<ActionResult<BookingReadDto>> GetBooking(int id)
     {
@@ -142,7 +143,7 @@ public class BookingsController : ControllerBase
     }
 
     // PUT: api/bookings/5
-    [Authorize(Roles = "Admin,Manager,Receptionist,InfiniteVoid")] // Только персонал и Годжо могут обновлять бронирования
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]// Только персонал и Годжо могут обновлять бронирования
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateBooking(int id, BookingUpdateDto bookingUpdateDto)
     {
@@ -195,7 +196,7 @@ public class BookingsController : ControllerBase
     }
 
     // DELETE: api/bookings/5
-    [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы, менеджеры и Годжо могут удалять бронирования
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Только админы, менеджеры и Годжо могут удалять бронирования
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBooking(int id)
     {

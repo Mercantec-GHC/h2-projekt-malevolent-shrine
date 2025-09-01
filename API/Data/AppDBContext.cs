@@ -10,6 +10,7 @@ namespace API.Data
     /// </summary>
     public class AppDBContext : DbContext
     {
+        
         /// <summary>
         /// Opretter en ny instans af AppDBContext med de givne options.
         /// </summary>
@@ -76,7 +77,7 @@ namespace API.Data
             // добавить эти роли в базу данных
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, Name = "Admin", CreatedAt = seedDate, UpdatedAt = seedDate },
-                new Role { Id = 2, Name = "Receptionist", CreatedAt = seedDate, UpdatedAt = seedDate },
+                new Role { Id = 2, Name = "Manager", CreatedAt = seedDate, UpdatedAt = seedDate },
                 new Role { Id = 3, Name = "Rengøring", CreatedAt = seedDate, UpdatedAt = seedDate },
                 new Role { Id = 4, Name = "Kunde", CreatedAt = seedDate, UpdatedAt = seedDate },
                 new Role { Id = 5, Name = "InfiniteVoid", CreatedAt = seedDate, UpdatedAt = seedDate }
