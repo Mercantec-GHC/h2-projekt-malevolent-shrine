@@ -99,6 +99,11 @@ public class BookingsController : ControllerBase
     [ProducesResponseType(typeof(BookingReadDto), 201)]
     public async Task<ActionResult<BookingReadDto>> CreateBooking(BookingCreateDto bookingCreateDto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
         // Проверяем, существует ли комната
         var roomExists = await _context.Rooms.AnyAsync(r => r.Id == bookingCreateDto.RoomId);
         if (!roomExists)
@@ -148,6 +153,11 @@ public class BookingsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateBooking(int id, BookingUpdateDto bookingUpdateDto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
         if (id != bookingUpdateDto.Id)
         {
             return BadRequest();

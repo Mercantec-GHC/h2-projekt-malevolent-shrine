@@ -27,6 +27,11 @@ namespace API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] AuthDto request)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
             // Проверяем, существует ли уже пользователь с таким же именем
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
             {
@@ -58,6 +63,10 @@ namespace API.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserLoginDto request)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             // Ищем пользователя с ролью
             var user = await _context.Users
                 .Include(u => u.Role) // Загружаем роль для JWT

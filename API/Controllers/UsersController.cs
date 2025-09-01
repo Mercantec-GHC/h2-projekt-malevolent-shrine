@@ -145,6 +145,10 @@ namespace API.Controllers
         public async Task<ActionResult<UserReadDto>> PostUser(UserCreateDto userDto)
 
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             
             try
             {
@@ -194,6 +198,11 @@ namespace API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UserUpdateDto userDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            } 
+            
             if (id != userDto.Id)
             {
                 return BadRequest();

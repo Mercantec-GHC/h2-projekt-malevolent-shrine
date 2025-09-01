@@ -117,6 +117,11 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<VipRoomReadDto>> CreateVipRoom(VipRoomCreateDto vipRoomDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
             try
             {
                 // Check if hotel exists
@@ -190,6 +195,13 @@ namespace API.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<VipRoomReadDto>> UpdateVipRoom(int id, VipRoomUpdateDto vipRoomDto)
         {
+            
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
+            
             try
             {
                 if (id != vipRoomDto.Id)

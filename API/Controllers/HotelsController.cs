@@ -41,6 +41,11 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<HotelReadDto>> PostHotel(HotelCreateDto hotelDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
             var hotel = new Hotel
             {
                 Name = hotelDto.Name,
@@ -64,6 +69,11 @@ namespace API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutHotel(int id, HotelUpdateDto hotelDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
             if (id != hotelDto.Id)
             {
                 return BadRequest();
