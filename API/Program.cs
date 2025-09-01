@@ -1,14 +1,14 @@
-using System.Reflection;
-using Microsoft.OpenApi.Models;
-using Scalar.AspNetCore;
 using API.Data;
-using Microsoft.EntityFrameworkCore;
+using API.Models;
 using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
-using API.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure; // Добавьте эту строку
+using Scalar.AspNetCore;
+using System.Reflection;
 
 
 namespace API;
@@ -120,7 +120,7 @@ public class Program
                     ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? Environment.GetEnvironmentVariable("JWT_Issuer"),
                     ValidAudience = builder.Configuration["Jwt:Audience"] ?? Environment.GetEnvironmentVariable("Jwt_Audience"),
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt_SecretKey"]!))
+                        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt_SecretKey"]!)) ?? new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("Jwt_SecretKey")!))
                 };
             });
         builder.Services.AddAuthorization();
