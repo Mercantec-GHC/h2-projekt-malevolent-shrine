@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using API.Data;
 using API.Models;
 using API.DTOs;
-using Microsoft.AspNetCore.Authorization; // Добавляем для авторизации
-using Microsoft.Extensions.Logging; // Добавляем для логирования
+using Microsoft.AspNetCore.Authorization; 
+
 
 
 namespace API.Controllers;
@@ -24,7 +24,7 @@ public class BookingsController : ControllerBase
     }
 
     // GET: api/bookings
-    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Только персонал и Годжо могут видеть все бронирования
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Только персонал и Годжо могут видеть ����се бронирования
     [HttpGet]
     public async Task<ActionResult<IEnumerable<BookingReadDto>>> GetBookings()
     {
@@ -49,7 +49,7 @@ public class BookingsController : ControllerBase
                 CheckInDate = b.CheckInDate,
                 CheckOutDate = b.CheckOutDate,
                 TotalPrice = b.TotalPrice,
-                Status = b.Status ?? string.Empty,
+                Status = b.Status,
                 CreatedAt = b.CreatedAt
             }).ToList();
 
@@ -104,27 +104,45 @@ public class BookingsController : ControllerBase
             return BadRequest(ModelState);
         }
         
-        // Проверяем, существует ли комната
-        var roomExists = await _context.Rooms.AnyAsync(r => r.Id == bookingCreateDto.RoomId);
-        if (!roomExists)
+        // Проверяем, существует ли комната и получаем её данные
+        var room = await _context.Rooms.FirstOrDefaultAsync(r => r.Id == bookingCreateDto.RoomId);
+        if (room == null)
         {
             return BadRequest($"Комната с ID {bookingCreateDto.RoomId} не существует!");
         }
 
-        // Проверяем, существует ли пользователь  
+        
+        // Проверяем, существует ли пользователь
         var userExists = await _context.Users.AnyAsync(u => u.Id == bookingCreateDto.UserId);
         if (!userExists)
         {
             return BadRequest($"Пользователь с ID {bookingCreateDto.UserId} не существует!");
         }
         
+        var overlapping = await _context.Bookings
+            .Where(b => b.RoomId == bookingCreateDto.RoomId &&
+                        b.CheckInDate < bookingCreateDto.CheckOutDate &&
+                        b.CheckOutDate > bookingCreateDto.CheckInDate)
+            .AnyAsync();
+
+        if (overlapping)
+            return BadRequest("Номер уже занят на выбранные даты.");
+        
+        // Проверяем корректность дат и рассчитываем количество ночей
+        var nights = (bookingCreateDto.CheckOutDate - bookingCreateDto.CheckInDate).Days;
+        if (nights <= 0)
+            return BadRequest("Некорректные даты.");
+
+        // Рассчитываем итоговую цену
+        var totalPrice = nights * room.PricePerNight;
+
         var booking = new Booking
         {
             UserId = bookingCreateDto.UserId,
             RoomId = bookingCreateDto.RoomId,
             CheckInDate = bookingCreateDto.CheckInDate,
             CheckOutDate = bookingCreateDto.CheckOutDate,
-            TotalPrice = bookingCreateDto.TotalPrice,
+            TotalPrice = totalPrice,
             Status = bookingCreateDto.Status
         };
 
@@ -169,25 +187,43 @@ public class BookingsController : ControllerBase
             return NotFound();
         }
 
-        // Проверяем, существует ли комната
-        var roomExists = await _context.Rooms.AnyAsync(r => r.Id == bookingUpdateDto.RoomId);
-        if (!roomExists)
+        // Получаем объект комнаты
+        var room = await _context.Rooms.FirstOrDefaultAsync(r => r.Id == bookingUpdateDto.RoomId);
+        if (room == null)
         {
             return BadRequest($"Комната с ID {bookingUpdateDto.RoomId} не существует!");
         }
 
-        // Проверяем, существует ли пользователь  
+        // Проверяем, существует ли пользователь
         var userExists = await _context.Users.AnyAsync(u => u.Id == bookingUpdateDto.UserId);
         if (!userExists)
         {
             return BadRequest($"Пользователь с ID {bookingUpdateDto.UserId} не существует!");
         }
 
+        // Проверка на пересечение дат (исключая текущее бронирование)
+        var overlapping = await _context.Bookings
+            .Where(b => b.RoomId == bookingUpdateDto.RoomId &&
+                        b.Id != id &&
+                        b.CheckInDate < bookingUpdateDto.CheckOutDate &&
+                        b.CheckOutDate > bookingUpdateDto.CheckInDate)
+            .AnyAsync();
+        if (overlapping)
+            return BadRequest("Номер уже занят на выбранные даты.");
+
+        // Проверяем корректность дат и рассчитываем количество ночей
+        var nights = (bookingUpdateDto.CheckOutDate - bookingUpdateDto.CheckInDate).Days;
+        if (nights <= 0)
+            return BadRequest("Некорректные даты.");
+
+        // Рассчитываем итоговую цену
+        var totalPrice = nights * room.PricePerNight;
+
         booking.UserId = bookingUpdateDto.UserId;
         booking.RoomId = bookingUpdateDto.RoomId;
         booking.CheckInDate = bookingUpdateDto.CheckInDate;
         booking.CheckOutDate = bookingUpdateDto.CheckOutDate;
-        booking.TotalPrice = bookingUpdateDto.TotalPrice;
+        booking.TotalPrice = totalPrice;
         booking.Status = bookingUpdateDto.Status;
 
         try
