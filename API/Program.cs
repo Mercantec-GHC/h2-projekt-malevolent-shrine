@@ -98,6 +98,8 @@ public class Program
         string connectionString = Configuration.GetConnectionString("DefaultConnection")
         ?? Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
 
+        Console.WriteLine("connectionString: " + connectionString);
+
         builder.Services.AddDbContext<AppDBContext>(options =>
                 options.UseNpgsql(connectionString));
        
