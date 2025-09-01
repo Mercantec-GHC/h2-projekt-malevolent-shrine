@@ -70,7 +70,7 @@ public class Program
                             "http://localhost:5085",
                             "http://localhost:8052",
                             "https://h2.mercantec.tech",
-                            "https://malevolentshrine.mercantec.tech/",
+                            "https://malevolentshrine.mercantec.tech",
                             "http://localhost:3000",    // React dev server
                             "http://localhost:3001",    // React альтернативный порт
                             "http://127.0.0.1:3000",    // React альтернативный хост
