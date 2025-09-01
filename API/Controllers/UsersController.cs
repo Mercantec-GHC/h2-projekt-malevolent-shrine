@@ -407,6 +407,10 @@ namespace API.Controllers
         [HttpPost("change-role")]
         public async Task<IActionResult> ChangeUserRoleByDto([FromBody] UserRoleUpdateDto roleUpdateDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             // Проверяем существование пользователя
             var user = await _context.Users
                 .Include(u => u.Role)
