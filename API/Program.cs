@@ -126,11 +126,6 @@ public class Program
             });
         builder.Services.AddAuthorization();
         builder.Services.AddScoped<PasswordHasher<User>>();
-        
-        builder.Services.AddDbContext<AppDBContext>(options =>
-        {
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-        });
         var app = builder.Build();
             
         
