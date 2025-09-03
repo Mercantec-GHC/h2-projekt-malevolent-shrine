@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using API.Models;
-using Microsoft.AspNetCore.Identity;
+
 
 namespace API.Data
 {
@@ -24,6 +24,11 @@ namespace API.Data
         /// Samling af brugere (tabellen Users).
         /// </summary>
         public DbSet<User> Users { get; set; }
+        
+        /// <summary>
+        /// Samling af brugerinfo (tabellen UserInfos).
+        ///  </summary>
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
         
         /// <summary>
         /// Samling af roller (tabellen Roles).
@@ -101,9 +106,7 @@ namespace API.Data
                 }
             );
             
-            
-            /// så den selv indstiller det aktuelle klokkeslæt HasDefaultValueSql - udfylder automatisk feltet
-            /// aktuel dato og klokkeslæt ved tilføjelse af en ny post
+            // Устанавливаем текущую дату по умолчанию для CreatedAt и UpdatedAt
             modelBuilder.Entity<Role>().Property(r => r.CreatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<Role>().Property(r => r.UpdatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<User>().Property(u => u.CreatedAt).HasDefaultValueSql("now()");

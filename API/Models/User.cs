@@ -28,5 +28,7 @@ namespace API.Models
 
         private List<Booking> Bookings { get; set; } = new();
         
+        public List<RefreshToken> RefreshTokens { get; set; } = new();
+        
     }
 }

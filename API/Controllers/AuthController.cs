@@ -6,7 +6,6 @@ using API.Services;
 using API.DTOs;
 using Microsoft.AspNetCore.Identity;
 
-
 namespace API.Controllers
 {
     [ApiController]
@@ -15,77 +14,158 @@ namespace API.Controllers
     {
         private readonly AppDBContext _context;
         private readonly JwtService _jwtService;
-        private readonly PasswordHasher<User> _passwordHasher;
 
-        public AuthController(AppDBContext context, JwtService jwtService, PasswordHasher<User> passwordHasher)
+        public AuthController(AppDBContext context, JwtService jwtService)
         {
             _context = context;
             _jwtService = jwtService;
-            _passwordHasher = passwordHasher;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] AuthDto request)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
-            
-            // Проверяем, существует ли уже пользователь с таким же именем
-            if (await _context.Users.AnyAsync(u => u.Username == request.Username))
-            {
-                return BadRequest("Пользователь с таким именем уже существует.");
-            }
-            
 
-            // Хешируем пароль с помощью BCrypt
+            if (await _context.Users.AnyAsync(u => u.Username == request.Username))
+                return BadRequest("Пользователь с таким именем уже существует.");
+
+            if (!string.IsNullOrWhiteSpace(request.Email) && await _context.Users.AnyAsync(u => u.Email == request.Email))
+                return BadRequest("Пользователь с таким email уже существует.");
+
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-            // Создаем нового пользователя
             var newUser = new User
             {
                 Username = request.Username,
                 HashedPassword = hashedPassword,
                 Email = request.Email,
-                FirstName = request.FirstName, // из DTO
-                LastName = request.LastName,   // из DTO
+                FirstName = request.FirstName,
+                LastName = request.LastName,
                 RoleId = 4,
             };
 
-            // Добавляем пользователя в базу данных
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
             return Ok("Регистрация успешна!");
         }
-        
+
         [HttpPost("login")]
-        public async Task<ActionResult<string>> Login(UserLoginDto request)
+        public async Task<ActionResult<AuthResponseDto>> Login([FromBody] UserLoginDto request)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
-            // Ищем пользователя с ролью
+
             var user = await _context.Users
-                .Include(u => u.Role) // Загружаем роль для JWT
+                .Include(u => u.Role)
+                .Include(u => u.RefreshTokens)
                 .FirstOrDefaultAsync(u => u.Email == request.Email);
-    
+
             if (user == null)
-            {
                 return BadRequest("Неверный логин или пароль.");
-            }
 
-            // Проверка пароля
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.HashedPassword))
-            {
                 return BadRequest("Неверный логин или пароль.");
+
+            var accessToken = _jwtService.GenerateToken(user, user.Role?.Name);
+            var refreshToken = _jwtService.GenerateRefreshToken();
+
+            var refreshTokenEntity = new RefreshToken
+            {
+                Token = refreshToken,
+                ExpiryDate = _jwtService.GetRefreshTokenExpiry(),
+                UserId = user.Id,
+                // Если в модели есть CreatedAt/CreatedByIp — можно заполнить здесь
+                // CreatedAt = DateTime.UtcNow,
+                // CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+
+            user.RefreshTokens.Add(refreshTokenEntity);
+
+            // Удаляем старые неактивные токены
+            var inactiveTokens = user.RefreshTokens
+                .Where(t => !t.IsActive)
+                .ToList();
+
+            foreach (var token in inactiveTokens)
+            {
+                user.RefreshTokens.Remove(token);
             }
 
-            var token = _jwtService.GenerateToken(user, user.Role?.Name);
-            return Ok(new { Message = "Вход выполнен успешно!", Token = token });
+            await _context.SaveChangesAsync();
+
+            return Ok(new AuthResponseDto
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                AccessTokenExpiry = _jwtService.GetAccessTokenExpiry(),
+                RefreshTokenExpiry = _jwtService.GetRefreshTokenExpiry(),
+                Message = "Вход выполнен успешно!"
+            });
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult<AuthResponseDto>> RefreshToken([FromBody] RefreshTokenDto request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var refreshToken = await _context.RefreshTokens
+                .Include(rt => rt.User)
+                .ThenInclude(u => u.Role)
+                .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
+
+            if (refreshToken == null || !refreshToken.IsActive)
+            {
+                return BadRequest("Недействительный refresh token.");
+            }
+
+            // Отзываем старый токен
+            refreshToken.IsRevoked = true;
+            refreshToken.RevokedAt = DateTime.UtcNow;
+            refreshToken.RevokedByIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            // Генерируем новые токены
+            var newAccessToken = _jwtService.GenerateToken(refreshToken.User, refreshToken.User.Role?.Name);
+            var newRefreshToken = _jwtService.GenerateRefreshToken();
+
+            var newRefreshTokenEntity = new RefreshToken
+            {
+                Token = newRefreshToken,
+                ExpiryDate = _jwtService.GetRefreshTokenExpiry(),
+                UserId = refreshToken.UserId,
+                // CreatedAt = DateTime.UtcNow,
+                // CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+
+            // Помечаем, что старый был заменён
+            refreshToken.ReplacedByToken = newRefreshToken;
+
+            // Добавляем новый токен к пользователю
+            refreshToken.User.RefreshTokens.Add(newRefreshTokenEntity);
+
+            // Удаляем старые неактивные токены (кроме только-что добавленного)
+            var user = refreshToken.User;
+            var inactiveTokens = user.RefreshTokens
+                .Where(t => !t.IsActive && t.Token != newRefreshToken)
+                .ToList();
+
+            foreach (var token in inactiveTokens)
+            {
+                user.RefreshTokens.Remove(token);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new AuthResponseDto
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken,
+                AccessTokenExpiry = _jwtService.GetAccessTokenExpiry(),
+                RefreshTokenExpiry = _jwtService.GetRefreshTokenExpiry(),
+                Message = "Токены успешно обновлены."
+            });
         }
     }
-        
 }
