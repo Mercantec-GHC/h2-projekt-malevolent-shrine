@@ -113,7 +113,8 @@ namespace API.Controllers
 
             var refreshToken = await _context.RefreshTokens
                 .Include(rt => rt.User)
-                .ThenInclude(u => u.Role)
+                .ThenInclude(u => u.Role).Include(refreshToken => refreshToken.User)
+                .ThenInclude(user => user.RefreshTokens)
                 .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
 
             if (refreshToken == null || !refreshToken.IsActive)
