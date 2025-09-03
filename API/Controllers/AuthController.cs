@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Services;
 using API.DTOs;
-using Microsoft.AspNetCore.Identity;
+
 
 namespace API.Controllers
 {
@@ -68,7 +68,7 @@ namespace API.Controllers
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.HashedPassword))
                 return BadRequest("Неверный логин или пароль.");
 
-            var accessToken = _jwtService.GenerateToken(user, user.Role?.Name);
+            var accessToken = _jwtService.GenerateToken(user, user.Role.Name);
             var refreshToken = _jwtService.GenerateRefreshToken();
 
             var refreshTokenEntity = new RefreshToken
@@ -128,7 +128,7 @@ namespace API.Controllers
             refreshToken.RevokedByIp = HttpContext.Connection.RemoteIpAddress?.ToString();
 
             // Генерируем новые токены
-            var newAccessToken = _jwtService.GenerateToken(refreshToken.User, refreshToken.User.Role?.Name);
+            var newAccessToken = _jwtService.GenerateToken(refreshToken.User, refreshToken.User.Role.Name);
             var newRefreshToken = _jwtService.GenerateRefreshToken();
 
             var newRefreshTokenEntity = new RefreshToken
@@ -167,6 +167,27 @@ namespace API.Controllers
                 RefreshTokenExpiry = _jwtService.GetRefreshTokenExpiry(),
                 Message = "Токены успешно обновлены."
             });
+        }
+        
+        [HttpPost("revoke-token")]
+        public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenDto request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var refreshToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
+
+            if (refreshToken == null || !refreshToken.IsActive)
+                return BadRequest("Недействительный refresh token.");
+
+            refreshToken.IsRevoked = true;
+            refreshToken.RevokedAt = DateTime.UtcNow;
+            refreshToken.RevokedByIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Токен успешно отозван.");
         }
     }
 }
