@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace API.Models
 {
     public class User : Common
@@ -6,6 +8,8 @@ namespace API.Models
         public required string LastName { get; set; }
         
         
+        [Required]
+        [EmailAddress]
         public string Email { get; set; }
         public string Username { get; set; }
         public string HashedPassword { get; set; }

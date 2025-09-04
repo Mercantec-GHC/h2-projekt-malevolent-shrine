@@ -27,10 +27,14 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            // Приводим email к нижнему регистру
+            if (!string.IsNullOrWhiteSpace(request.Email))
+                request.Email = request.Email.ToLowerInvariant();
+
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
                 return BadRequest("Пользователь с таким именем уже существует.");
 
-            if (!string.IsNullOrWhiteSpace(request.Email) && await _context.Users.AnyAsync(u => u.Email == request.Email))
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return BadRequest("Пользователь с таким email уже существует.");
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -56,6 +60,10 @@ namespace API.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            // Приводим email к нижнему регистру
+            if (!string.IsNullOrWhiteSpace(request.Email))
+                request.Email = request.Email.ToLowerInvariant();
 
             var user = await _context.Users
                 .Include(u => u.Role)
