@@ -103,6 +103,15 @@ public class BookingsController : ControllerBase
         {
             return BadRequest(ModelState);
         }
+        var role = User.FindFirst(ClaimTypes.Role)?.Value; 
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        int currentUserId = int.TryParse(userIdClaim, out var uid) ? uid : 0;
+        
+        if (role != RoleNames.Admin && role != RoleNames.Manager && role != RoleNames.InfiniteVoid)
+        {
+            bookingCreateDto.UserId = currentUserId;
+        }
+
         
         // Проверяем, существует ли комната и получаем её данные
         var room = await _context.Rooms.FirstOrDefaultAsync(r => r.Id == bookingCreateDto.RoomId);
@@ -175,7 +184,7 @@ public class BookingsController : ControllerBase
         {
             return BadRequest(ModelState);
         }
-        
+
         if (id != bookingUpdateDto.Id)
         {
             return BadRequest();
