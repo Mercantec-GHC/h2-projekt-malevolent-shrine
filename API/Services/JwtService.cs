@@ -20,6 +20,12 @@ namespace API.Services
             _secretKey = _configuration["Jwt:SecretKey"] ??
                          Environment.GetEnvironmentVariable("Jwt_SecretKey") ??
                          "MyVerySecureSecretKeyThatIsAtLeast32CharactersLong123456789";
+            // Проверка на null или слишком короткий ключ
+            if (string.IsNullOrWhiteSpace(_secretKey) || _secretKey.Length < 32)
+            {
+                throw new ArgumentException("JWT SecretKey is missing or too short. Please set a secure key (at least 32 characters) in appsettings.json or environment variables.");
+            }
+            
             _issuer = _configuration["Jwt:Issuer"] ??
                       Environment.GetEnvironmentVariable("JWT_Issuer") ??
                       "H2-2025-API";

@@ -50,7 +50,7 @@ namespace API.Data
         /// </summary>
         public DbSet<VipRoom> VipRooms { get; set; }
         public DbSet<Booking> Bookings { get; set; }
-        
+        public DbSet<UserInfo> UserInfos { get; set; }
         
         /// <summary>
         /// Konfigurerer konteksten ved opstart.

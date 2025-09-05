@@ -76,17 +76,19 @@ namespace API.Controllers
             {
                 return BadRequest();
             }
-
-            var room = new Room
+            
+            var room = await _context.Rooms.FindAsync(id);
+            if (room == null)
             {
-                Id = roomDto.Id,
-                Number = roomDto.Number,
-                Capacity = roomDto.Capacity,
-                PricePerNight = roomDto.PricePerNight,
-                Floor = roomDto.Floor,
-                IsAvailable = roomDto.IsAvailable,
-                HotelId = roomDto.HotelId
-            };
+                return NotFound();
+            }
+            
+            room.Number = roomDto.Number;
+            room.Capacity = roomDto.Capacity;
+            room.PricePerNight = roomDto.PricePerNight;
+            room.Floor = roomDto.Floor;
+            room.IsAvailable = roomDto.IsAvailable;
+            room.HotelId = roomDto.HotelId;
             
             _context.Entry(room).State = EntityState.Modified;
 

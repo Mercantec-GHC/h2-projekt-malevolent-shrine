@@ -1,5 +1,6 @@
 using API.Data;
 using API.Models;
+using API.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Bogus;
 using Microsoft.AspNetCore.Identity; 
@@ -73,6 +74,7 @@ namespace API.Services
                     .RuleFor(r => r.HotelId, hotel.Id) // Связываем с отелем
                     .RuleFor(r => r.CreatedAt, f => f.Date.Past(1))
                     .RuleFor(r => r.UpdatedAt, (f, r) => r.CreatedAt.AddMinutes(f.Random.Int(1, 60)))
+                    
                     .Generate(10);
                 
                 // Здесь мы создадим VIP комнаты
@@ -86,6 +88,7 @@ namespace API.Services
                     .RuleFor(vr => vr.CreatedAt, f => f.Date.Past(1))
                     .RuleFor(vr => vr.UpdatedAt, (f, vr) => vr.CreatedAt.AddMinutes(f.Random.Int(1, 60)))
                     // Добавляем дополнительные удобства для VIP комнат
+                    .RuleFor(vr => vr.VipServiceDescription, f => f.Lorem.Sentence(5))
                     .RuleFor(vr => vr.ExtraAmenities, f => f.Random.ListItems(new List<string> { "Hello Kitty", "Kuromi", "Deadpool" }, 3)) // Пример удобств
                     .RuleFor(vr => vr.Description, f => f.Lorem.Sentence(10)) // Описание комнаты
                     .Generate(2);

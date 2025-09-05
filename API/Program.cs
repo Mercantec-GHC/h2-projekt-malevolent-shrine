@@ -125,6 +125,7 @@ public class Program
             });
         builder.Services.AddAuthorization();
         builder.Services.AddScoped<PasswordHasher<User>>();
+        builder.Services.AddScoped<DataSeederService>();
         
         builder.Services.AddDbContext<AppDBContext>(options =>
         {

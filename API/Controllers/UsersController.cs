@@ -334,7 +334,7 @@ namespace API.Controllers
                     user.FirstName,
                     user.LastName,
                     user.CreatedAt,
-                    Role = user.Role?.Name, // Извлекаем только Name из объекта Role
+                    Role = user.Role.Name, // Извлекаем только Name из объекта Role
                     user.ProfilePicture
                 });  
             }
@@ -434,7 +434,7 @@ namespace API.Controllers
                 return BadRequest("Роль InfiniteVoid может быть только у Сатору Годжо.");
             }
 
-            var oldRoleName = user.Role?.Name ?? "Неизвестная роль";
+            var oldRoleName = user.Role.Name ?? "Неизвестная роль";
             
             // Изменяем роль пользователя
             user.RoleId = roleUpdateDto.RoleId;

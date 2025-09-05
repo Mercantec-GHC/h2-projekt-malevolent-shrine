@@ -4,14 +4,23 @@ namespace API.Models
 {
     public class User : Common
     {
+        [Required]
+        [StringLength(50)]
         public required string FirstName { get; set; }
+        
+        [Required]
+        [StringLength(50)]
         public required string LastName { get; set; }
         
         
         [Required]
         [EmailAddress]
         public string Email { get; set; }
+        
+        [Required]
         public string Username { get; set; }
+        
+        [Required]
         public string HashedPassword { get; set; }
         public byte[]? Salt { get; set; }
         
