@@ -253,7 +253,8 @@ namespace API.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("HotelId");
+                    b.HasIndex("HotelId", "Number")
+                        .IsUnique();
 
                     b.ToTable("Rooms");
 
@@ -282,7 +283,8 @@ namespace API.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("HashedPassword")
                         .IsRequired()
@@ -293,7 +295,8 @@ namespace API.Migrations
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("ProfilePicture")
                         .HasColumnType("text");
@@ -315,7 +318,13 @@ namespace API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.HasIndex("RoleId");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
 
                     b.ToTable("Users");
 
@@ -361,7 +370,7 @@ namespace API.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("UserInfo");
+                    b.ToTable("UserInfos");
                 });
 
             modelBuilder.Entity("API.Models.VipRoom", b =>

@@ -117,6 +117,10 @@ namespace API.Data
             modelBuilder.Entity<Hotel>().Property(h => h.UpdatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<Room>().Property(r => r.CreatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<Room>().Property(r => r.UpdatedAt).HasDefaultValueSql("now()");
+modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
+            modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
+            modelBuilder.Entity<Room>().HasIndex(r => new { r.HotelId, r.Number }).IsUnique();
+            
             
             modelBuilder.Entity<UserInfo>()
                 .HasKey(i => i.UserId); // Shared PK
