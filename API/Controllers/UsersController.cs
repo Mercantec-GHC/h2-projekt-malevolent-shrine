@@ -20,7 +20,6 @@ namespace API.Controllers
     {
         private readonly AppDBContext _context;
         private readonly JwtService _jwtService;
-        private readonly PasswordHasher<User> _passwordHasher;
         private readonly ILogger<UsersController> _logger;
         
         
@@ -29,14 +28,13 @@ namespace API.Controllers
         /// </summary>
         /// <param name="context"></param>
         /// <param name="jwtService"></param>
-        /// <param name="passwordHasher"></param>
         /// <param name="logger"></param>
         /// /// <remarks>
         /// Dette er konstruktøren for UsersController, der bruger Dependency Injection til at få
-        ///  AppDBContext, JwtService og PasswordHasher<User>.
+        ///  AppDBContext, JwtService.
         ///  logger bruges til at logge informationer og fejl.
-        ///  Dette sikrer, at controlleren har adgang til databasen, JWT-tjenesten og
-        ///  password hasheren for at håndtere brugerautentificering og
+        ///  Dette sikrer, at controlleren har adgang til databasen, JWT-tjenesten
+        ///  for at håndtere brugerautentificering og
         ///  autorisation.
         ///  Denne controller håndterer CRUD-operationer for brugere, herunder oprettelse,
         ///  læsning, opdatering og sletning af brugere.
@@ -44,11 +42,10 @@ namespace API.Controllers
         ///  samt hente alle tilgængelige roller.
         /// </remarks>
         /// <returns> </returns>    
-        public UsersController(AppDBContext context, JwtService jwtService, PasswordHasher<User> passwordHasher, ILogger<UsersController> logger)
+        public UsersController(AppDBContext context, JwtService jwtService, ILogger<UsersController> logger)
         {
             _context = context;
             _jwtService = jwtService;
-            _passwordHasher = passwordHasher; // Ты уже добавил это
             _logger = logger;
         }
         
@@ -150,6 +147,15 @@ namespace API.Controllers
                 return BadRequest(ModelState);
             }
             
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+            
+            if (await _context.Users.AnyAsync(u => u.Email == userDto.Email))
+                return BadRequest("Пользователь с таким email уже существует.");
+
+            if (await _context.Users.AnyAsync(u => u.Username == userDto.Username))
+                return BadRequest("Пользователь с таким именем уже существует.");
+
+            
             try
             {
                 var user = new User
@@ -157,6 +163,9 @@ namespace API.Controllers
                     FirstName = userDto.FirstName,
                     LastName = userDto.LastName,
                     Email = userDto.Email,
+                    Username = userDto.Username,
+                    HashedPassword = hashedPassword,
+                    RoleId = 4, // Роль "Kunde" по умолчанию
                     UserInfo = new UserInfo
                     {
                         PhoneNumber = userDto.PhoneNumber,

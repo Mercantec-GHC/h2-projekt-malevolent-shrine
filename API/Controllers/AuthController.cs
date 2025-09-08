@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using API.Data;
 using API.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -84,10 +85,24 @@ namespace API.Controllers
                 Token = refreshToken,
                 ExpiryDate = _jwtService.GetRefreshTokenExpiry(),
                 UserId = user.Id,
-                // Если в модели есть CreatedAt/CreatedByIp — можно заполнить здесь
-                // CreatedAt = DateTime.UtcNow,
-                // CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString()
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
+            
+// Ограничиваем количество активных токенов на пользователя (например, 5)
+            var activeTokensCount = user.RefreshTokens.Count(t => t.IsActive);
+            if (activeTokensCount >= 5)
+            {
+                var oldestActive = user.RefreshTokens
+                    .Where(t => t.IsActive)
+                    .OrderBy(t => t.CreatedAt)
+                    .First();
+                
+                oldestActive.IsRevoked = true;
+                oldestActive.RevokedAt = DateTime.UtcNow;
+                oldestActive.RevokedByIp = "exceeded_limit";
+            }
+            
 
             user.RefreshTokens.Add(refreshTokenEntity);
 
@@ -124,7 +139,7 @@ namespace API.Controllers
                 .ThenInclude(u => u.Role).Include(refreshToken => refreshToken.User)
                 .ThenInclude(user => user.RefreshTokens)
                 .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
-
+            
             if (refreshToken == null || !refreshToken.IsActive)
             {
                 return BadRequest("Недействительный refresh token.");
@@ -144,8 +159,8 @@ namespace API.Controllers
                 Token = newRefreshToken,
                 ExpiryDate = _jwtService.GetRefreshTokenExpiry(),
                 UserId = refreshToken.UserId,
-                // CreatedAt = DateTime.UtcNow,
-                // CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString()
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             // Помечаем, что старый был заменён
@@ -197,5 +212,32 @@ namespace API.Controllers
 
             return Ok("Токен успешно отозван.");
         }
+[HttpPost("revoke-all-tokens")]
+        public async Task<IActionResult> RevokeAllTokens()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return BadRequest("Недействительный пользователь.");
+            }
+        
+            var user = await _context.Users
+                .Include(u => u.RefreshTokens)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+        
+            if (user == null)
+                return BadRequest("Пользователь не найден.");
+        
+            foreach (var token in user.RefreshTokens.Where(t => t.IsActive))
+            {
+                token.IsRevoked = true;
+                token.RevokedAt = DateTime.UtcNow;
+                token.RevokedByIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            }
+        
+            await _context.SaveChangesAsync();
+            return Ok("Все токены успешно отозваны.");
+        }
+        
     }
 }

@@ -2,7 +2,6 @@ using API.Data;
 using API.Models;
 using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -124,7 +123,6 @@ public class Program
                 };
             });
         builder.Services.AddAuthorization();
-        builder.Services.AddScoped<PasswordHasher<User>>();
         builder.Services.AddScoped<DataSeederService>();
         
         builder.Services.AddDbContext<AppDBContext>(options =>
