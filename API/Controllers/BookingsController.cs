@@ -250,6 +250,38 @@ public class BookingsController : ControllerBase
 
         return NoContent();
     }
+    
+// GET: api/bookings/my
+    [Authorize]
+    [HttpGet("my")]
+    public async Task<ActionResult<IEnumerable<BookingReadDto>>> GetMyBookings()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Forbid();
+        }
+
+        var bookings = await _context.Bookings
+            .Where(b => b.UserId == userId)
+            .Include(b => b.Room)
+            .ThenInclude(r => r.Hotel)
+            .ToListAsync();
+
+        var bookingReadDtos = bookings.Select(b => new BookingReadDto
+        {
+            Id = b.Id,
+            UserId = b.UserId,
+            RoomId = b.RoomId,
+            CheckInDate = b.CheckInDate,
+            CheckOutDate = b.CheckOutDate,
+            TotalPrice = b.TotalPrice,
+            Status = b.Status,
+            CreatedAt = b.CreatedAt
+        }).ToList();
+
+        return Ok(bookingReadDtos);
+    }
 
     // DELETE: api/bookings/5
     [Authorize]

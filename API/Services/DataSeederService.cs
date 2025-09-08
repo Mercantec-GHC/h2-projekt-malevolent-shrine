@@ -26,7 +26,7 @@ namespace API.Services
         {
             var faker = new Faker<User>("en")
                 .RuleFor(u => u.Email, f => f.Internet.Email().ToLower())
-                .RuleFor(u => u.HashedPassword, (f, u) => _passwordHasher.HashPassword(u, "Password123!"))
+                .RuleFor(u => u.HashedPassword, (f, u) => BCrypt.Net.BCrypt.HashPassword("Password123!"))
                 .RuleFor(u => u.RoleId, f => f.Random.ListItem(_context.Roles.ToList()).Id)
                 .RuleFor(u => u.FirstName, f => f.Name.FirstName())
                 .RuleFor(u => u.LastName, f => f.Name.LastName())

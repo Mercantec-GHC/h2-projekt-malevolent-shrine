@@ -22,7 +22,7 @@ namespace API.Models
         
         [Required]
         public string HashedPassword { get; set; }
-        public byte[]? Salt { get; set; }
+        
         
         public DateTime DateOfBirth { get; set; }
         public bool IsAdult => DateOfBirth <= DateTime.Today.AddYears(-18);
@@ -38,6 +38,8 @@ namespace API.Models
         public UserInfo? UserInfo { get; set; }
         
         public string? ProfilePicture { get; set; }
+        
+        
 
         private List<Booking> Bookings { get; set; } = new();
         
