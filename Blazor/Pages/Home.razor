@@ -1,5 +1,4 @@
 ﻿@page "/"
-
 @using System.Net.Http
 
 <h1 class="mb-4">Status Dashboard</h1>
@@ -26,9 +25,11 @@
     {
         <div class="hotel-card">
             <p>@h.Name</p><br/>
+            @*<img src="h.Image">*@
             <p><strong>Address: </strong>@h.Address</p>
             <p>Rooms: @h.Rooms.Count()</p>
         </div>
+
     }
 </div>
 

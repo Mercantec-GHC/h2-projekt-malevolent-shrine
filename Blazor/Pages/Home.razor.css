@@ -18,19 +18,12 @@
     min-height: 280px; /* выше карточка */
 }
 
-    /* Наведение */
-    .hotel-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
-        cursor: pointer;
-    }
-
-    /* Заголовок */
+    /* Название */
     .hotel-card p:first-child {
         font-size: 1.5rem;
         font-weight: 700;
         color: #2c3e50;
-        margin: 0;
+        margin: 0 0 0.75rem 0; /* добавим чуть воздуха снизу */
         line-height: 1.3;
     }
 
@@ -38,8 +31,7 @@
     .hotel-card p:nth-child(2) {
         font-size: 1rem;
         color: #555;
-        margin: 0.75rem 0 1rem 0;
-        flex-grow: 1;
+        margin: 0.75rem 0 0.5rem 0; /* ближе к Rooms */
     }
 
     /* Rooms */
@@ -51,5 +43,6 @@
         display: inline-block;
         padding: 0.4rem 1rem;
         border-radius: 12px;
-        margin-top: auto;
+        margin-top: auto; /* прижимаем вниз */
     }
+

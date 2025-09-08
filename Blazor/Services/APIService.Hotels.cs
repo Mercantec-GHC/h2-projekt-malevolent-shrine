@@ -10,7 +10,7 @@ namespace Blazor.Services
         {
             try
             {
-                return await httpClient.GetFromJsonAsync<List<Hotel>>("api/Hotels");
+                return await _httpClient.GetFromJsonAsync<List<Hotel>>("api/Hotels");
             }
             catch (Exception ex) 
             {
