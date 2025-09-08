@@ -21,6 +21,14 @@
     </div>
 </div>
 
+<div class="hotels">
+    @foreach(var h in hotels)
+    {
+        <p>@h.Name</p>
+        <p>@h.Address</p>
+        <p>@h.Rooms.Count()</p>
+    }
+</div>
 
 <div class="row">
     <div class="col-12">
@@ -31,10 +39,13 @@
 @code {
     HealthCheckResponse? healthCheck;
     HealthCheckResponse? dbHealthCheck;
+    List<Hotel> hotels = new List<Hotel>();
+
 
     protected override async Task OnInitializedAsync()
     {
         healthCheck = await ApiService.GetHealthCheckAsync();
         dbHealthCheck = await ApiService.GetDBHealthCheckAsync();
+        hotels = await ApiService.GetAllHotels();
     }
 }
