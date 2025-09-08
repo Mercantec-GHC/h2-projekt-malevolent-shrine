@@ -24,16 +24,12 @@
 <div class="hotels">
     @foreach(var h in hotels)
     {
-        <p>@h.Name</p>
-        <p>@h.Address</p>
-        <p>@h.Rooms.Count()</p>
+        <div class="hotel-card">
+            <p>@h.Name</p><br/>
+            <p><strong>Address: </strong>@h.Address</p>
+            <p>Rooms: @h.Rooms.Count()</p>
+        </div>
     }
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <Counter />
-    </div>
 </div>
 
 @code {

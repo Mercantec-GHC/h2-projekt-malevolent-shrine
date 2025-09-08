@@ -1,0 +1,55 @@
+﻿.hotels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); /* карточки шире */
+    gap: 2rem; /* чуть больше расстояние */
+    margin-top: 2rem;
+}
+
+.hotel-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 2rem; /* больше внутренний отступ */
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 1px solid #f0f0f0;
+    min-height: 280px; /* выше карточка */
+}
+
+    /* Наведение */
+    .hotel-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+        cursor: pointer;
+    }
+
+    /* Заголовок */
+    .hotel-card p:first-child {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    /* Адрес */
+    .hotel-card p:nth-child(2) {
+        font-size: 1rem;
+        color: #555;
+        margin: 0.75rem 0 1rem 0;
+        flex-grow: 1;
+    }
+
+    /* Rooms */
+    .hotel-card p:last-child {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #2980b9;
+        background: #ecf6fc;
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        border-radius: 12px;
+        margin-top: auto;
+    }
