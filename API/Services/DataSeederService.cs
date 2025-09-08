@@ -24,10 +24,11 @@ namespace API.Services
 
         public async Task<List<User>> SeedUsersAsync(int count)
         {
+            var roles = _context.Roles.ToList();
             var faker = new Faker<User>("en")
                 .RuleFor(u => u.Email, f => f.Internet.Email().ToLower())
                 .RuleFor(u => u.HashedPassword, (f, u) => BCrypt.Net.BCrypt.HashPassword("Password123!"))
-                .RuleFor(u => u.RoleId, f => f.Random.ListItem(_context.Roles.ToList()).Id)
+                .RuleFor(u => u.RoleId, f => roles.Count > 0 ? f.PickRandom(roles).Id : 4)
                 .RuleFor(u => u.FirstName, f => f.Name.FirstName())
                 .RuleFor(u => u.LastName, f => f.Name.LastName())
                 .RuleFor(u => u.CreatedAt, f => f.Date.Past(1))
@@ -60,24 +61,22 @@ namespace API.Services
                 .RuleFor(h => h.Rooms, new List<Room>()) // Изначально комнаты пустые
                 .Generate(count);
 
-            // Здесь мы добавим код для создания комнат...
+            _context.Hotels.AddRange(hotels);
+            await _context.SaveChangesAsync(); // Сохраняем, чтобы получить HotelId
+
+            // Теперь создаём комнаты для каждого отеля с правильным HotelId
             foreach (var hotel in hotels)
             {
-                // Здесь мы создадим обычные комнаты
-                // Здесь мы создадим обычные комнаты
-                var rooms = new Faker<Room>("en") // Добавьте "en" здесь
-                    .RuleFor(r => r.Number, f => f.Random.Int(100, 999).ToString()) // Случайный номер комнаты
-                    .RuleFor(r => r.PricePerNight, f => f.Random.Decimal(50, 500)) // Случайная цена
-                    .RuleFor(r => r.Capacity, f => f.Random.Int(1, 4)) // Случайная вместимость
-                    .RuleFor(r => r.Floor, f => f.Random.Int(1, 10)) // Случайный этаж
-                    .RuleFor(r => r.IsAvailable, f => f.Random.Bool()) // Случайно доступна или нет
-                    .RuleFor(r => r.HotelId, hotel.Id) // Связываем с отелем
+                var rooms = new Faker<Room>("en")
+                    .RuleFor(r => r.Number, f => f.Random.Int(100, 999).ToString())
+                    .RuleFor(r => r.PricePerNight, f => f.Random.Decimal(50, 500))
+                    .RuleFor(r => r.Capacity, f => f.Random.Int(1, 4))
+                    .RuleFor(r => r.Floor, f => f.Random.Int(1, 10))
+                    .RuleFor(r => r.IsAvailable, f => f.Random.Bool())
+                    .RuleFor(r => r.HotelId, hotel.Id)
                     .RuleFor(r => r.CreatedAt, f => f.Date.Past(1))
                     .RuleFor(r => r.UpdatedAt, (f, r) => r.CreatedAt.AddMinutes(f.Random.Int(1, 60)))
-                    
                     .Generate(10);
-                
-                // Здесь мы создадим VIP комнаты
                 var vipRooms = new Faker<VipRoom>("en")
                     .RuleFor(vr => vr.Number, f => f.Random.Int(1000, 1099).ToString())
                     .RuleFor(vr => vr.PricePerNight, f => f.Random.Decimal(500, 1500))
@@ -87,19 +86,15 @@ namespace API.Services
                     .RuleFor(vr => vr.HotelId, hotel.Id)
                     .RuleFor(vr => vr.CreatedAt, f => f.Date.Past(1))
                     .RuleFor(vr => vr.UpdatedAt, (f, vr) => vr.CreatedAt.AddMinutes(f.Random.Int(1, 60)))
-                    // Добавляем дополнительные удобства для VIP комнат
                     .RuleFor(vr => vr.VipServiceDescription, f => f.Lorem.Sentence(5))
-                    .RuleFor(vr => vr.ExtraAmenities, f => f.Random.ListItems(new List<string> { "Hello Kitty", "Kuromi", "Deadpool" }, 3)) // Пример удобств
-                    .RuleFor(vr => vr.Description, f => f.Lorem.Sentence(10)) // Описание комнаты
+                    .RuleFor(vr => vr.ExtraAmenities, f => f.Random.ListItems(new List<string> { "Hello Kitty", "Kuromi", "Deadpool" }, 3))
+                    .RuleFor(vr => vr.Description, f => f.Lorem.Sentence(10))
                     .Generate(2);
-
-                // Теперь мы добавим их в отель
                 hotel.Rooms.AddRange(rooms);
                 hotel.Rooms.AddRange(vipRooms);
+                _context.Rooms.AddRange(rooms);
+                _context.Rooms.AddRange(vipRooms);
             }
-
-            // Здесь мы добавим код для сохранения в базу...
-            _context.Hotels.AddRange(hotels);
             await _context.SaveChangesAsync();
 
             return hotels;

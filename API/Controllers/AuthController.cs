@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Services;
 using API.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace API.Controllers
@@ -192,6 +193,7 @@ namespace API.Controllers
             });
         }
         
+        [Authorize]
         [HttpPost("revoke-token")]
         public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenDto request)
         {
