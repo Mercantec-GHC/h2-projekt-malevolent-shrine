@@ -1,10 +1,8 @@
-namespace API.DTOs;
+namespace DomainModels.DTOs;
 using System.ComponentModel.DataAnnotations;
 
-public class RoomUpdateDto
+public class RoomCreateDto
 {
-    public int Id { get; set; }
-    
     [Required]
     [StringLength(10)]
     public required string Number { get; set; }
@@ -18,6 +16,6 @@ public class RoomUpdateDto
     [Range(1, 100)]
     public int Floor { get; set; }
     
-    public bool IsAvailable { get; set; }
+    public bool IsAvailable { get; set; } = true;
     public int? HotelId { get; set; }
 }

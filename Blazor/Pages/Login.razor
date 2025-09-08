@@ -1,0 +1,51 @@
+﻿@page "/login"
+@using System.Net.Http
+@inject NavigationManager Navigation
+
+<h3>Login</h3>
+    
+@if(showMessage)
+{
+    <p>@errorMessage</p>
+}
+
+<div class="auth-wrapper">
+    <EditForm model="user" method="post" FormName="CreateForm" OnValidSubmit="() => HandleSubmitAsync()" Enhance>
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+            <div>
+                <label class="labels" for="email">E-mail:</label>
+                <InputText id="email" class="text_field" @bind-Value="user.Email"></InputText>
+            <ValidationMessage For="@(() => user.Email)" />
+            </div>
+            <div>
+                <label class="labels" for="password">Password:</label>
+                <InputText id="password" class="text_field" @bind-Value="user.Password"></InputText>
+                <ValidationMessage For="@(() => user.Password)" />
+            </div>
+        <button id="submit-btn" style="margin-bottom: 10px;" class="btn" type="submit">Login</button>
+        <ValidationSummary />
+    </EditForm>
+</div>
+
+@code {
+    UserLoginDto user = new UserLoginDto();
+    string errorMessage = "Incorrect login or password";
+    bool showMessage = false;    
+
+    private async Task HandleSubmitAsync()
+    {
+        showMessage = false;
+
+        bool success = await ApiService.Login(user);
+
+        if (success)
+        {
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            showMessage = true;
+        }
+    }
+}

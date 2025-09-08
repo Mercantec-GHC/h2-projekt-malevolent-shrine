@@ -1,6 +1,6 @@
 
 
-namespace API.DTOs
+namespace DomainModels.DTOs
 {
     public class HotelUpdateDto
     {

@@ -3,7 +3,7 @@ using API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Services;
-using API.DTOs;
+using DomainModels.DTOs;
 using Microsoft.AspNetCore.Identity;
 
 

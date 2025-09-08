@@ -1,5 +1,4 @@
-namespace API.DTOs;
-
+namespace DomainModels.DTOs;
 public class RoomReadDto
 {
     public int Id { get; set; }

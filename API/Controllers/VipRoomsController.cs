@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
 using API.Models;
-using API.DTOs;
+using DomainModels.DTOs;
 using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers

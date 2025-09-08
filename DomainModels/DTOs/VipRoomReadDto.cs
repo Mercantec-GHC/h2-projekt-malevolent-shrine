@@ -1,69 +1,73 @@
-using System.ComponentModel.DataAnnotations;
-
-namespace API.DTOs
+namespace DomainModels.DTOs
 {
     /// <summary>
-    /// DTO for updating an existing VIP room
+    /// DTO for reading VIP room data
     /// </summary>
-    public class VipRoomUpdateDto
+    public class VipRoomReadDto
     {
         /// <summary>
         /// VIP room ID
         /// </summary>
         public int Id { get; set; }
-
+        
         /// <summary>
-        /// Room number (unique identifier)
+        /// Room number
         /// </summary>
-        [Required]
-        public required string Number { get; set; }
-
+        public string Number { get; set; } = string.Empty;
+        
         /// <summary>
-        /// Maximum capacity of the room
+        /// Room capacity
         /// </summary>
-        [Range(1, 20)]
         public int Capacity { get; set; }
-
+        
         /// <summary>
-        /// Price per night in currency
+        /// Price per night
         /// </summary>
-        [Range(0.01, 10000)]
         public decimal PricePerNight { get; set; }
-
+        
         /// <summary>
-        /// Floor number where the room is located
+        /// Floor number
         /// </summary>
         public int Floor { get; set; }
-
+        
         /// <summary>
-        /// Whether the room is currently available for booking
+        /// Availability status
         /// </summary>
         public bool IsAvailable { get; set; }
-
+        
         /// <summary>
-        /// ID of the hotel this room belongs to
+        /// Hotel ID
         /// </summary>
         public int? HotelId { get; set; }
-
+        
         /// <summary>
-        /// Description of VIP services provided
+        /// VIP service description
         /// </summary>
-        [Required]
-        public required string VipServiceDescription { get; set; }
-
+        public string VipServiceDescription { get; set; } = string.Empty;
+        
         /// <summary>
-        /// List of extra amenities available in this VIP room
+        /// Extra amenities list
         /// </summary>
         public List<string> ExtraAmenities { get; set; } = new();
-
+        
         /// <summary>
-        /// Optional room description
+        /// Room description
         /// </summary>
         public string? Description { get; set; }
-
+        
         /// <summary>
-        /// Optional room image URL
+        /// Room image URL
         /// </summary>
         public string? ImageUrl { get; set; }
+        
+        /// <summary>
+        /// Creation date
+        /// </summary>
+        public DateTime CreatedAt { get; set; }
+        
+        /// <summary>
+        /// Last update date
+        /// </summary>
+        public DateTime UpdatedAt { get; set; }
     }
 }

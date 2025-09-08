@@ -1,10 +1,8 @@
-namespace API.DTOs;
+namespace DomainModels.DTOs;
 using System.ComponentModel.DataAnnotations;
 
-public class UserUpdateDto
+public class UserCreateDto
 {
-    public int Id { get; set; }
-    
     [Required]
     [StringLength(50)]
     public required string FirstName { get; set; }
@@ -22,7 +20,10 @@ public class UserUpdateDto
     [StringLength(20)]
     public required string PhoneNumber { get; set; }
     
-    // Пароль мы будем менять отдельно, поэтому здесь его не будет
+    [Required]
+    [MinLength(6)]
+    [StringLength(100)]
+    public required string Password { get; set; }
     
     [StringLength(200)]
     public string? Address { get; set; }

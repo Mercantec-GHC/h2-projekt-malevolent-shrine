@@ -1,40 +1,50 @@
 ﻿@page "/"
-
 @using System.Net.Http
 
-<h1 class="mb-4">Status Dashboard</h1>
+<h1 class="page-title">Status Dashboard</h1>
 
-<div class="row">
-    <div class="col-md-6 mb-4">
-        <StatusCard 
-            Title="API Status"
-            IconClass="bi bi-heart-pulse text-success"
-            BorderClass="border-success"
-            HealthCheck="@healthCheck" />
+<div class="status-row">
+    <div class="status-card-wrapper">
+        <div class="status-card card">
+            <StatusCard Title="API Status"
+                        IconClass="bi bi-heart-pulse text-success"
+                        BorderClass="border-success"
+                        HealthCheck="@healthCheck" />
+        </div>
     </div>
-    <div class="col-md-6 mb-4">
-        <StatusCard 
-            Title="Database Status"
-            IconClass="bi bi-database text-warning"
-            BorderClass="border-warning"
-            HealthCheck="@dbHealthCheck" />
+    <div class="status-card-wrapper">
+        <div class="status-card card">
+            <StatusCard Title="Database Status"
+                        IconClass="bi bi-database text-warning"
+                        BorderClass="border-warning"
+                        HealthCheck="@dbHealthCheck" />
+        </div>
     </div>
 </div>
 
-
-<div class="row">
-    <div class="col-12">
-        <Counter />
-    </div>
+<h2 class="section-title">Hotels</h2>
+<div class="hotels">
+    @foreach (var h in hotels)
+    {
+        <div class="hotel-card">
+            <div class="hotel-accent"></div>
+            <p class="hotel-name">@h.Name</p>
+            @*<img class="hotel-image" src="@h.Image" alt="Hotel Image" />*@
+            <p class="hotel-address"><strong>Address: </strong>@h.Address</p>
+            <p class="hotel-rooms">Rooms: @h.Rooms.Count()</p>
+        </div>
+    }
 </div>
 
 @code {
     HealthCheckResponse? healthCheck;
     HealthCheckResponse? dbHealthCheck;
+    List<Hotel> hotels = new List<Hotel>();
 
     protected override async Task OnInitializedAsync()
     {
         healthCheck = await ApiService.GetHealthCheckAsync();
         dbHealthCheck = await ApiService.GetDBHealthCheckAsync();
+        hotels = await ApiService.GetAllHotels();
     }
 }

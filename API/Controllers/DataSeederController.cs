@@ -2,7 +2,7 @@ using API.Models;
 using Microsoft.AspNetCore.Mvc;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
-
+using DomainModels.DTOs;
 
 namespace API.Controllers
 {

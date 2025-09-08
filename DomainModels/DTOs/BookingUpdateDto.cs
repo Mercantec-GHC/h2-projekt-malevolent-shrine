@@ -1,8 +1,10 @@
-namespace API.DTOs;
+namespace DomainModels.DTOs;
 using System.ComponentModel.DataAnnotations;
 
-public class BookingCreateDto
+public class BookingUpdateDto
 {
+    public int Id { get; set; }
+
     [Required]
     public int UserId { get; set; }
 

@@ -1,10 +1,8 @@
-namespace API.DTOs;
+namespace DomainModels.DTOs;
 using System.ComponentModel.DataAnnotations;
 
-public class RoleUpdateDto
+public class RoleCreateDto
 {
-    public int Id { get; set; }
-    
     [Required]
     [StringLength(50)]
     public required string Name { get; set; }
