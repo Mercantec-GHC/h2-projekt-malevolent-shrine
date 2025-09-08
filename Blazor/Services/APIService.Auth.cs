@@ -1,6 +1,6 @@
 ﻿using System.Net.Http.Json;
-using API.DTOs;
 using DomainModels.DTOs;
+using DomainModels.Models;
 using Microsoft.JSInterop;
 
 namespace Blazor.Services

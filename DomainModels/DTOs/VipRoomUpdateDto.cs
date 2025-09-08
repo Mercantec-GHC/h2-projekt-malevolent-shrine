@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace API.DTOs
+namespace DomainModels.DTOs
 {
     /// <summary>
     /// DTO for updating an existing VIP room

@@ -1,4 +1,4 @@
-namespace API.DTOs
+namespace DomainModels.DTOs
 {
     /// <summary>
     /// DTO for reading VIP room data

@@ -1,4 +1,4 @@
-namespace API.DTOs;
+namespace DomainModels.DTOs;
 
 public class BookingReadDto
 {

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DomainModels.DTOs
+namespace DomainModels.Models
 
 {
     public class AuthDto

@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
 using API.Data;
+using DomainModels.DTOs;
 using API.Models;
-using API.DTOs;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization; // Добавляем для авторизации
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
@@ -19,11 +19,33 @@ namespace API.Controllers
         }
 
         [HttpGet] // Чтение отелей доступно всем
-        public async Task<ActionResult<IEnumerable<Hotel>>> GetHotels()
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<HotelReadDto>>> GetHotels()
         {
-            return await _context.Hotels.ToListAsync();
+            var hotels = await _context.Hotels
+                .Include(h => h.Rooms)
+                .Select(h => new HotelReadDto
+                {
+                    Id = h.Id,
+                    Name = h.Name,
+                    Address = h.Address,
+                    Rooms = h.Rooms.Select(r => new RoomReadDto
+                    {
+                        Id = r.Id,
+                        Number = r.Number,
+                        Capacity = r.Capacity,
+                        PricePerNight = r.PricePerNight,
+                        Floor = r.Floor,
+                        IsAvailable = r.IsAvailable,
+                        HotelId = r.HotelId
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            return Ok(hotels);
         }
-        
+
+
         [HttpGet("{id}")] // Чтение конкретного отеля доступно всем
         public async Task<ActionResult<Hotel>> GetHotel(int id)
         {

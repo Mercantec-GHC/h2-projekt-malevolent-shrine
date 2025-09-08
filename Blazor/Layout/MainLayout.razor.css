@@ -1,77 +1,165 @@
-.page {
-    position: relative;
-    display: flex;
-    flex-direction: column;
+/* ===== Общий стиль страницы ===== */
+body {
+    margin: 0;
+    font-family: 'Montserrat', 'Arial Black', sans-serif;
+    background: #000; /* чисто черный фон */
+    color: #fff;
+    overflow-x: hidden;
 }
 
+/* ===== Layout ===== */
+.page {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: #000;
+    color: white;
+    padding: 1rem;
+    border-right: 6px solid #e60012;
+    clip-path: polygon(0 0, 100% 5%, 100% 100%, 0 95%);
+    box-shadow: 4px 0 12px rgba(0,0,0,0.8);
+    z-index: 5;
+}
+
+    .sidebar a {
+        display: block;
+        padding: 0.8rem 1rem;
+        font-weight: bold;
+        color: white;
+        text-decoration: none;
+        transition: transform 0.2s, background 0.2s;
+    }
+
+        .sidebar a:hover {
+            background: #e60012;
+            transform: translateX(5px);
+        }
+
+/* ===== Main content с узорами ===== */
 main {
     flex: 1;
+    padding: 1.5rem;
+    clip-path: polygon(0 0, 100% 0, 100% 95%, 0 100%);
+    position: relative;
+    z-index: 1;
+    /* Чёрный фон с более заметным паттерном */
+    /* background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 2px, transparent 2px, transparent 8px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 2px, transparent 2px, transparent 8px);*/
+    background-image: url(https://i.redd.it/54obu7eenrq61.gif);
 }
 
-.sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
-}
-
-.top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
+/* Верхняя панель */
+    .top-row {
     display: flex;
-    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
 }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
+    .top-row a {
+        color: #e60012;
+        font-weight: bold;
         text-decoration: none;
+        font-size: 1.1rem;
     }
 
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
-    }
+        .top-row a:hover {
+            text-decoration: underline;
+        }
 
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-@media (max-width: 640.98px) {
-    .top-row {
-        justify-content: space-between;
-    }
-
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
-    }
+/* Заголовки */
+h1, h2, h3 {
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: white;
+    margin-bottom: 1rem;
+    text-shadow: -3px 3px 0 #000, -4px 4px 0 #e60012;
 }
 
-@media (min-width: 641px) {
-    .page {
-        flex-direction: row;
+/* ===== Карточки статуса ===== */
+.status-card {
+    background: #000;
+    border: 3px solid #fff;
+    border-radius: 0;
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 #e60012, -6px -6px 0 #fff;
+    clip-path: polygon(0 0, 100% 6%, 100% 100%, 0 94%);
+    transition: transform 0.2s;
+}
+
+    .status-card:hover {
+        transform: translateY(-6px);
     }
 
-    .sidebar {
-        width: 250px;
-        height: 100vh;
-        position: sticky;
-        top: 0;
+    .status-card h3 {
+        margin: 0;
+        font-size: 1.4rem;
+        color: #e60012;
     }
 
-    .top-row {
-        position: sticky;
-        top: 0;
-        z-index: 1;
+/* ===== Список отелей ===== */
+.hotels {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.hotel-card {
+    background: #000;
+    border: 3px solid #fff;
+    position: relative;
+    padding: 1.2rem;
+    box-shadow: 6px 6px 0 #e60012, -6px -6px 0 #fff;
+    clip-path: polygon(0 0, 100% 6%, 100% 100%, 0 94%);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+}
+
+    .hotel-card:hover {
+        transform: translateY(-10px) rotateX(6deg) rotateY(-6deg);
+        box-shadow: 10px 10px 0 #e60012, -10px -10px 0 #fff;
     }
 
-    .top-row.auth ::deep a:first-child {
-        flex: 1;
-        text-align: right;
-        width: 0;
-    }
+/* Красная декоративная полоска */
+.hotel-accent {
+    height: 6px;
+    width: 100%;
+    background: #e60012;
+    margin-bottom: 0.8rem;
+    clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
+}
 
-    .top-row, article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
-    }
+/* Название отеля */
+.hotel-name {
+    font-size: 1.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: white;
+    text-shadow: -3px 3px 0 #000, -4px 4px 0 #e60012;
+    margin-bottom: 0.4rem;
+}
+
+/* Остальная информация */
+.hotel-address {
+    font-size: 1rem;
+    color: #ccc;
+}
+
+.hotel-rooms {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    background: #e60012;
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    margin-top: 1rem;
+    clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
+    box-shadow: -3px 3px 0 #000;
 }
