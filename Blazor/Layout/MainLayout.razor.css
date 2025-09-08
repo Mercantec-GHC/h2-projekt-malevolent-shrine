@@ -49,6 +49,7 @@ main {
     /* Чёрный фон с более заметным паттерном */
     /* background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 2px, transparent 2px, transparent 8px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 2px, transparent 2px, transparent 8px);*/
     background-image: url(https://i.redd.it/54obu7eenrq61.gif);
+    background-size: cover;
 }
 
 /* Верхняя панель */
