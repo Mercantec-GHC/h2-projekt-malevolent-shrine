@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure; // Добавьте эту строку
 using Scalar.AspNetCore;
 using System.Reflection;
+using Microsoft.AspNetCore.Identity;
 
 
 namespace API;
@@ -123,7 +124,9 @@ public class Program
                 };
             });
         builder.Services.AddAuthorization();
-        builder.Services.AddScoped<DataSeederService>();
+        builder.Services.AddScoped<DataSeederService>(); 
+        builder.Services.AddScoped<PasswordHasher<User>>();
+        
         
         builder.Services.AddDbContext<AppDBContext>(options =>
         {

@@ -114,8 +114,9 @@ namespace API.Controllers
 
             foreach (var token in inactiveTokens)
             {
-                user.RefreshTokens.Remove(token); 
                 _context.RefreshTokens.Remove(token);
+                user.RefreshTokens.Remove(token); 
+                
             }
 
             await _context.SaveChangesAsync();
@@ -142,6 +143,7 @@ namespace API.Controllers
                 .Include(rt => rt.User)
                 .ThenInclude(u => u.RefreshTokens)
                 .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
+
 
             
             if (refreshToken == null || !refreshToken.IsActive)
