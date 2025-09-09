@@ -59,7 +59,7 @@ namespace API.Services
                 _issuer,
                 _audience,
                 claims,
-                expires: DateTime.Now.AddMinutes(_expiryMinutes),
+                expires: DateTime.UtcNow.AddMinutes(_expiryMinutes),
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);

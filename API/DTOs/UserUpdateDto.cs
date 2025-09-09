@@ -26,4 +26,6 @@ public class UserUpdateDto
     
     [StringLength(200)]
     public string? Address { get; set; }
+
+    public string Username { get; set; }
 }

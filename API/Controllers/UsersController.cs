@@ -216,6 +216,13 @@ namespace API.Controllers
             {
                 return BadRequest();
             }
+            
+            // Проверка уникальности email и username
+            if (await _context.Users.AnyAsync(u => u.Email == userDto.Email && u.Id != id))
+                return BadRequest("Пользователь с таким email уже существует.");
+            if (await _context.Users.AnyAsync(u => u.Username == userDto.Username && u.Id != id))
+                return BadRequest("Пользователь с таким именем уже существует.");
+
 
             var user = await _context.Users
                 .Include(u => u.UserInfo) // Загружаем связанные данные!
