@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blazor</title>
+    <title>Malevolent Shrine</title>
     <base href="/" />
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/app.css" />
@@ -48,6 +48,12 @@
                 console.log('Service Worker registration error:', error);
             }
         }
+
+        window.auth = {
+            getToken: function () {
+                return localStorage.getItem("access_token");
+            }
+        };
     </script>
 </body>
 
