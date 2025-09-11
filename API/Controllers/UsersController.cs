@@ -140,7 +140,6 @@ namespace API.Controllers
         /// </summary>
         /// <param name="userDto"></param>
         /// <returns>Returnerer en UserReadDto med oprettede brugerens ID og detaljer</returns>
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
         [HttpPost]
         public async Task<ActionResult<UserReadDto>> PostUser(UserCreateDto userDto)
 
@@ -183,7 +182,7 @@ namespace API.Controllers
                 _logger.LogError(ex, "Ошибка при создании пользователя.");
 
                 // Возвращаем пользователю понятную ошибку
-                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+                return StatusCode(500, $"Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже. {ex.Message}");
             }
         }
         

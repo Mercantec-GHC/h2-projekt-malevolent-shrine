@@ -84,58 +84,147 @@ h1, h2, h3 {
 /* ===== ќтели, статус и т.д. остаютс€ без изменений ===== */
 
 /* ===== ћобильные стили ===== */
+/* ===== ќбщий стиль страницы ===== */
+body {
+    margin: 0;
+    font-family: 'Montserrat', 'Arial Black', sans-serif;
+    background: #000;
+    color: #fff;
+    overflow-x: hidden;
+}
+
+/* ===== Layout ===== */
+.page {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: row; /* по умолчанию десктоп */
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+    width: 260px;
+    background: #000;
+    color: white;
+    padding: 1rem;
+    border-right: 6px solid #e60012;
+    box-shadow: 4px 0 12px rgba(0,0,0,0.8);
+    transition: width 0.3s ease, padding 0.3s ease;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+    .sidebar.collapsed {
+        width: 0;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        overflow: hidden;
+    }
+
+/* ===== Sidebar Toggle ===== */
+.sidebar-toggle {
+    position: fixed;
+    top: 0.5rem;
+    left: 260px;
+    z-index: 10;
+    background: #e60012;
+    color: white;
+    border: none;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    border-radius: 0 4px 4px 0;
+    transition: left 0.3s ease;
+}
+
+.sidebar.collapsed + .sidebar-toggle {
+    left: 0;
+}
+
+/* ===== Main Content ===== */
+main {
+    flex: 1;
+    padding: 2.5rem;
+    position: relative;
+    z-index: 1;
+    background-image: url(https://i.redd.it/54obu7eenrq61.gif);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+/* ===== «аголовки ===== */
+h1, h2, h3 {
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: white;
+    margin-bottom: 1rem;
+    text-shadow: -3px 3px 0 #000, -4px 4px 0 #e60012;
+}
+
+/* ===== ћобильные стили ===== */
 @media (max-width: 768px) {
     .page {
-        flex-direction: column; /* контент под sidebar */
+        flex-direction: column; /* sidebar сверху */
     }
 
     .sidebar {
-        display: block; /* раст€гиваетс€ по контенту */
-        width: 100%; /* полна€ ширина */
-        height: auto; /* высота по содержимому */
-        position: relative; /* не перекрывает контент */
-        padding: 1rem 0; /* вертикальные отступы */
+        width: 100%;
+        height: auto !important; /* по содержимому */
+        max-height: none !important;
+        padding: 0.5rem 1rem;
         border-right: none;
         box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        transform: none;
+        display: flex;
+        flex-direction: column; /* вертикально, а кнопки внутри будут в р€ду */
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: flex-start;
+        overflow: visible !important;
     }
 
-        .sidebar.collapsed {
-            display: none; /* полностью скрыт */
-            height: auto;
-            padding: 0;
-            box-shadow: none;
+    .nav-scrollable,
+    .nav-wrapper,
+    .nav-items {
+        display: flex !important;
+        flex-direction: row !important; /* кнопки в р€д */
+        flex-wrap: wrap !important; /* перенос строк при необходимости */
+        height: auto !important; /* убрать фиксированную высоту */
+        max-height: none !important;
+        overflow: visible !important;
+        flex-grow: 0 !important; /* убрать раст€жение */
+    }
+
+    .nav-item {
+        padding: 0.25rem 0.5rem;
+    }
+
+        .nav-item a {
+            height: auto !important;
+            line-height: normal;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.9rem;
         }
 
-        /* ≈сли внутри есть прокручиваемый контейнер */
-        .sidebar .nav-scrollable {
-            height: auto;
-            overflow: visible;
-        }
-
-    main {
-        margin-top: 0;
-        padding: 1rem;
+    .bottom-nav {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
     }
 
     .sidebar-toggle {
-        position: relative; /* кнопка внутри потока на мобилке */
-        left: 1rem;
+        position: relative;
         top: 0.5rem;
-    }
-}
-@media (max-width: 768px) {
-    /* —айдбар */
-    .sidebar {
-        height: auto !important; /* раст€гиваетс€ только по контенту */
-        max-height: none !important; /* отмен€ем ограничени€ */
+        left: 1rem;
     }
 
-        /* ¬нутренние контейнеры */
-        .sidebar .nav-scrollable,
-        .sidebar .nav-wrapper {
-            height: auto !important;
-            max-height: none !important;
-            overflow: visible !important; /* чтобы не ограничивало */
-        }
+    main {
+        padding: 1rem;
+    }
 }
+
+
