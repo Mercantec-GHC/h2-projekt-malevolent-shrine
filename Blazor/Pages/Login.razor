@@ -52,8 +52,7 @@
 
         if (success)
         {
-            StateHasChanged();
-            Navigation.NavigateTo("/login");
+            Navigation.NavigateTo("/", forceLoad: true);
         }
         else
         {

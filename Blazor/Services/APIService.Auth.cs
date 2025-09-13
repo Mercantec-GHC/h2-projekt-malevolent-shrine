@@ -9,10 +9,29 @@ namespace Blazor.Services
     {
         private const string TOKEN_KEY = "access_token";
 
-        public async Task<bool> Register(AuthDto user)
+        public async Task<bool> RegisterAsync(AuthDto user)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/auth/register", user);
-            return response.IsSuccessStatusCode;
+
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/Auth/register", user);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"API Error: {response.StatusCode} - {errorContent}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex.Message}");
+                return false;
+            }
         }
 
         public async Task<bool> Login(UserLoginDto user)

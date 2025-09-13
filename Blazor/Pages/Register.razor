@@ -12,56 +12,43 @@
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <div class="form-columns">
+<div class="form-columns"> 
             <!-- Левая колонка -->
-            <div class="form-column">
-                <div class="text-field">
-                    <label for="fName">First name *:</label>
-                    <InputText id="fName" @bind-Value="user.FirstName" class="input" />
-                    <ValidationMessage For="@(() => user.FirstName)" />
-                </div>
-
-                <div class="text-field">
-                    <label for="email">E-mail *:</label>
-                    <InputText id="email" @bind-Value="user.Email" class="input" />
-                    <ValidationMessage For="@(() => user.Email)" />
-                </div>
-
-                <div class="text-field">
-                    <label for="address">Address *:</label>
-                    <InputText id="address" @bind-Value="user.Address" class="input" />
-                    <ValidationMessage For="@(() => user.Address)" />
-                </div>
-            </div>
-
-            <!-- Правая колонка -->
-            <div class="form-column">
-                <div class="text-field">
-                    <label for="lName">Last name *:</label>
-                    <InputText id="lName" @bind-Value="user.LastName" class="input" />
-                    <ValidationMessage For="@(() => user.LastName)" />
-                </div>
-
-                <div class="text-field">
-                    <label for="pNumber">Phone Number:</label>
-                    <InputText id="pNumber" @bind-Value="user.PhoneNumber" class="input" />
-                    <ValidationMessage For="@(() => user.PhoneNumber)" />
-                </div>
-
-                <div class="text-field">
-                    <label for="username">Phone Number:</label>
-                    <InputText id="username" @bind-Value="user.Username" class="input" />
-                    <ValidationMessage For="@(() => user.Username)" />
-                </div>
-
-                <div class="text-field">
-                    <label for="password">Password: *</label>
-                    <InputText id="password" type="password" @bind-Value="user.Password" class="input" />
-                    <ValidationMessage For="@(() => user.Password)" />
-                </div>
-            </div>
+        <div class="text-field">
+            <label for="username">Username *:</label>
+            <InputText id="username" type="text" @bind-Value="user.Username" class="input" />
+            <ValidationMessage For="@(() => user.Username)" />
+        </div>
+    <div class="form-column">
+        <div class="text-field">
+            <label for="fName">First name *:</label>
+            <InputText id="fName" @bind-Value="user.FirstName" class="input" />
+            <ValidationMessage For="@(() => user.FirstName)" />
         </div>
 
+        <div class="text-field">
+            <label for="email">E-mail *:</label>
+            <InputText id="email" @bind-Value="user.Email" class="input" />
+            <ValidationMessage For="@(() => user.Email)" />
+        </div>
+
+                        <!-- Правая колонка -->
+        <div class="form-column">
+            <div class="text-field">
+                <label for="lName">Last name *:</label>
+                <InputText id="lName" @bind-Value="user.LastName" class="input" />
+                <ValidationMessage For="@(() => user.LastName)" />
+            </div>
+
+
+            <div class="text-field">
+                <label for="password">Password: *</label>
+                <InputText id="password" type="password" @bind-Value="user.Password" class="input" />
+                <ValidationMessage For="@(() => user.Password)" />
+            </div>
+        </div>
+    </div>
+</div>
         <button type="submit" class="submit-button">REGISTER</button>
 
         <p class="to-login">
@@ -73,20 +60,20 @@
 
 
 @code {
-    private UserCreateDto user = new UserCreateDto();
+    private AuthDto user = new AuthDto();
     string errorMessage = "Something went wrong while trying to register new user. Please try again later or contact support.";
     bool showMessage = false;
 
-    private async Task HandleSubmitAsync(UserCreateDto user)
+    private async Task HandleSubmitAsync(AuthDto user)
     {
         showMessage = false;
 
-        bool success = await ApiService.RegisterNewUser(user);
+        bool success = await ApiService.RegisterAsync(user);
 
         if (success)
         {
             StateHasChanged();
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/login");
         }
         else
         {
