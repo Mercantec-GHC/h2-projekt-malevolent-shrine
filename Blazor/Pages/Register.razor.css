@@ -1,36 +1,49 @@
 ﻿.form-wrapper {
     position: relative;
-    background-color: #000;
+    background: linear-gradient(145deg, #0d0d0d, #1a1a1a);
     color: white;
-    border: 4px solid white;
-    padding: 3rem 2rem;
-    max-width: 800px;
-    border-radius: 13px;
+    border: 3px solid white;
+    padding: 3rem 2.5rem;
+    max-width: 850px;
+    border-radius: 16px;
     margin: 5rem auto;
     font-family: 'Segoe UI', 'Arial Black', sans-serif;
-    z-index: 1;
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.3);
+    animation: fadeIn 0.8s ease-in-out;
 }
 
 h3 {
     text-align: center;
     margin-bottom: 2rem;
+    font-size: 1.8rem;
+    font-weight: bold;
+    position: relative;
 }
 
-/* Контейнер для двух колонок */
+    h3::after {
+        content: "";
+        display: block;
+        width: 60px;
+        height: 3px;
+        background: red;
+        margin: 0.5rem auto 0 auto;
+        border-radius: 3px;
+    }
+
+/* Две колонки */
 .form-columns {
-    display: flex; /* flex для точного выравнивания */
-    gap: 2rem; /* расстояние между колонками */
+    display: flex;
+    gap: 2rem;
 }
 
-/* Каждая колонка */
+/* Колонка */
 .form-column {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    flex: 1; /* колонки одинаковой ширины */
+    flex: 1;
 }
 
-/* Поля выравниваем одинаковой ширины */
 .text-field {
     display: flex;
     flex-direction: column;
@@ -45,44 +58,50 @@ h3 {
 
 .input {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1rem;
     font-size: 1rem;
     background-color: #1c1c1c;
     color: white;
-    border: none;
-    border-bottom: 3px solid white;
+    border: 2px solid #333;
     outline: none;
-    border-radius: 4px 4px 0 0;
-    box-sizing: border-box;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 0 5px rgba(255,255,255,0.05);
 }
 
     .input:focus {
-        border-bottom: 3px solid red;
+        border-color: red;
+        box-shadow: 0 0 10px red;
     }
 
+/* Кнопка */
 .submit-button {
     background-color: red;
     color: white;
     font-weight: bold;
     font-size: 1.1rem;
-    padding: 0.9rem 2rem;
+    padding: 1rem 2.5rem;
     border: none;
     box-shadow: 3px 3px 0 black;
     cursor: pointer;
     display: block;
-    margin: 2rem auto 0 auto;
-    border-radius: 6px;
+    margin: 2.5rem auto 0 auto;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
     .submit-button:hover {
         background-color: white;
         color: red;
-        box-shadow: 0 0 10px red;
+        box-shadow: 0 0 15px red;
+        transform: translateY(-2px);
     }
 
+/* Ссылка */
 .to-login {
     text-align: center;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
+    font-size: 0.95rem;
 }
 
     .to-login a {
@@ -95,3 +114,56 @@ h3 {
         .to-login a:hover {
             color: white;
         }
+
+/* Ошибки */
+.validation-message {
+    color: #ff4d4d;
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+}
+
+.error-box {
+    background: rgba(0, 0, 0, 0.85); /* тёмный фон для контраста с огнём */
+    color: #ff4d4d;
+    border: 2px solid #ff0000;
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    font-weight: bold;
+    font-size: 1rem;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: fadeInError 0.6s ease-out;
+}
+
+/* Иконка ошибки */
+.error-icon {
+    font-size: 1.3rem;
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInError {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

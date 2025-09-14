@@ -53,7 +53,7 @@ namespace API.Controllers
                 RoleId = 4,
             };
 
-            // Добавляем пользователя в базу данных
+            // Добавляем пользователя в базу данных TODO: только если пользователь еще не существует
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 

@@ -1,15 +1,17 @@
 ﻿@page "/login"
 @using System.Net.Http
 @inject NavigationManager Navigation
-   
-@if(showMessage)
+
+@if (showMessage)
 {
-    <p>@errorMessage</p>
+    <div class="error-box">
+        ❌ @errorMessage
+    </div>
 }
 
 <div class="form-wrapper">
-    <div class="form-container">LOGIN</div>
-    <EditForm model="user" method="post" FormName="CreateForm" OnValidSubmit="() => HandleSubmitAsync()" Enhance>
+    <h3>Login</h3>
+    <EditForm model="user" method="post" OnValidSubmit="() => HandleSubmitAsync()" FormName="LoginForm">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
@@ -25,11 +27,6 @@
             <ValidationMessage For="@(() => user.Password)" />
         </div>
 
-        @if (showMessage)
-        {
-            <p class="error">@errorMessage</p>
-        }
-
         <button type="submit" class="submit-button">LOGIN</button>
 
         <p class="to-register">
@@ -38,11 +35,10 @@
     </EditForm>
 </div>
 
-
 @code {
     UserLoginDto user = new UserLoginDto();
-    string errorMessage = "Incorrect login or password. Please try again";
-    bool showMessage = false;    
+    string errorMessage = "Incorrect login or password. Please try again.";
+    bool showMessage = false;
 
     private async Task HandleSubmitAsync()
     {

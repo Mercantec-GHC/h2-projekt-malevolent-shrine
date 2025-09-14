@@ -1,8 +1,44 @@
 ﻿@page "/profile"
 @using System.Net.Http
+@inject IJSRuntime JS
+@inject APIService APIService
 
-<h3>Profile</h3>
-
-@code {
-
+@if (errorMessage != null)
+{
+    <p style="color:red">@errorMessage</p>
 }
+else if (userId != null)
+{
+   <p>Email: @user.Email</p>
+}
+else
+{
+    <p>Loading...</p>
+}
+@code {
+    private string? userId;
+    private string? errorMessage;
+    private UserReadDto user = new UserReadDto();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Получаем токен из localStorage
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "access_token");
+
+            user = await APIService.GetCurrentUserAsync(token);
+            userId = user?.Id.ToString();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            errorMessage = "Please login or register.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error occured while trying to load profile";
+            Console.Error.WriteLine(ex);
+        }
+    }
+}
+
