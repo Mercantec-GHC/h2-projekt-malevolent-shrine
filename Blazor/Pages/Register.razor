@@ -1,0 +1,90 @@
+﻿@page "/register"
+@inject NavigationManager Navigation
+
+@if (showMessage)
+{
+    <div class="error-box">
+        <span class="error-icon">❌</span>
+        <span>@errorMessage</span>
+    </div>
+}
+
+
+
+<div class="form-wrapper">
+    <h3>Register</h3>
+    <EditForm model="user" OnValidSubmit="() => HandleSubmitAsync(user)">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-columns">
+            <!-- Левая колонка -->
+            <div class="form-column">
+                <div class="text-field">
+                    <label for="username">Username *:</label>
+                    <InputText id="username" type="text" @bind-Value="user.Username" class="input" />
+                    <ValidationMessage For="@(() => user.Username)" />
+                </div>
+
+                <div class="text-field">
+                    <label for="fName">First name *:</label>
+                    <InputText id="fName" @bind-Value="user.FirstName" class="input" />
+                    <ValidationMessage For="@(() => user.FirstName)" />
+                </div>
+
+                <div class="text-field">
+                    <label for="email">E-mail *:</label>
+                    <InputText id="email" @bind-Value="user.Email" class="input" />
+                    <ValidationMessage For="@(() => user.Email)" />
+                </div>
+            </div>
+
+            <!-- Правая колонка -->
+            <div class="form-column">
+                <div class="text-field">
+                    <label for="lName">Last name *:</label>
+                    <InputText id="lName" @bind-Value="user.LastName" class="input" />
+                    <ValidationMessage For="@(() => user.LastName)" />
+                </div>
+
+                <div class="text-field">
+                    <label for="password">Password *:</label>
+                    <InputText id="password" type="password" @bind-Value="user.Password" class="input" />
+                    <ValidationMessage For="@(() => user.Password)" />
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-button">REGISTER</button>
+
+        <p class="to-login">
+            Already have an account? <a href="/login">Sign in</a>
+        </p>
+    </EditForm>
+</div>
+
+
+
+
+@code {
+    private AuthDto user = new AuthDto();
+    string errorMessage = "Something went wrong while trying to register new user. Please try again later or contact support.";
+    bool showMessage = false;
+
+    private async Task HandleSubmitAsync(AuthDto user)
+    {
+        showMessage = false;
+
+        bool success = await ApiService.RegisterAsync(user);
+
+        if (success)
+        {
+            StateHasChanged();
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            showMessage = true;
+        }
+    }
+}

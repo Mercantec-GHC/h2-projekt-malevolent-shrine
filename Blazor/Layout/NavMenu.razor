@@ -1,30 +1,58 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject IJSRuntime JSRuntime
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">H2 Med MAGS</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        <a class="navbar-brand" href="/">Malevolent Shrine</a>
     </div>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
+<div class="@NavMenuCssClass nav-scrollable">
+    <nav class="nav-wrapper">
+        <div class="nav-items">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <i class="bi bi-house-door-fill"></i> Home
+                </NavLink>
+
+
+            </div>
         </div>
-        
+
+        <div class="bottom-nav">
+            @if (!isLoggedIn)
+            {
+                <NavLink class="nav-link login" href="login">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </NavLink>
+                <NavLink class="nav-link register" href="register">
+                    <i class="bi bi-person-plus-fill"></i> Register
+                </NavLink>
+            }
+            else
+            {
+                <NavLink class="nav-link register" href="profile">
+                    <i class="bi bi-person-circle"></i> Profile
+                </NavLink>
+            }
+        </div>
     </nav>
 </div>
 
+
 @code {
-    private bool collapseNavMenu = true;
+    [Parameter] public EventCallback OnToggleSidebar { get; set; }
+    [Parameter] public bool IsSidebarCollapsed { get; set; }
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    public bool isLoggedIn = false;
 
-    private void ToggleNavMenu()
+    private string? NavMenuCssClass => IsSidebarCollapsed ? "collapse" : "open";
+
+    private Task HandleToggle() => OnToggleSidebar.InvokeAsync(null);
+
+    protected override async Task OnInitializedAsync()
     {
-        collapseNavMenu = !collapseNavMenu;
+        var token = await JSRuntime.InvokeAsync<string>("auth.getToken");
+        isLoggedIn = !string.IsNullOrWhiteSpace(token);
+        StateHasChanged();
     }
 }

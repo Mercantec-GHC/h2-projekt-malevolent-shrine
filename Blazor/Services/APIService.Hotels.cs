@@ -6,16 +6,16 @@ namespace Blazor.Services
 {
     public partial class APIService
     {
-        public async Task<List<Hotel>> GetAllHotels()
+        public async Task<List<HotelReadDto>> GetAllHotels()
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<List<Hotel>>("api/Hotels");
+                return await _httpClient.GetFromJsonAsync<List<HotelReadDto>>("api/Hotels");
             }
             catch (Exception ex) 
             {
                 Console.WriteLine($"Error: {ex.Message}");
-                return new List<Hotel>();
+                return new List<HotelReadDto>();
             }
         }
     }

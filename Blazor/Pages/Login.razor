@@ -3,36 +3,43 @@
 @inject NavigationManager Navigation
 @inject Blazor.Services.APIService ApiService
 
-<h3>Login</h3>
-    
-@if(showMessage)
+@if (showMessage)
 {
-    <p>@errorMessage</p>
+    <div class="error-box">
+        ❌ @errorMessage
+    </div>
 }
 
-<div class="auth-wrapper">
-    <EditForm model="user" method="post" FormName="CreateForm" OnValidSubmit="() => HandleSubmitAsync()" Enhance>
+<div class="form-wrapper">
+    <h3>Login</h3>
+    <EditForm model="user" method="post" OnValidSubmit="() => HandleSubmitAsync()" FormName="LoginForm">
         <DataAnnotationsValidator />
         <ValidationSummary />
-            <div>
-                <label class="labels" for="email">E-mail:</label>
-                <InputText id="email" class="text_field" @bind-Value="user.Email"></InputText>
+
+        <div class="text-field">
+            <label for="email">E-mail:</label>
+            <InputText id="email" @bind-Value="user.Email" class="input" />
             <ValidationMessage For="@(() => user.Email)" />
-            </div>
-            <div>
-                <label class="labels" for="password">Password:</label>
-                <InputText id="password" class="text_field" @bind-Value="user.Password"></InputText>
-                <ValidationMessage For="@(() => user.Password)" />
-            </div>
-        <button id="submit-btn" style="margin-bottom: 10px;" class="btn" type="submit">Login</button>
-        <ValidationSummary />
+        </div>
+
+        <div class="text-field">
+            <label for="password">Password:</label>
+            <InputText id="password" type="password" @bind-Value="user.Password" class="input" />
+            <ValidationMessage For="@(() => user.Password)" />
+        </div>
+
+        <button type="submit" class="submit-button">LOGIN</button>
+
+        <p class="to-register">
+            Don't have an account? <a href="/register">Register now</a>
+        </p>
     </EditForm>
 </div>
 
 @code {
     UserLoginDto user = new UserLoginDto();
-    string errorMessage = "Incorrect login or password";
-    bool showMessage = false;    
+    string errorMessage = "Incorrect login or password. Please try again.";
+    bool showMessage = false;
 
     private async Task HandleSubmitAsync()
     {
@@ -42,7 +49,7 @@
 
         if (success)
         {
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/", forceLoad: true);
         }
         else
         {

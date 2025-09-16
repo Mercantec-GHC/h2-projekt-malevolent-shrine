@@ -50,8 +50,8 @@ namespace API.Controllers
                 LastName = request.LastName,
                 RoleId = 4,
             };
-
-            _context.Users.Add(newUser);
+           
+            _context.Users.Add(newUser);     // Добавляем пользователя в базу данных TODO: только если пользователь еще не существует
             await _context.SaveChangesAsync();
 
             return Ok("Регистрация успешна!");
