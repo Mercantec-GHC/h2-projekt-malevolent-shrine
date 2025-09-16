@@ -5,7 +5,7 @@ using API.DTOs;
 using Microsoft.EntityFrameworkCore;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+
 using System.Security.Claims;
 
 
@@ -55,7 +55,7 @@ namespace API.Controllers
        /// </summary>
        /// <returns>En liste af UserReadDto</returns>
       
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsers()
         {
@@ -94,7 +94,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="id">Users unikke ID</param>
         /// <returns>En UserReadDTO hvis brugeren findes</returns>
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
         [HttpGet("{id}")]
         public async Task<ActionResult<UserReadDto>> GetUser(int id)
         {
@@ -137,7 +137,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="userDto"></param>
         /// <returns>Returnerer en UserReadDto med oprettede brugerens ID og detaljer</returns>
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]// Добавляем InfiniteVoid
         [HttpPost]
         public async Task<ActionResult<UserReadDto>> PostUser(UserCreateDto userDto)
 
@@ -203,7 +203,7 @@ namespace API.Controllers
         /// <param name="id">Brugerens unikke ID</param>
         /// <param name="userDto">Brugerens opdaterede data</param>
         /// <returns>Returnerer NoContent hvis opdateringen lykkedes</returns>
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UserUpdateDto userDto)
         {
@@ -450,7 +450,7 @@ namespace API.Controllers
                 return BadRequest("Роль InfiniteVoid может быть только у Сатору Годжо.");
             }
 
-            var oldRoleName = user.Role.Name ?? "Неизвестная роль";
+            var oldRoleName = user.Role.Name;
             
             // Изменяем роль пользователя
             user.RoleId = roleUpdateDto.RoleId;
