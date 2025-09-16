@@ -1,0 +1,75 @@
+﻿/* Profile.razor.css */
+
+/* Общий контейнер */
+.profile-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 20px;
+    background: linear-gradient(145deg, #1f1f1f, #2c2c2c);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+    /* Заголовок карточки */
+    .profile-container h4 {
+        margin-bottom: 20px;
+        font-size: 1.8rem;
+        text-align: center;
+        color: #f0f0f0;
+    }
+
+    /* Definition list */
+    .profile-container dl {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        row-gap: 12px;
+        column-gap: 20px;
+    }
+
+    .profile-container dt {
+        font-weight: bold;
+        color: #ccc;
+    }
+
+    .profile-container dd {
+        margin: 0;
+        color: #fff;
+    }
+
+/* VIP badge */
+.vip-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.vip-yes {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.vip-no {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+/* Spinner container */
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+/* Error message */
+.error-message {
+    color: #ff6b6b;
+    background-color: rgba(255, 0, 0, 0.1);
+    padding: 10px 15px;
+    border-radius: 8px;
+    text-align: center;
+}

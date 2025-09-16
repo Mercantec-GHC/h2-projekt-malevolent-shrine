@@ -1,5 +1,7 @@
-namespace DomainModels.Models;
+using System.ComponentModel.DataAnnotations.Schema;
 
+namespace DomainModels.Models;
+[Table("UserInfos")]
 public class UserInfo
 {
         public int UserId { get; set; }

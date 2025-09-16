@@ -299,7 +299,7 @@ namespace API.Controllers
         /// </remarks>
         [Authorize] // Этот endpoint доступен всем авторизованным пользователям
         [HttpGet("me")]
-        public async Task<IActionResult> GetCurrentUser()
+        public async Task<ActionResult<User>> GetCurrentUser()
         {
 
             try
@@ -332,9 +332,11 @@ namespace API.Controllers
                     user.Id,
                     user.Email,
                     user.FirstName,
+                    user.IsVIP,
                     user.LastName,
+                    user.DateOfBirth,
                     user.CreatedAt,
-                    Role = user.Role?.Name, // Извлекаем только Name из объекта Role
+                    Role = user.Role, // Извлекаем только Name из объекта Role
                     user.ProfilePicture
                 });  
             }
@@ -344,7 +346,7 @@ namespace API.Controllers
                 _logger.LogError(ex, "Ошибка при получении текущего пользователя.");
 
                 // Возвращаем пользователю понятную ошибку
-                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+                return StatusCode(500, $"Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже\n\n{ex.Message} {ex.StackTrace}");
             }
         }
 

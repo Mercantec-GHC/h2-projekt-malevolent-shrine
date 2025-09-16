@@ -8,7 +8,7 @@ namespace Blazor.Services
 {
     public partial class APIService
     {
-        public async Task<UserReadDto> GetCurrentUserAsync(string? token = null)
+        public async Task<User> GetCurrentUserAsync(string? token = null)
         {
             try
             {
@@ -17,11 +17,11 @@ namespace Blazor.Services
                     _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 }
 
-                return await _httpClient.GetFromJsonAsync<UserReadDto>("api/Users/me");
+                return await _httpClient.GetFromJsonAsync<User>("api/Users/me");
             } catch (Exception ex)
             {
                 Console.WriteLine($"{ex} {ex.Message} {ex.StackTrace}");
-                return new UserReadDto();
+                return new User();
             }
         }
     }

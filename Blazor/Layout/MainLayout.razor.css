@@ -1,6 +1,39 @@
+п»ї/* ===== Layout ===== */
+.page {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: row; /* ГЇГ® ГіГ¬Г®Г«Г·Г Г­ГЁГѕ Г¤ГҐГ±ГЄГІГ®ГЇ */
+}
 
+/* ===== Sidebar Toggle ===== */
+.sidebar-toggle {
+    position: fixed;
+    top: 0.5rem;
+    left: 260px;
+    z-index: 10;
+    background: #e60012;
+    color: white;
+    border: none;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    border-radius: 0 4px 4px 0;
+    transition: left 0.3s ease;
+}
 
-/* ===== Общий стиль страницы ===== */
+.sidebar.collapsed + .sidebar-toggle {
+    left: 0;
+}
+
+h1, h2, h3 {
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: white;
+    margin-bottom: 1rem;
+    text-shadow: -3px 3px 0 #000, -4px 4px 0 #e60012;
+}
+
 body {
     margin: 0;
     font-family: 'Montserrat', 'Arial Black', sans-serif;
@@ -13,7 +46,7 @@ body {
 .page {
     display: flex;
     min-height: 100vh;
-    flex-direction: row; /* по умолчанию десктоп */
+    flex-direction: row;
 }
 
 /* ===== Sidebar ===== */
@@ -25,7 +58,7 @@ body {
     border-right: 6px solid #e60012;
     box-shadow: 4px 0 12px rgba(0,0,0,0.8);
     transition: width 0.3s ease, padding 0.3s ease;
-    position: sticky;
+    position: sticky;   
     top: 0;
     height: 100vh;
     overflow: hidden;
@@ -59,103 +92,32 @@ body {
     left: 0;
 }
 
-/* ===== Main Content ===== */
 main {
     flex: 1;
     padding: 2.5rem;
     position: relative;
     z-index: 1;
-    background-image: url(https://i.redd.it/54obu7eenrq61.gif);
-    background-repeat: no-repeat;
+    /* Р“СЂР°РґРёРµРЅС‚РЅС‹Р№ С„РѕРЅ СЃ С‚С‘РїР»С‹РјРё РєСЂР°СЃРЅС‹РјРё Р±Р»РёРєР°РјРё */
+    background: radial-gradient(circle at 20% 20%, rgba(230,0,18,0.15), transparent 30%), radial-gradient(circle at 80% 80%, rgba(230,0,18,0.1), transparent 30%), linear-gradient(135deg, #2e2e2e 0%, #4a4a4a 50%, #2e2e2e 100%);
     background-size: cover;
     background-position: center;
 }
 
-/* ===== Заголовки ===== */
-h1, h2, h3 {
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: white;
-    margin-bottom: 1rem;
-    text-shadow: -3px 3px 0 #000, -4px 4px 0 #e60012;
-}
-
-/* ===== Отели, статус и т.д. остаются без изменений ===== */
-
-/* ===== Мобильные стили ===== */
-/* ===== Общий стиль страницы ===== */
-body {
-    margin: 0;
-    font-family: 'Montserrat', 'Arial Black', sans-serif;
-    background: #000;
-    color: #fff;
-    overflow-x: hidden;
-}
-
-/* ===== Layout ===== */
-.page {
-    display: flex;
-    min-height: 100vh;
-    flex-direction: row; /* по умолчанию десктоп */
-}
-
-/* ===== Sidebar ===== */
-.sidebar {
-    width: 260px;
-    background: #000;
-    color: white;
-    padding: 1rem;
-    border-right: 6px solid #e60012;
-    box-shadow: 4px 0 12px rgba(0,0,0,0.8);
-    transition: width 0.3s ease, padding 0.3s ease;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow: hidden;
-}
-
-    .sidebar.collapsed {
-        width: 0;
-        padding: 0;
-        border: none;
-        box-shadow: none;
-        overflow: hidden;
+    /* Р›С‘РіРєРёР№ overlay РґР»СЏ РєРѕРЅС‚СЂР°СЃС‚Р° СЃ РєР°СЂС‚РѕС‡РєР°РјРё */
+    main::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.2); /* РјРёРЅРёРјР°Р»СЊРЅРѕРµ Р·Р°С‚РµРјРЅРµРЅРёРµ */
+        z-index: -1;
+        pointer-events: none;
     }
 
-/* ===== Sidebar Toggle ===== */
-.sidebar-toggle {
-    position: fixed;
-    top: 0.5rem;
-    left: 260px;
-    z-index: 10;
-    background: #e60012;
-    color: white;
-    border: none;
-    padding: 0.5rem 0.8rem;
-    cursor: pointer;
-    font-size: 1.2rem;
-    border-radius: 0 4px 4px 0;
-    transition: left 0.3s ease;
-}
 
-.sidebar.collapsed + .sidebar-toggle {
-    left: 0;
-}
 
-/* ===== Main Content ===== */
-main {
-    flex: 1;
-    padding: 2.5rem;
-    position: relative;
-    z-index: 1;
-    background-image: url(https://i.redd.it/54obu7eenrq61.gif);
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-}
-
-/* ===== Заголовки ===== */
 h1, h2, h3 {
     font-weight: 900;
     text-transform: uppercase;
@@ -165,21 +127,20 @@ h1, h2, h3 {
     text-shadow: -3px 3px 0 #000, -4px 4px 0 #e60012;
 }
 
-/* ===== Мобильные стили ===== */
 @media (max-width: 768px) {
     .page {
-        flex-direction: column; /* sidebar сверху */
+        flex-direction: column; /* sidebar Г±ГўГҐГ°ГµГі */
     }
 
     .sidebar {
         width: 100%;
-        height: auto !important; /* по содержимому */
+        height: auto !important; /* ГЇГ® Г±Г®Г¤ГҐГ°Г¦ГЁГ¬Г®Г¬Гі */
         max-height: none !important;
         padding: 0.5rem 1rem;
         border-right: none;
         box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         display: flex;
-        flex-direction: column; /* вертикально, а кнопки внутри будут в ряду */
+        flex-direction: column; /* ГўГҐГ°ГІГЁГЄГ Г«ГјГ­Г®, Г  ГЄГ­Г®ГЇГЄГЁ ГўГ­ГіГІГ°ГЁ ГЎГіГ¤ГіГІ Гў Г°ГїГ¤Гі */
         flex-wrap: wrap;
         justify-content: flex-start;
         align-items: flex-start;
@@ -190,12 +151,12 @@ h1, h2, h3 {
     .nav-wrapper,
     .nav-items {
         display: flex !important;
-        flex-direction: row !important; /* кнопки в ряд */
-        flex-wrap: wrap !important; /* перенос строк при необходимости */
-        height: auto !important; /* убрать фиксированную высоту */
+        flex-direction: row !important; /* ГЄГ­Г®ГЇГЄГЁ Гў Г°ГїГ¤ */
+        flex-wrap: wrap !important; /* ГЇГҐГ°ГҐГ­Г®Г± Г±ГІГ°Г®ГЄ ГЇГ°ГЁ Г­ГҐГ®ГЎГµГ®Г¤ГЁГ¬Г®Г±ГІГЁ */
+        height: auto !important; /* ГіГЎГ°Г ГІГј ГґГЁГЄГ±ГЁГ°Г®ГўГ Г­Г­ГіГѕ ГўГ»Г±Г®ГІГі */
         max-height: none !important;
         overflow: visible !important;
-        flex-grow: 0 !important; /* убрать растяжение */
+        flex-grow: 0 !important; /* ГіГЎГ°Г ГІГј Г°Г Г±ГІГїГ¦ГҐГ­ГЁГҐ */
     }
 
     .nav-item {
