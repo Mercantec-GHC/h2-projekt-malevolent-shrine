@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DomainModels.DTOs
+namespace API.DTOs
 {
     public class RefreshTokenDto
     {

@@ -1,4 +1,4 @@
-namespace DomainModels.DTOs
+namespace API.DTOs
 {
     public class AuthResponseDto
     {
