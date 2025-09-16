@@ -1,15 +1,26 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace API.Models
 {
     public class User : Common
     {
+        [Required]
+        [StringLength(50)]
         public string FirstName { get; set; }
+        [Required]
+        [StringLength(50)]
         public string LastName { get; set; }
         
-        
+        [Required]
+        [EmailAddress]
         public string Email { get; set; }
+        
+        [Required]
         public string Username { get; set; }
+        
+        [Required]
         public string HashedPassword { get; set; }
-        public byte[]? Salt { get; set; }
+        
         
         public DateTime DateOfBirth { get; set; }
         public bool IsAdult => DateOfBirth <= DateTime.Today.AddYears(-18);
@@ -25,8 +36,12 @@ namespace API.Models
         public UserInfo? UserInfo { get; set; }
         
         public string? ProfilePicture { get; set; }
+        
+        
 
         private List<Booking> Bookings { get; set; } = new();
+        
+        public List<RefreshToken> RefreshTokens { get; set; } = new();
         
     }
 }

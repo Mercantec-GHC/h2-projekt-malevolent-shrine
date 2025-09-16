@@ -20,6 +20,10 @@ public class UserCreateDto
     public string? PhoneNumber { get; set; }
     
     [Required]
+    [StringLength(50)]
+    public required string Username { get; set; }
+    
+    [Required]
     [MinLength(6)]
     [StringLength(100)]
     public string? Password { get; set; }

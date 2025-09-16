@@ -9,7 +9,7 @@ namespace API.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public DateTime CreatedAt { get; set; } // Убираем = DateTime.Now
-        public DateTime UpdatedAt { get; set; } // Убираем = DateTime.Now
+        public DateTime CreatedAt { get; set; } // Убираем = DateTime. Now
+        public DateTime UpdatedAt { get; set; } // Убираем = DateTime. Now
     }
 }

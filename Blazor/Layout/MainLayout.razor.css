@@ -1,8 +1,8 @@
-﻿/* ===== Layout ===== */
+ï»¿/* ===== Layout ===== */
 .page {
     display: flex;
     min-height: 100vh;
-    flex-direction: row; /* ïî óìîë÷àíèþ äåñêòîï */
+    flex-direction: row;
 }
 
 /* ===== Sidebar Toggle ===== */
@@ -97,13 +97,16 @@ main {
     padding: 2.5rem;
     position: relative;
     z-index: 1;
-    /* Градиентный фон с тёплыми красными бликами */
     background: radial-gradient(circle at 20% 20%, rgba(230,0,18,0.15), transparent 30%), radial-gradient(circle at 80% 80%, rgba(230,0,18,0.1), transparent 30%), linear-gradient(135deg, #2e2e2e 0%, #4a4a4a 50%, #2e2e2e 100%);
     background-size: cover;
     background-position: center;
 }
+    .top-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
 
-    /* Лёгкий overlay для контраста с карточками */
     main::before {
         content: "";
         position: absolute;
@@ -111,7 +114,7 @@ main {
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0,0,0,0.2); /* минимальное затемнение */
+        background: rgba(0,0,0,0.2);
         z-index: -1;
         pointer-events: none;
     }
@@ -129,18 +132,18 @@ h1, h2, h3 {
 
 @media (max-width: 768px) {
     .page {
-        flex-direction: column; /* sidebar ñâåðõó */
+        flex-direction: column;
     }
 
     .sidebar {
         width: 100%;
-        height: auto !important; /* ïî ñîäåðæèìîìó */
+        height: auto !important; 
         max-height: none !important;
         padding: 0.5rem 1rem;
         border-right: none;
         box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         display: flex;
-        flex-direction: column; /* âåðòèêàëüíî, à êíîïêè âíóòðè áóäóò â ðÿäó */
+        flex-direction: column; 
         flex-wrap: wrap;
         justify-content: flex-start;
         align-items: flex-start;
@@ -151,12 +154,12 @@ h1, h2, h3 {
     .nav-wrapper,
     .nav-items {
         display: flex !important;
-        flex-direction: row !important; /* êíîïêè â ðÿä */
-        flex-wrap: wrap !important; /* ïåðåíîñ ñòðîê ïðè íåîáõîäèìîñòè */
-        height: auto !important; /* óáðàòü ôèêñèðîâàííóþ âûñîòó */
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        height: auto !important;
         max-height: none !important;
         overflow: visible !important;
-        flex-grow: 0 !important; /* óáðàòü ðàñòÿæåíèå */
+        flex-grow: 0 !important;
     }
 
     .nav-item {
