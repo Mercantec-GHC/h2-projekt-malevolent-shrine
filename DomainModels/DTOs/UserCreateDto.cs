@@ -12,13 +12,16 @@ public class UserCreateDto
     public required string LastName { get; set; }
     
     [Required]
-    [EmailAddress]
-    [StringLength(100)]
+    [StringLength(50)]
     public required string Email { get; set; }
     
     [Required]
     [StringLength(20)]
     public required string PhoneNumber { get; set; }
+    
+    [Required]
+    [StringLength(50)]
+    public required string Username { get; set; }
     
     [Required]
     [MinLength(6)]
