@@ -225,6 +225,8 @@ namespace API.Controllers
             return Ok("Токен успешно отозван.");
         }
 [HttpPost("revoke-all-tokens")]
+
+        [Authorize]
         public async Task<IActionResult> RevokeAllTokens()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
