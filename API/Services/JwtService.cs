@@ -40,17 +40,21 @@ namespace API.Services
         
         public string GenerateToken(User user, string? roleName = null)
         {
-            // Если роль не передана или пустая, это ошибка - не должно быть роли по умолчанию
             if (string.IsNullOrEmpty(roleName))
             {
-                throw new InvalidOperationException($"Роль пользователя {user.Email} не загружена. Проверьте Include(u => u.Role) в запросе.");
+                throw new InvalidOperationException($"Роль по��ьзователя {user.Email} не загружена. Проверьте Include(u => u.Role) в запросе.");
             }
 
+            var jti = Guid.NewGuid().ToString(); // Уникальный идентификатор токена
+    
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, roleName) // Используем только переданную роль
+                new Claim(ClaimTypes.Role, roleName),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), // Subject (User ID)
+                new Claim(JwtRegisteredClaimNames.Jti, jti), // JWT ID
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
