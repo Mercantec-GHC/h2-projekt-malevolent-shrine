@@ -60,19 +60,18 @@
     {
         try
         {
-            // Get token from localStorage
             var token = await JS.InvokeAsync<string>("localStorage.getItem", "access_token");
             user = await APIService.GetCurrentUserAsync(token);
             userId = user.Id.ToString();
         }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        catch (UnauthorizedAccessException)
         {
             errorMessage = "Please login or register.";
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             errorMessage = "Error occurred while trying to load profile";
-            Console.Error.WriteLine(ex);
         }
+
     }
 }

@@ -10,19 +10,23 @@ namespace Blazor.Services
     {
         public async Task<User> GetCurrentUserAsync(string? token = null)
         {
-            try
+            if (!string.IsNullOrEmpty(token))
             {
-                if (!string.IsNullOrEmpty(token))
-                {
-                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                }
-
-                return await _httpClient.GetFromJsonAsync<User>("api/Users/me");
-            } catch (Exception ex)
-            {
-                Console.WriteLine($"{ex} {ex.Message} {ex.StackTrace}");
-                return new User();
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
+
+            var response = await _httpClient.GetAsync("api/Users/me");
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedAccessException("Unauthorized");
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<User>()
+                   ?? new User();
         }
+
     }
 }

@@ -28,10 +28,6 @@ public class UserCreateDto
     [StringLength(100)]
     public string? Password { get; set; }
 
-    [Required]
-    public string? Username { get; set; }
-
-
     [StringLength(200)]
     public string? Address { get; set; }
 }
