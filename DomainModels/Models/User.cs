@@ -1,0 +1,32 @@
+namespace DomainModels.Models
+{
+    public class User : Common
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        
+        
+        public string Email { get; set; }
+        public string Username { get; set; }
+        public string HashedPassword { get; set; }
+        public byte[]? Salt { get; set; }
+        
+        public DateTime DateOfBirth { get; set; }
+        public bool IsAdult => DateOfBirth <= DateTime.Today.AddYears(-18);
+
+        
+        //for VIP users
+        public bool IsVIP { get; set; }
+        
+        //Adding Role
+        public int RoleId { get; set; }
+        public Role Role { get; set; }
+        
+        public UserInfo? UserInfo { get; set; }
+        
+        public string? ProfilePicture { get; set; }
+
+        private List<Booking> Bookings { get; set; } = new();
+        
+    }
+}

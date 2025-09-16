@@ -1,7 +1,38 @@
-.navbar-toggler {
-    background-color: rgba(255, 255, 255, 0.1);
+.bi {
+    display: inline-block;
+    position: relative;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.75rem;
+    top: -1px;
+    background-size: cover;
+    font-size: 1.2rem;
+    vertical-align: middle;
+    margin-right: 0.5rem;
 }
 
+.bi-house-door-fill-nav-menu {
+    background-image: url("data:image/svg+xml,..."); /* обрезано для краткости */
+}
+
+.bi-house-door-fill-nav-menu {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-size: cover;
+    background-image: url("data:image/svg+xml,..."); /* убедись, что SVG здесь */
+}
+
+
+.bi-plus-square-fill-nav-menu {
+    background-image: url("data:image/svg+xml,...");
+}
+
+.bi-list-nested-nav-menu {
+    background-image: url("data:image/svg+xml,...");
+}
+
+/* Верхняя панель */
 .top-row {
     min-height: 3.5rem;
     background-color: rgba(0,0,0,0.4);
@@ -11,73 +42,153 @@
     font-size: 1.1rem;
 }
 
-.bi {
-    display: inline-block;
-    position: relative;
-    width: 1.25rem;
-    height: 1.25rem;
-    margin-right: 0.75rem;
-    top: -1px;
-    background-size: cover;
+.navbar-toggler {
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-.bi-house-door-fill-nav-menu {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-house-door-fill' viewBox='0 0 16 16'%3E%3Cpath d='M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5Z'/%3E%3C/svg%3E");
+/* ===== Sidebar Scrollable ===== */
+.nav-scrollable {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
 }
 
-.bi-plus-square-fill-nav-menu {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-plus-square-fill' viewBox='0 0 16 16'%3E%3Cpath d='M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm6.5 4.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3a.5.5 0 0 1 1 0z'/%3E%3C/svg%3E");
+.nav-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
-.bi-list-nested-nav-menu {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-list-nested' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M4.5 11.5A.5.5 0 0 1 5 11h10a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm-2-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm-2-4A.5.5 0 0 1 1 3h10a.5.5 0 0 1 0 1H1a.5.5 0 0 1-.5-.5z'/%3E%3C/svg%3E");
+.nav-items {
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
+/* ===== Навигационные ссылки ===== */
 .nav-item {
     font-size: 0.9rem;
-    padding-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
 }
 
-    .nav-item:first-of-type {
-        padding-top: 1rem;
-    }
-
-    .nav-item:last-of-type {
-        padding-bottom: 1rem;
-    }
-
-    .nav-item ::deep a {
+    .nav-item a {
         color: #d7d7d7;
         border-radius: 4px;
         height: 3rem;
         display: flex;
         align-items: center;
         line-height: 3rem;
+        text-decoration: none;
+        font-weight: bold;
     }
 
-.nav-item ::deep a.active {
-    background-color: rgba(255,255,255,0.37);
-    color: white;
+        .nav-item a.active {
+            background-color: rgba(255,255,255,0.37);
+            color: white;
+        }
+
+        .nav-item a:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+/* ===== Bottom-nav ===== */
+.bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem;
+    border-top: 2px solid white;
+    background-color: rgba(0, 0, 0, 0.8);
+    box-shadow: 0 -4px 0 #e60012;
+    position: relative; /* было static */
+    bottom: auto; /* чтобы не прилипало к самому низу */
+    margin-bottom: 2.5rem; /* поднимем вверх на немного */
 }
 
-.nav-item ::deep a:hover {
-    background-color: rgba(255,255,255,0.1);
+
+.bottom-nav .nav-link {
+    display: inline-flex;
+    align-items: center; /* ВЫРАВНИВАНИЕ по центру */
+    gap: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    font-size: 0.95rem;
+    font-weight: bold;
+    text-decoration: none;
     color: white;
+    background-color: #111;
+    border: 2px solid white;
+    clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+    box-shadow: 3px 3px 0 black;
+    transition: all 0.2s ease-in-out;
+    line-height: 1.25rem; /* или auto */
+}
+.bottom-nav .nav-link span {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-size: cover;
+    background-position: center;
+    vertical-align: middle;
 }
 
-@media (min-width: 641px) {
-    .navbar-toggler {
-        display: none;
+
+        /* Login */
+        .bottom-nav .nav-link.login {
+            background-color: #e60012;
+        }
+
+        /* Register */
+        .bottom-nav .nav-link.register {
+            background-color: #1d3557;
+        }
+
+            /* Profile */
+            .bottom-nav .nav-link.register[href*="profile"] {
+                background-color: #333;
+            }
+
+        /* Hover для всех */
+        .bottom-nav .nav-link:hover {
+            background-color: white;
+            color: #e60012;
+            box-shadow: 0 0 10px red;
+            border-color: red;
+        }
+
+/* ===== Responsive ===== */
+
+/* Desktop */
+@media (min-width: 769px) {
+    .nav-scrollable {
+        display: block !important;
+        height: calc(100vh - 3.5rem);
+        overflow-y: auto;
     }
 
     .collapse {
-        /* Never collapse the sidebar for wide screens */
-        display: block;
+        display: block !important;
     }
 
+    nav.nav {
+        flex-direction: column;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
     .nav-scrollable {
-        /* Allow sidebar to scroll for tall menus */
-        height: calc(100vh - 3.5rem);
-        overflow-y: auto;
+        display: none;
+    }
+
+        .nav-scrollable.open {
+            display: block;
+        }
+
+    nav.nav {
+        flex-direction: row;
+        justify-content: space-around;
+    }
+
+    .nav-item {
+        padding: 0.5rem;
     }
 }

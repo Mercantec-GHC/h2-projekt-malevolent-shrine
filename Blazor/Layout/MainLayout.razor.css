@@ -1,76 +1,30 @@
-/* ===== Общий стиль страницы ===== */
-body {
-    margin: 0;
-    font-family: 'Montserrat', 'Arial Black', sans-serif;
-    background: #000; /* чисто черный фон */
-    color: #fff;
-    overflow-x: hidden;
-}
-
-/* ===== Layout ===== */
+ГЇВ»Вї/* ===== Layout ===== */
 .page {
     display: flex;
     min-height: 100vh;
+    flex-direction: row;
 }
 
-/* Sidebar */
-.sidebar {
-    width: 260px;
-    background: #000;
+/* ===== Sidebar Toggle ===== */
+.sidebar-toggle {
+    position: fixed;
+    top: 0.5rem;
+    left: 260px;
+    z-index: 10;
+    background: #e60012;
     color: white;
-    padding: 1rem;
-    border-right: 6px solid #e60012;
-    clip-path: polygon(0 0, 100% 5%, 100% 100%, 0 95%);
-    box-shadow: 4px 0 12px rgba(0,0,0,0.8);
-    z-index: 5;
+    border: none;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    border-radius: 0 4px 4px 0;
+    transition: left 0.3s ease;
 }
 
-    .sidebar a {
-        display: block;
-        padding: 0.8rem 1rem;
-        font-weight: bold;
-        color: white;
-        text-decoration: none;
-        transition: transform 0.2s, background 0.2s;
-    }
-
-        .sidebar a:hover {
-            background: #e60012;
-            transform: translateX(5px);
-        }
-
-/* ===== Main content с узорами ===== */
-main {
-    flex: 1;
-    padding: 1.5rem;
-    clip-path: polygon(0 0, 100% 0, 100% 95%, 0 100%);
-    position: relative;
-    z-index: 1;
-    /* Чёрный фон с более заметным паттерном */
-    /* background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 2px, transparent 2px, transparent 8px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 2px, transparent 2px, transparent 8px);*/
-    background-image: url(https://i.redd.it/54obu7eenrq61.gif);
-    background-size: cover;
+.sidebar.collapsed + .sidebar-toggle {
+    left: 0;
 }
 
-/* Верхняя панель */
-    .top-row {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 1rem;
-}
-
-    .top-row a {
-        color: #e60012;
-        font-weight: bold;
-        text-decoration: none;
-        font-size: 1.1rem;
-    }
-
-        .top-row a:hover {
-            text-decoration: underline;
-        }
-
-/* Заголовки */
 h1, h2, h3 {
     font-weight: 900;
     text-transform: uppercase;
@@ -80,87 +34,161 @@ h1, h2, h3 {
     text-shadow: -3px 3px 0 #000, -4px 4px 0 #e60012;
 }
 
-/* ===== Карточки статуса ===== */
-.status-card {
+body {
+    margin: 0;
+    font-family: 'Montserrat', 'Arial Black', sans-serif;
     background: #000;
-    border: 3px solid #fff;
-    border-radius: 0;
+    color: #fff;
+    overflow-x: hidden;
+}
+
+/* ===== Layout ===== */
+.page {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: row;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+    width: 260px;
+    background: #000;
+    color: white;
     padding: 1rem;
-    position: relative;
+    border-right: 6px solid #e60012;
+    box-shadow: 4px 0 12px rgba(0,0,0,0.8);
+    transition: width 0.3s ease, padding 0.3s ease;
+    position: sticky;   
+    top: 0;
+    height: 100vh;
     overflow: hidden;
-    box-shadow: 6px 6px 0 #e60012, -6px -6px 0 #fff;
-    clip-path: polygon(0 0, 100% 6%, 100% 100%, 0 94%);
-    transition: transform 0.2s;
 }
 
-    .status-card:hover {
-        transform: translateY(-6px);
+    .sidebar.collapsed {
+        width: 0;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        overflow: hidden;
     }
 
-    .status-card h3 {
-        margin: 0;
-        font-size: 1.4rem;
-        color: #e60012;
-    }
-
-/* ===== Список отелей ===== */
-.hotels {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
-}
-
-.hotel-card {
-    background: #000;
-    border: 3px solid #fff;
-    position: relative;
-    padding: 1.2rem;
-    box-shadow: 6px 6px 0 #e60012, -6px -6px 0 #fff;
-    clip-path: polygon(0 0, 100% 6%, 100% 100%, 0 94%);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-    perspective: 1000px;
-    transform-style: preserve-3d;
-}
-
-    .hotel-card:hover {
-        transform: translateY(-10px) rotateX(6deg) rotateY(-6deg);
-        box-shadow: 10px 10px 0 #e60012, -10px -10px 0 #fff;
-    }
-
-/* Красная декоративная полоска */
-.hotel-accent {
-    height: 6px;
-    width: 100%;
+/* ===== Sidebar Toggle ===== */
+.sidebar-toggle {
+    position: fixed;
+    top: 0.5rem;
+    left: 260px;
+    z-index: 10;
     background: #e60012;
-    margin-bottom: 0.8rem;
-    clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    border-radius: 0 4px 4px 0;
+    transition: left 0.3s ease;
 }
 
-/* Название отеля */
-.hotel-name {
-    font-size: 1.5rem;
+.sidebar.collapsed + .sidebar-toggle {
+    left: 0;
+}
+
+main {
+    flex: 1;
+    padding: 2.5rem;
+    position: relative;
+    z-index: 1;
+    background: radial-gradient(circle at 20% 20%, rgba(230,0,18,0.15), transparent 30%), radial-gradient(circle at 80% 80%, rgba(230,0,18,0.1), transparent 30%), linear-gradient(135deg, #2e2e2e 0%, #4a4a4a 50%, #2e2e2e 100%);
+    background-size: cover;
+    background-position: center;
+}
+    .top-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
+    main::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.2);
+        z-index: -1;
+        pointer-events: none;
+    }
+
+
+
+h1, h2, h3 {
     font-weight: 900;
     text-transform: uppercase;
+    letter-spacing: 2px;
     color: white;
+    margin-bottom: 1rem;
     text-shadow: -3px 3px 0 #000, -4px 4px 0 #e60012;
-    margin-bottom: 0.4rem;
 }
 
-/* Остальная информация */
-.hotel-address {
-    font-size: 1rem;
-    color: #ccc;
+@media (max-width: 768px) {
+    .page {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto !important; 
+        max-height: none !important;
+        padding: 0.5rem 1rem;
+        border-right: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column; 
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: flex-start;
+        overflow: visible !important;
+    }
+
+    .nav-scrollable,
+    .nav-wrapper,
+    .nav-items {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        flex-grow: 0 !important;
+    }
+
+    .nav-item {
+        padding: 0.25rem 0.5rem;
+    }
+
+        .nav-item a {
+            height: auto !important;
+            line-height: normal;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.9rem;
+        }
+
+    .bottom-nav {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .sidebar-toggle {
+        position: relative;
+        top: 0.5rem;
+        left: 1rem;
+    }
+
+    main {
+        padding: 1rem;
+    }
 }
 
-.hotel-rooms {
-    font-size: 1rem;
-    font-weight: 800;
-    color: #fff;
-    background: #e60012;
-    display: inline-block;
-    padding: 0.4rem 0.8rem;
-    margin-top: 1rem;
-    clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
-    box-shadow: -3px 3px 0 #000;
-}
+

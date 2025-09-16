@@ -1,7 +1,13 @@
 ﻿@page "/"
 @using System.Net.Http
-
-<h1 class="page-title">Status Dashboard</h1>
+<div class="greeting">
+    <div class="logo">
+        <div class="circle">
+            <img src="https://ih1.redbubble.net/image.4696681445.6267/bg,f8f8f8-flat,750x,075,f-pad,750x1000,f8f8f8.jpg" alt="Logo">
+        </div>
+    </div>
+    <h1 class="page-title">Welcome to Malevolent Shrine</h1>
+</div>
 
 <div class="status-row">
     <div class="status-card-wrapper">
@@ -39,7 +45,7 @@
 @code {
     HealthCheckResponse? healthCheck;
     HealthCheckResponse? dbHealthCheck;
-    List<Hotel> hotels = new List<Hotel>();
+    List<HotelReadDto> hotels = new List<HotelReadDto>();
 
     protected override async Task OnInitializedAsync()
     {

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using API.Models;
-using Microsoft.AspNetCore.Identity;
+
 
 namespace API.Data
 {
@@ -26,6 +26,11 @@ namespace API.Data
         public DbSet<User> Users { get; set; }
         
         /// <summary>
+        /// Samling af brugerinfo (tabellen UserInfos).
+        ///  </summary>
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        
+        /// <summary>
         /// Samling af roller (tabellen Roles).
         /// </summary>
         public DbSet<Role> Roles { get; set; }
@@ -45,8 +50,7 @@ namespace API.Data
         /// </summary>
         public DbSet<VipRoom> VipRooms { get; set; }
         public DbSet<Booking> Bookings { get; set; }
-        
-        
+        public DbSet<UserInfo> UserInfos { get; set; }
         /// <summary>
         /// Konfigurerer konteksten ved opstart.
         /// Her sætter vi kompatibilitet for Npgsql-tidsstempler.
@@ -101,9 +105,7 @@ namespace API.Data
                 }
             );
             
-            
-            /// så den selv indstiller det aktuelle klokkeslæt HasDefaultValueSql - udfylder automatisk feltet
-            /// aktuel dato og klokkeslæt ved tilføjelse af en ny post
+            // Устанавливаем текущую дату по умолчанию для CreatedAt и UpdatedAt
             modelBuilder.Entity<Role>().Property(r => r.CreatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<Role>().Property(r => r.UpdatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<User>().Property(u => u.CreatedAt).HasDefaultValueSql("now()");
@@ -114,6 +116,10 @@ namespace API.Data
             modelBuilder.Entity<Hotel>().Property(h => h.UpdatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<Room>().Property(r => r.CreatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<Room>().Property(r => r.UpdatedAt).HasDefaultValueSql("now()");
+modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
+            modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
+            modelBuilder.Entity<Room>().HasIndex(r => new { r.HotelId, r.Number }).IsUnique();
+            
             
             modelBuilder.Entity<UserInfo>()
                 .HasKey(i => i.UserId); // Shared PK

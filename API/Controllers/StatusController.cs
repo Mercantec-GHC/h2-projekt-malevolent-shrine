@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using API.Data;
-using DomainModels.DTOs;
+using API.Data; 
 
 namespace API.Controllers
 {

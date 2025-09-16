@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using API.Data;
 using API.Models;
-using DomainModels.DTOs;
+using API.DTOs;
 using Microsoft.EntityFrameworkCore;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+
 using System.Security.Claims;
 
 
@@ -20,7 +20,6 @@ namespace API.Controllers
     {
         private readonly AppDBContext _context;
         private readonly JwtService _jwtService;
-        private readonly PasswordHasher<User> _passwordHasher;
         private readonly ILogger<UsersController> _logger;
         
         
@@ -29,14 +28,13 @@ namespace API.Controllers
         /// </summary>
         /// <param name="context"></param>
         /// <param name="jwtService"></param>
-        /// <param name="passwordHasher"></param>
         /// <param name="logger"></param>
         /// /// <remarks>
         /// Dette er konstruktøren for UsersController, der bruger Dependency Injection til at få
-        ///  AppDBContext, JwtService og PasswordHasher<User>.
+        ///  AppDBContext, JwtService.
         ///  logger bruges til at logge informationer og fejl.
-        ///  Dette sikrer, at controlleren har adgang til databasen, JWT-tjenesten og
-        ///  password hasheren for at håndtere brugerautentificering og
+        ///  Dette sikrer, at controlleren har adgang til databasen, JWT-tjenesten
+        ///  for at håndtere brugerautentificering og
         ///  autorisation.
         ///  Denne controller håndterer CRUD-operationer for brugere, herunder oprettelse,
         ///  læsning, opdatering og sletning af brugere.
@@ -44,11 +42,10 @@ namespace API.Controllers
         ///  samt hente alle tilgængelige roller.
         /// </remarks>
         /// <returns> </returns>    
-        public UsersController(AppDBContext context, JwtService jwtService, PasswordHasher<User> passwordHasher, ILogger<UsersController> logger)
+        public UsersController(AppDBContext context, JwtService jwtService, ILogger<UsersController> logger)
         {
             _context = context;
             _jwtService = jwtService;
-            _passwordHasher = passwordHasher; // Ты уже добавил это
             _logger = logger;
         }
         
@@ -58,7 +55,7 @@ namespace API.Controllers
        /// </summary>
        /// <returns>En liste af UserReadDto</returns>
       
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsers()
         {
@@ -97,7 +94,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="id">Users unikke ID</param>
         /// <returns>En UserReadDTO hvis brugeren findes</returns>
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
         [HttpGet("{id}")]
         public async Task<ActionResult<UserReadDto>> GetUser(int id)
         {
@@ -140,7 +137,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="userDto"></param>
         /// <returns>Returnerer en UserReadDto med oprettede brugerens ID og detaljer</returns>
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]// Добавляем InfiniteVoid
         [HttpPost]
         public async Task<ActionResult<UserReadDto>> PostUser(UserCreateDto userDto)
 
@@ -150,6 +147,15 @@ namespace API.Controllers
                 return BadRequest(ModelState);
             }
             
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+            
+            if (await _context.Users.AnyAsync(u => u.Email == userDto.Email))
+                return BadRequest("Пользователь с таким email уже существует.");
+
+            if (await _context.Users.AnyAsync(u => u.Username == userDto.Username))
+                return BadRequest("Пользователь с таким именем уже существует.");
+
+            
             try
             {
                 var user = new User
@@ -157,6 +163,9 @@ namespace API.Controllers
                     FirstName = userDto.FirstName,
                     LastName = userDto.LastName,
                     Email = userDto.Email,
+                    Username = userDto.Username,
+                    HashedPassword = hashedPassword,
+                    RoleId = 4, // Роль "Kunde" по умолчанию
                     UserInfo = new UserInfo
                     {
                         PhoneNumber = userDto.PhoneNumber,
@@ -172,7 +181,7 @@ namespace API.Controllers
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     Email = user.Email,
-                    PhoneNumber = user.UserInfo.PhoneNumber, // Через UserInfo!
+                    PhoneNumber = user.UserInfo.PhoneNumber, // Через UserInfo! 
                     Address = user.UserInfo.Address // Через UserInfo!
                 };
                 return CreatedAtAction(nameof(GetUser), new { id = userReadDto.Id }, userReadDto);
@@ -183,7 +192,7 @@ namespace API.Controllers
                 _logger.LogError(ex, "Ошибка при создании пользователя.");
 
                 // Возвращаем пользователю понятную ошибку
-                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+                return StatusCode(500, $"Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже. {ex.Message}\n\n{ex}");
             }
         }
         
@@ -194,7 +203,7 @@ namespace API.Controllers
         /// <param name="id">Brugerens unikke ID</param>
         /// <param name="userDto">Brugerens opdaterede data</param>
         /// <returns>Returnerer NoContent hvis opdateringen lykkedes</returns>
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UserUpdateDto userDto)
         {
@@ -207,6 +216,13 @@ namespace API.Controllers
             {
                 return BadRequest();
             }
+            
+            // Проверка уникальности email и username
+            if (await _context.Users.AnyAsync(u => u.Email == userDto.Email && u.Id != id))
+                return BadRequest("Пользователь с таким email уже существует.");
+            if (await _context.Users.AnyAsync(u => u.Username == userDto.Username && u.Id != id))
+                return BadRequest("Пользователь с таким именем уже существует.");
+
 
             var user = await _context.Users
                 .Include(u => u.UserInfo) // Загружаем связанные данные!
@@ -299,7 +315,7 @@ namespace API.Controllers
         /// </remarks>
         [Authorize] // Этот endpoint доступен всем авторизованным пользователям
         [HttpGet("me")]
-        public async Task<IActionResult> GetCurrentUser()
+        public async Task<ActionResult<User>> GetCurrentUser()
         {
 
             try
@@ -332,9 +348,11 @@ namespace API.Controllers
                     user.Id,
                     user.Email,
                     user.FirstName,
+                    user.IsVIP,
                     user.LastName,
+                    user.DateOfBirth,
                     user.CreatedAt,
-                    Role = user.Role?.Name, // Извлекаем только Name из объекта Role
+                    Role = user.Role.Name, // Извлекаем только Name из объекта Role
                     user.ProfilePicture
                 });  
             }
@@ -344,7 +362,7 @@ namespace API.Controllers
                 _logger.LogError(ex, "Ошибка при получении текущего пользователя.");
 
                 // Возвращаем пользователю понятную ошибку
-                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+                return StatusCode(500, $"Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже\n\n{ex.Message} {ex.StackTrace}");
             }
         }
 
@@ -407,6 +425,10 @@ namespace API.Controllers
         [HttpPost("change-role")]
         public async Task<IActionResult> ChangeUserRoleByDto([FromBody] UserRoleUpdateDto roleUpdateDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             // Проверяем существование пользователя
             var user = await _context.Users
                 .Include(u => u.Role)
@@ -430,7 +452,7 @@ namespace API.Controllers
                 return BadRequest("Роль InfiniteVoid может быть только у Сатору Годжо.");
             }
 
-            var oldRoleName = user.Role?.Name ?? "Неизвестная роль";
+            var oldRoleName = user.Role.Name;
             
             // Изменяем роль пользователя
             user.RoleId = roleUpdateDto.RoleId;
