@@ -142,6 +142,12 @@ modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())), // Вычисление хеша
                     c => c.ToList() // Создание снимка
                 ));
+           
+            
+            // Добавить в конец метода OnModelCreating:
+            modelBuilder.Entity<RefreshToken>().HasIndex(rt => rt.TokenHash).IsUnique();
+            modelBuilder.Entity<RefreshToken>().Property(rt => rt.CreatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<RefreshToken>().Property(rt => rt.UpdatedAt).HasDefaultValueSql("now()");
         }
     }
 }
