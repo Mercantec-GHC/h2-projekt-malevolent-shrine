@@ -29,6 +29,12 @@ public class Program
             Console.WriteLine($"APIService BaseAddress: {client.BaseAddress}");
         });
 
+        // Регистрируем отдельный HttpClient для ActiveDirectoryService
+        builder.Services.AddHttpClient<ActiveDirectoryService>(client =>
+        {
+            client.BaseAddress = new Uri(apiEndpoint);
+        });
+
         await builder.Build().RunAsync();
     }
 }

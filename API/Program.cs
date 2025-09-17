@@ -127,7 +127,8 @@ public class Program
         builder.Services.AddAuthorization();
         builder.Services.AddScoped<DataSeederService>(); 
         builder.Services.AddScoped<PasswordHasher<User>>();
-        
+        // Active Directory services
+        builder.Services.AddScoped<API.AD.ActiveDirectoryService>();
         
         builder.Services.AddDbContext<AppDBContext>(options =>
         {

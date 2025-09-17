@@ -1,0 +1,234 @@
+@page "/admin-dashboard"
+@using Blazor.Models
+@using Blazor.Services
+@inject ActiveDirectoryService ADService
+
+<h3>Active Directory Admin Dashboard (Тестовый)</h3>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="TestConnection" disabled="@isLoading">
+        @if (isLoading)
+        {
+            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+        }
+        Проверить соединение с AD
+    </button>
+    
+    @if (!string.IsNullOrEmpty(connectionStatus))
+    {
+        <div class="alert @(connectionStatusOk ? "alert-success" : "alert-danger") mt-2">
+            @connectionStatus
+        </div>
+    }
+</div>
+
+<hr />
+<h4>Пользователи</h4>
+<div class="row mb-3">
+    <div class="col-md-6">
+        <input @bind="userSearch" @onkeypress="OnSearchKeyPress" 
+               placeholder="Поиск пользователя..." class="form-control" />
+    </div>
+    <div class="col-md-6">
+        <button class="btn btn-secondary me-2" @onclick="LoadUsers" disabled="@isLoading">
+            Обновить список
+        </button>
+        <button class="btn btn-info" @onclick="SearchUsers" disabled="@(isLoading || string.IsNullOrWhiteSpace(userSearch))">
+            Поиск
+        </button>
+    </div>
+</div>
+
+@if (isLoading && users == null)
+{
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+        <p>Загрузка пользователей...</p>
+    </div>
+}
+else if (users?.Count == 0)
+{
+    <div class="alert alert-info">Нет пользователей для отображения</div>
+}
+else if (users != null)
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Имя</th>
+                    <th>Логин</th>
+                    <th>Email</th>
+                    <th>Отдел</th>
+                    <th>Должность</th>
+                    <th>Компания</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in users)
+                {
+                    <tr>
+                        <td>@(string.IsNullOrEmpty(user.Name) ? user.DisplayName : user.Name)</td>
+                        <td>@user.Username</td>
+                        <td>@user.Email</td>
+                        <td>@user.Department</td>
+                        <td>@user.Title</td>
+                        <td>@user.Company</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="mt-2">
+            <small class="text-muted">Найдено пользователей: @users.Count</small>
+        </div>
+    </div>
+}
+
+<hr />
+<h4>Группы</h4>
+<button class="btn btn-secondary mb-3" @onclick="LoadGroups" disabled="@isLoading">
+    Обновить список групп
+</button>
+
+@if (isLoading && groups == null)
+{
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+        <p>Загрузка групп...</p>
+    </div>
+}
+else if (groups?.Count == 0)
+{
+    <div class="alert alert-info">Нет групп для отображения</div>
+}
+else if (groups != null)
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Имя группы</th>
+                    <th>Описание</th>
+                    <th>Количество участников</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var group in groups)
+                {
+                    <tr>
+                        <td>@group.Name</td>
+                        <td>@(string.IsNullOrEmpty(group.Description) ? "Нет описания" : group.Description)</td>
+                        <td>@group.Members.Count</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="mt-2">
+            <small class="text-muted">Найдено групп: @groups.Count</small>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ADUser>? users = null;
+    private List<ADGroup>? groups = null;
+    private string userSearch = string.Empty;
+    private string connectionStatus = string.Empty;
+    private bool connectionStatusOk = false;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInitialData();
+    }
+
+    private async Task LoadInitialData()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        await Task.WhenAll(LoadUsers(), LoadGroups());
+        
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadUsers()
+    {
+        try
+        {
+            users = await ADService.GetAllUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            users = new List<ADUser>();
+            connectionStatus = $"Ошибка загрузки пользователей: {ex.Message}";
+            connectionStatusOk = false;
+        }
+    }
+
+    private async Task SearchUsers()
+    {
+        if (string.IsNullOrWhiteSpace(userSearch))
+            return;
+
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            users = await ADService.SearchUsersAsync(userSearch);
+            connectionStatus = $"Поиск завершен. Найдено пользователей: {users.Count}";
+            connectionStatusOk = true;
+        }
+        catch (Exception ex)
+        {
+            users = new List<ADUser>();
+            connectionStatus = $"Ошибка поиска: {ex.Message}";
+            connectionStatusOk = false;
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadGroups()
+    {
+        try
+        {
+            groups = await ADService.GetAllGroupsAsync();
+        }
+        catch (Exception ex)
+        {
+            groups = new List<ADGroup>();
+            connectionStatus = $"Ошибка загрузки групп: {ex.Message}";
+            connectionStatusOk = false;
+        }
+    }
+
+    private async Task TestConnection()
+    {
+        isLoading = true;
+        connectionStatus = string.Empty;
+        StateHasChanged();
+
+        var (success, message) = await ADService.TestConnectionAsync();
+        
+        connectionStatus = message;
+        connectionStatusOk = success;
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task OnSearchKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(userSearch))
+        {
+            await SearchUsers();
+        }
+    }
+}
