@@ -11,6 +11,9 @@
     else if (user != null && user.Id != 0)
     {
         <h4>User Profile</h4>
+        <div class="profile-header">
+            <img class="pfp" src="@user.ProfilePicture" alt="Profile picture" />
+        </div>
         <dl>
             <dt>First name:</dt>
             <dd>@user.FirstName</dd>
@@ -23,7 +26,7 @@
 
             <dt>VIP:</dt>
             <dd>
-                @if (user.IsVIP)
+                @if (user.isVIP)
                 {
                     <span class="vip-badge vip-yes">Yes</span>
                 }
@@ -32,10 +35,8 @@
                     <span class="vip-badge vip-no">No</span>
                 }
             </dd>
-
-            @* <dt>Address:</dt>
-            <dd>@($"{user.UserInfo?.Address}, {user.UserInfo?.City}")</dd>
- *@
+             <dt>Address:</dt>
+            <dd>@(address ?? String.Empty)</dd>
             <dt>Email:</dt>
             <dd>@user.Email</dd>
         </dl>
@@ -54,7 +55,8 @@
 @code {
     private string? userId;
     private string? errorMessage;
-    private User user = new User();
+    private UserReadDto? user = new UserReadDto();
+    string address = String.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -63,6 +65,7 @@
             var token = await JS.InvokeAsync<string>("localStorage.getItem", "access_token");
             user = await APIService.GetCurrentUserAsync(token);
             userId = user.Id.ToString();
+            address = $"{user.Address}, {user.City}";
         }
         catch (UnauthorizedAccessException)
         {

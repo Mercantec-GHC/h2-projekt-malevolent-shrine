@@ -1,11 +1,11 @@
-using Microsoft.AspNetCore.Mvc;
 using API.Data;
-using API.Models;
 using API.DTOs;
-using Microsoft.EntityFrameworkCore;
+using API.Models;
 using API.Services;
+using Bogus.DataSets;
 using Microsoft.AspNetCore.Authorization;
-
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 
@@ -315,7 +315,7 @@ namespace API.Controllers
         /// </remarks>
         [Authorize] // Этот endpoint доступен всем авторизованным пользователям
         [HttpGet("me")]
-        public async Task<ActionResult<User>> GetCurrentUser()
+        public async Task<ActionResult<UserReadDto>> GetCurrentUser()
         {
 
             try
@@ -340,21 +340,19 @@ namespace API.Controllers
                 if (user == null)
                     return NotFound("Пользователь не найден в базе данных.");
 
-                return Ok(new
+                return Ok(new UserReadDto()
                 {
-                    // Старый способ new { Id = user.Id }
-                    // Новый способ (сокращенный)
-                
-                    user.Id,
-                    user.Email,
-                    user.FirstName,
-                    user.IsVIP,
-                    user.LastName,
-                    user.DateOfBirth,
-                    user.CreatedAt,
-                    Role = user.Role.Name, // Извлекаем только Name из объекта Role
-                    user.ProfilePicture
-                });  
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    PhoneNumber = user.UserInfo?.PhoneNumber,
+                    Address = user.UserInfo?.Address,
+                    City = user.UserInfo?.City,
+                    ProfilePicture = user.UserInfo?.AvatarUrl ?? "https://www.manageengine.com/images/speaker-placeholder.png",
+                    DateOfBirth = user.DateOfBirth,
+                    isVIP = user.IsVIP
+                });
             }
             catch (Exception ex)
             {

@@ -73,3 +73,29 @@
     border-radius: 8px;
     text-align: center;
 }
+
+/* Header с аватаркой */
+.profile-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Аватар */
+.pfp {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%; /* круглая */
+    object-fit: cover; /* чтобы не растягивалось */
+    border: 3px solid #444; /* легкая рамка */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    margin-bottom: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    /* Ховер-анимация */
+    .pfp:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.8);
+    }

@@ -43,10 +43,10 @@ namespace Blazor.Services
 
             var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
 
-            if (result?.Token == null)
+            if (result?.AccessToken == null)
                 return false;
 
-            await _js.InvokeVoidAsync("localStorage.setItem", TOKEN_KEY, result.Token);
+            await _js.InvokeVoidAsync("localStorage.setItem", TOKEN_KEY, result.AccessToken);
 
             return true;
         }
@@ -65,6 +65,6 @@ namespace Blazor.Services
     public class LoginResponse
     {
         public string Message { get; set; } = string.Empty;
-        public string Token { get; set; } = string.Empty;
+        public string AccessToken { get; set; } = string.Empty;
     }
 }

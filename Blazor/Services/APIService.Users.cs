@@ -8,7 +8,7 @@ namespace Blazor.Services
 {
     public partial class APIService
     {
-        public async Task<User> GetCurrentUserAsync(string? token = null)
+        public async Task<UserReadDto> GetCurrentUserAsync(string? token = null)
         {
             if (!string.IsNullOrEmpty(token))
             {
@@ -21,11 +21,9 @@ namespace Blazor.Services
             {
                 throw new UnauthorizedAccessException("Unauthorized");
             }
-
             response.EnsureSuccessStatusCode();
-
-            return await response.Content.ReadFromJsonAsync<User>()
-                   ?? new User();
+            return await response.Content.ReadFromJsonAsync<UserReadDto>()
+                   ?? new UserReadDto();
         }
 
     }
