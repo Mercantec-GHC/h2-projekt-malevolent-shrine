@@ -17,25 +17,30 @@ namespace API.Services
         public JwtService(IConfiguration configuration)
         {
             _configuration = configuration;
-            _secretKey = _configuration["Jwt:SecretKey"] ??
-                         Environment.GetEnvironmentVariable("JWT__SecretKey") ??
-                         "MyVerySecureSecretKeyThatIsAtLeast32CharactersLong123456789";
-            // Проверка на null или слишком короткий ключ
-            if (string.IsNullOrWhiteSpace(_secretKey) || _secretKey.Length < 32)
-            {
-                throw new ArgumentException("JWT SecretKey is missing or too short. Please set a secure key (at least 32 characters) in appsettings.json or environment variables.");
-            }
+            _secretKey = _configuration["Jwt:SecretKey"]
+                         ?? Environment.GetEnvironmentVariable("JWT__SecretKey")
+                         ?? throw new ArgumentException("JWT SecretKey is missing. Configure Jwt:SecretKey or JWT__SecretKey.");
+            if (_secretKey.Length < 32)
+                throw new ArgumentException("JWT SecretKey too short. Use at least 32 chars.");
             
-            _issuer = _configuration["Jwt:Issuer"] ??
-                      Environment.GetEnvironmentVariable("JWT__Issuer") ??
-                      "H2-2025-API";
-            _audience = _configuration["Jwt:Audience"] ??
-                        Environment.GetEnvironmentVariable("JWT__Audience") ??
-                        "H2-2025-Client";
-            _expiryMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"] ??
-                                       Environment.GetEnvironmentVariable("JWT__ExpiryMinutes") ?? "60");
-            _refreshTokenExpiryDays = int.Parse(_configuration["Jwt:RefreshTokenExpiryDays"] ??
-                                                Environment.GetEnvironmentVariable("JWT__RefreshTokenExpiryDays") ?? "7");
+            
+            _issuer = _configuration["Jwt:Issuer"]
+                      ?? Environment.GetEnvironmentVariable("JWT__Issuer")
+                      ?? "H2-2025-API";
+            
+            _audience = _configuration["Jwt:Audience"]
+                        ?? Environment.GetEnvironmentVariable("JWT__Audience")
+                        ?? "H2-2025-Client";
+            
+            _expiryMinutes = int.Parse(
+                _configuration["Jwt:ExpiryMinutes"]
+                ?? Environment.GetEnvironmentVariable("JWT__ExpiryMinutes")
+                ?? "60");
+
+            _refreshTokenExpiryDays = int.Parse(
+                _configuration["Jwt:RefreshTokenExpiryDays"]
+                ?? Environment.GetEnvironmentVariable("JWT__RefreshTokenExpiryDays")
+                ?? "7");
         }
         
         public string GenerateToken(User user, string? roleName = null)
