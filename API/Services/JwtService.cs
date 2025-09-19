@@ -18,7 +18,7 @@ namespace API.Services
         {
             _configuration = configuration;
             _secretKey = _configuration["Jwt:SecretKey"] ??
-                         Environment.GetEnvironmentVariable("Jwt_SecretKey") ??
+                         Environment.GetEnvironmentVariable("JWT__SecretKey") ??
                          "MyVerySecureSecretKeyThatIsAtLeast32CharactersLong123456789";
             // Проверка на null или слишком короткий ключ
             if (string.IsNullOrWhiteSpace(_secretKey) || _secretKey.Length < 32)
@@ -27,22 +27,22 @@ namespace API.Services
             }
             
             _issuer = _configuration["Jwt:Issuer"] ??
-                      Environment.GetEnvironmentVariable("JWT_Issuer") ??
+                      Environment.GetEnvironmentVariable("JWT__Issuer") ??
                       "H2-2025-API";
             _audience = _configuration["Jwt:Audience"] ??
-                        Environment.GetEnvironmentVariable("Jwt_Audience") ??
+                        Environment.GetEnvironmentVariable("JWT__Audience") ??
                         "H2-2025-Client";
             _expiryMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"] ??
-                                       Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES") ?? "60");
-            _refreshTokenExpiryDays = int.Parse(_configuration["Jwt:RefreshTokenExpiryDays"] ?? "7");
-            
+                                       Environment.GetEnvironmentVariable("JWT__ExpiryMinutes") ?? "60");
+            _refreshTokenExpiryDays = int.Parse(_configuration["Jwt:RefreshTokenExpiryDays"] ??
+                                                Environment.GetEnvironmentVariable("JWT__RefreshTokenExpiryDays") ?? "7");
         }
         
         public string GenerateToken(User user, string? roleName = null)
         {
             if (string.IsNullOrEmpty(roleName))
             {
-                throw new InvalidOperationException($"Роль по��ьзователя {user.Email} не загружена. Проверьте Include(u => u.Role) в запросе.");
+                throw new InvalidOperationException($"Роль пользователя {user.Email} не загружена. Проверьте Include(u => u.Role) в запросе.");
             }
 
             var jti = Guid.NewGuid().ToString(); // Уникальный идентификатор токена
