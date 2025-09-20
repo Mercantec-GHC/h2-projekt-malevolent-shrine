@@ -2,6 +2,7 @@
 @using System.Net.Http
 @inject NavigationManager Navigation
 @inject Blazor.Services.APIService ApiService
+@inject Blazor.Services.AdAuthClientService AdAuthClientService
 
 @if (showMessage)
 {
@@ -36,10 +37,42 @@
     </EditForm>
 </div>
 
+<hr />
+
+<div class="form-wrapper">
+    <h3>Login with Active Directory</h3>
+    <EditForm model="adForm" OnValidSubmit="() => HandleAdLoginAsync()">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="text-field">
+            <label for="ad-username">AD Username (samAccountName):</label>
+            <InputText id="ad-username" @bind-Value="adForm.Username" class="input" />
+        </div>
+
+        <div class="text-field">
+            <label for="ad-password">Password:</label>
+            <InputText id="ad-password" type="password" @bind-Value="adForm.Password" class="input" />
+        </div>
+
+        <button type="button" class="submit-button" @onclick="HandleAdLoginAsync">LOGIN WITH AD</button>
+
+        @if (showAdMessage)
+        {
+            <div class="error-box">❌ @adErrorMessage</div>
+        }
+    </EditForm>
+</div>
+
 @code {
     UserLoginDto user = new UserLoginDto();
     string errorMessage = "Incorrect login or password. Please try again.";
     bool showMessage = false;
+
+    // AD login state
+    private AdLoginModel adForm = new();
+    string adErrorMessage = "AD login failed. Check your username/password.";
+    bool showAdMessage = false;
 
     private async Task HandleSubmitAsync()
     {
@@ -55,5 +88,32 @@
         {
             showMessage = true;
         }
+    }
+
+    private async Task HandleAdLoginAsync()
+    {
+        showAdMessage = false;
+        try
+        {
+            var ok = await AdAuthClientService.LoginWithAdAsync(adForm.Username, adForm.Password);
+            if (ok)
+            {
+                Navigation.NavigateTo("/", forceLoad: true);
+            }
+            else
+            {
+                showAdMessage = true;
+            }
+        }
+        catch
+        {
+            showAdMessage = true;
+        }
+    }
+
+    private class AdLoginModel
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }
