@@ -16,21 +16,27 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
-        // Læs API endpoint fra miljøvariabler eller brug default
-        var envApiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT");
-        Console.WriteLine($"API ENV Endpoint: {envApiEndpoint}");
-        var apiEndpoint = envApiEndpoint ?? "https://malevolentshrineapi.mercantec.tech/";
-        Console.WriteLine($"API Endpoint: {apiEndpoint}");
+        // Read API endpoint from Blazor appsettings (wwwroot/appsettings*.json) with a safe local fallback
+        var configuredApi = builder.Configuration["ApiEndpoint"];
+        var apiEndpoint = string.IsNullOrWhiteSpace(configuredApi)
+            ? "http://localhost:8062/"
+            : configuredApi;
 
-        // Registrer HttpClient til API service med konfigurerbar endpoint
+        Console.WriteLine($"Blazor Environment: {builder.HostEnvironment.Environment}");
+        Console.WriteLine($"Configured API Endpoint: {configuredApi}");
+        Console.WriteLine($"Using API Endpoint: {apiEndpoint}");
+
         builder.Services.AddHttpClient<APIService>(client =>
         {
             client.BaseAddress = new Uri(apiEndpoint);
-            Console.WriteLine($"APIService BaseAddress: {client.BaseAddress}");
         });
 
-        // Регистрируем отдельный HttpClient для ActiveDirectoryService
         builder.Services.AddHttpClient<ActiveDirectoryService>(client =>
+        {
+            client.BaseAddress = new Uri(apiEndpoint);
+        });
+
+        builder.Services.AddHttpClient<AdAuthClientService>(client =>
         {
             client.BaseAddress = new Uri(apiEndpoint);
         });

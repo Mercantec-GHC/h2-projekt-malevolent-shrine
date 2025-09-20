@@ -22,6 +22,26 @@
                         <i class="bi bi-gear-fill"></i> AD Dashboard (Test)
                     </NavLink>
                 </div>
+                
+                @* Менеджер: назначение задач уборки *@
+                @if (isManagerOrAdmin)
+                {
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="assign-cleaning">
+                            <i class="bi bi-list-check"></i> Назначить уборку
+                        </NavLink>
+                    </div>
+                }
+                
+                @* Уборщик: мои задачи *@
+                @if (isCleaner)
+                {
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="my-tasks">
+                            <i class="bi bi-broom"></i> Мои задачи
+                        </NavLink>
+                    </div>
+                }
             }
         </div>
 
@@ -51,6 +71,8 @@
     [Parameter] public bool IsSidebarCollapsed { get; set; }
 
     public bool isLoggedIn = false;
+    private bool isCleaner = false;
+    private bool isManagerOrAdmin = false;
 
     private string? NavMenuCssClass => IsSidebarCollapsed ? "collapse" : "open";
 
@@ -60,6 +82,12 @@
     {
         var token = await JSRuntime.InvokeAsync<string>("auth.getToken");
         isLoggedIn = !string.IsNullOrWhiteSpace(token);
+
+        var role = await JSRuntime.InvokeAsync<string>("auth.getRole");
+        // Роли приходят как строки из JWT: Admin, Manager, Rengøring, Kunde, InfiniteVoid
+        isCleaner = string.Equals(role, "Rengøring", StringComparison.OrdinalIgnoreCase);
+        isManagerOrAdmin = role == "Manager" || role == "Admin" || role == "InfiniteVoid";
+
         StateHasChanged();
     }
 }

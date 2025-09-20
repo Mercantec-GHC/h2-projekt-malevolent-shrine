@@ -23,6 +23,7 @@ namespace API.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] AuthDto request)
         {
             if (!ModelState.IsValid)
@@ -57,6 +58,7 @@ namespace API.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] UserLoginDto request)
         {
             if (!ModelState.IsValid)
@@ -74,8 +76,20 @@ namespace API.Controllers
             if (user == null)
                 return BadRequest("Неверный логин или password.");
 
+            // Если пользователь создан через AD, у него может не быть локального пароля
+            if (string.IsNullOrWhiteSpace(user.HashedPassword))
+                return BadRequest("Этот аккаунт создан через AD. Войдите через /api/adauth/login или используйте кнопку 'Login with AD'.");
+
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.HashedPassword))
                 return BadRequest("Неверный логин или пароль.");
+
+            if (user.Role == null)
+            {
+                // Подстрахуемся и подгрузим роль ещё раз
+                user.Role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == user.RoleId);
+                if (user.Role == null)
+                    return StatusCode(500, "У пользователя не назначена роль. Обратитесь к администратору.");
+            }
 
             var accessToken = _jwtService.GenerateToken(user, user.Role.Name);
             var refreshToken = _jwtService.GenerateRefreshToken();
@@ -130,6 +144,7 @@ namespace API.Controllers
         }
 
         [HttpPost("refresh-token")]
+        [AllowAnonymous]
         public async Task<ActionResult<AuthResponseDto>> RefreshToken([FromBody] RefreshTokenDto request)
         {
             if (!ModelState.IsValid)

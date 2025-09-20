@@ -1,12 +1,13 @@
 using API.AD;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using API.Models;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Требует авторизации для использования AD методов
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager)] // Доступ к методам AD только для ролей Admin и Manager
     public class ActiveDirectoryController : ControllerBase
     {
         private readonly ActiveDirectoryService _adService;

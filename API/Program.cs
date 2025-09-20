@@ -81,7 +81,9 @@ public class Program
                             "http://localhost:3000",    // React dev server альтернативный
                             "http://127.0.0.1:5173",    // localhost через IP
                             "http://127.0.0.1:5174",
-                            "http://127.0.0.1:3001"     // React альтернативный хост
+                            "http://127.0.0.1:3001",    // React альтернативный хост
+                            "http://localhost:9026",     // Blazor docker dev
+                            "https://localhost:9026"     // Blazor docker dev (https)
                         )
                         .AllowAnyMethod()
                         .AllowAnyHeader()
@@ -125,6 +127,8 @@ public class Program
                 };
             });
         builder.Services.AddAuthorization();
+        builder.Services.AddScoped<AdLdapAuthService>();
+        
         builder.Services.AddScoped<DataSeederService>(); 
         builder.Services.AddScoped<PasswordHasher<User>>();
         // Active Directory services

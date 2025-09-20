@@ -85,7 +85,7 @@ namespace API.Controllers
             return CreatedAtAction(nameof(GetHotel), new { id = hotelReadDto.Id }, hotelReadDto);
         }
         
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы и Годжо могут обновлять отели
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)] // Только админы и Годжо могут обновлять отели
         [HttpPut("{id}")]
         public async Task<IActionResult> PutHotel(int id, HotelUpdateDto hotelDto)
         {
@@ -132,7 +132,7 @@ namespace API.Controllers
             return _context.Hotels.Any(e => e.Id == id);
         }
         
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы и Годжо могут удалять отели
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)] // Только админы и Годжо могут удалять отели
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteHotel(int id)
         {

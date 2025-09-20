@@ -55,7 +55,7 @@ namespace API.Controllers
        /// </summary>
        /// <returns>En liste af UserReadDto</returns>
       
-        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsers()
         {
@@ -94,7 +94,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="id">Users unikke ID</param>
         /// <returns>En UserReadDTO hvis brugeren findes</returns>
-        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] 
         [HttpGet("{id}")]
         public async Task<ActionResult<UserReadDto>> GetUser(int id)
         {
@@ -501,5 +501,43 @@ namespace API.Controllers
                 return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
             }
         }
+
+        /// <summary>
+        /// Henter brugere efter rolle
+        /// Kun for autoriserede brugere med roller Admin, Manager eller InfiniteVoid
+        /// </summary>
+        /// <param name="roleName">Navnet på rollen (f.eks. 'Rengøring')</param>
+        /// <returns>En liste af UserReadDto for brugere med den angivne rolle</returns>
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]
+        [HttpGet("by-role/{roleName}")]
+        public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsersByRole(string roleName)
+        {
+            try
+            {
+                var users = await _context.Users
+                    .Include(u => u.Role)
+                    .Include(u => u.UserInfo)
+                    .Where(u => u.Role.Name == roleName)
+                    .ToListAsync();
+
+                var result = users.Select(u => new UserReadDto
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    PhoneNumber = u.UserInfo?.PhoneNumber ?? string.Empty,
+                    Address = u.UserInfo?.Address ?? string.Empty
+                }).ToList();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при получении пользователей роли {Role}", roleName);
+                return StatusCode(500, "Внутренняя ошибка сервера");
+            }
+        }
     }
 }
+

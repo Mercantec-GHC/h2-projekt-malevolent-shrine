@@ -51,6 +51,7 @@ namespace API.Data
         public DbSet<VipRoom> VipRooms { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<UserInfo> UserInfos { get; set; }
+        public DbSet<CleaningTask> CleaningTasks { get; set; }
         /// <summary>
         /// Konfigurerer konteksten ved opstart.
         /// Her sætter vi kompatibilitet for Npgsql-tidsstempler.
@@ -120,6 +121,25 @@ modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
             modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
             modelBuilder.Entity<Room>().HasIndex(r => new { r.HotelId, r.Number }).IsUnique();
             
+            // Конфигурация CleaningTask
+            modelBuilder.Entity<CleaningTask>()
+                .HasOne(ct => ct.Room)
+                .WithMany()
+                .HasForeignKey(ct => ct.RoomId)
+                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<CleaningTask>()
+                .HasOne(ct => ct.AssignedToUser)
+                .WithMany()
+                .HasForeignKey(ct => ct.AssignedToUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<CleaningTask>()
+                .HasOne(ct => ct.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(ct => ct.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<CleaningTask>().Property(ct => ct.CreatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<CleaningTask>().Property(ct => ct.UpdatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<CleaningTask>().HasIndex(ct => new { ct.AssignedToUserId, ct.Status });
             
             modelBuilder.Entity<UserInfo>()
                 .HasKey(i => i.UserId); // Shared PK
