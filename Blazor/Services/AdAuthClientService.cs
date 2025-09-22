@@ -15,18 +15,35 @@ namespace Blazor.Services
             _http = http; _js = js;
         }
 
-        public async Task<bool> LoginWithAdAsync(string username, string password)
+        public async Task<(bool Success, string? Error)> LoginWithAdAsync(string username, string password)
         {
             var payload = new AdLoginRequestDto { Username = username, Password = password };
-            var response = await _http.PostAsJsonAsync("api/adauth/login", payload);
-            if (!response.IsSuccessStatusCode) return false;
+            using var response = await _http.PostAsJsonAsync("api/adauth/login", payload);
+            if (!response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    var errObj = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+                    var msg = errObj?.error ?? $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}";
+                    return (false, msg);
+                }
+                catch
+                {
+                    return (false, $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}");
+                }
+            }
 
             var result = await response.Content.ReadFromJsonAsync<AdLoginResponseDto>();
-            if (result == null || string.IsNullOrEmpty(result.AccessToken)) return false;
+            if (result == null || string.IsNullOrEmpty(result.AccessToken))
+            {
+                return (false, "Пустой ответ от сервера при логине AD.");
+            }
 
             await _js.InvokeVoidAsync("localStorage.setItem", TOKEN_KEY, result.AccessToken);
-            return true;
+            return (true, null);
         }
+
+        private class ErrorResponse { public string? error { get; set; } }
 
         // Local DTOs to avoid referencing server-side namespaces
         private class AdLoginRequestDto

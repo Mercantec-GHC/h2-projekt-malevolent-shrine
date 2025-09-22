@@ -101,11 +101,11 @@ else if (users != null)
         <p>Загрузка групп...</p>
     </div>
 }
-else if (groups?.Count == 0)
+else if (FilteredGroups?.Count() == 0)
 {
     <div class="alert alert-info">Нет групп для отображения</div>
 }
-else if (groups != null)
+else if (FilteredGroups != null)
 {
     <div class="table-responsive">
         <table class="table table-bordered table-striped">
@@ -117,7 +117,7 @@ else if (groups != null)
                 </tr>
             </thead>
             <tbody>
-                @foreach (var group in groups)
+                @foreach (var group in FilteredGroups)
                 {
                     <tr>
                         <td>@group.Name</td>
@@ -140,6 +140,20 @@ else if (groups != null)
     private string connectionStatus = string.Empty;
     private bool connectionStatusOk = false;
     private bool isLoading = false;
+
+    // Список разрешённых групп (должен совпадать с ADRoleMapping в appsettings.json)
+    private readonly HashSet<string> allowedGroups = new()
+    {
+        "Hotel_Admins",
+        "Hotel_Managers",
+        "Hotel_Receptionists",
+        "Hotel_Rengøring",
+        "Hotel_Kunde",
+        "Hotel_InfiniteVoid"
+    };
+
+    private IEnumerable<ADGroup> FilteredGroups =>
+        groups?.Where(g => allowedGroups.Contains(g.Name)) ?? Enumerable.Empty<ADGroup>();
 
     protected override async Task OnInitializedAsync()
     {

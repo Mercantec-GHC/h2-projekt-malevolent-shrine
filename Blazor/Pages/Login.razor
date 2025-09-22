@@ -95,18 +95,20 @@
         showAdMessage = false;
         try
         {
-            var ok = await AdAuthClientService.LoginWithAdAsync(adForm.Username, adForm.Password);
+            var (ok, err) = await AdAuthClientService.LoginWithAdAsync(adForm.Username, adForm.Password);
             if (ok)
             {
                 Navigation.NavigateTo("/", forceLoad: true);
             }
             else
             {
+                adErrorMessage = string.IsNullOrWhiteSpace(err) ? adErrorMessage : err;
                 showAdMessage = true;
             }
         }
-        catch
+        catch (Exception ex)
         {
+            adErrorMessage = ex.Message;
             showAdMessage = true;
         }
     }
