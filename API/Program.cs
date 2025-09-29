@@ -99,7 +99,7 @@ public class Program
         string connectionString = Configuration.GetConnectionString("DefaultConnection")
         ?? Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
 
-        Console.WriteLine("connectionString: " + connectionString);
+        Console.WriteLine("connectionString: " + (string.IsNullOrWhiteSpace(connectionString) ? "<empty>" : "<provided>"));
        
 
 
@@ -149,10 +149,22 @@ public class Program
         // Active Directory services
         builder.Services.AddScoped<API.AD.ActiveDirectoryService>();
         
-        builder.Services.AddDbContext<AppDBContext>(options =>
+        // Подключение БД: если строка подключения отсутствует, используем InMemory для стабильного старта API
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            options.UseNpgsql(connectionString);
-        });
+            Console.WriteLine("WARNING: No DefaultConnection configured. Using InMemory database 'AppDb' for this run.");
+            builder.Services.AddDbContext<AppDBContext>(options =>
+            {
+                options.UseInMemoryDatabase("AppDb");
+            });
+        }
+        else
+        {
+            builder.Services.AddDbContext<AppDBContext>(options =>
+            {
+                options.UseNpgsql(connectionString);
+            });
+        }
         var app = builder.Build();
             
         
@@ -189,6 +201,28 @@ public class Program
 
         app.MapControllers();
         app.MapHub<TicketHub>("/hubs/tickets");
+
+        // Автонакат миграций для реальной БД (пропускаем InMemory)
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            var sp = scope.ServiceProvider;
+            var db = (AppDBContext?)sp.GetService(typeof(AppDBContext));
+            var provider = db?.Database.ProviderName ?? string.Empty;
+            if (db != null && !provider.Contains("InMemory", StringComparison.OrdinalIgnoreCase))
+            {
+                db.Database.Migrate();
+                Console.WriteLine($"Database migrated successfully using provider '{provider}'.");
+            }
+            else
+            {
+                Console.WriteLine("Database migration skipped (InMemory provider or DbContext not resolved).");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("WARNING: Database migration failed: " + ex.Message);
+        }
 
         app.Run();
     }

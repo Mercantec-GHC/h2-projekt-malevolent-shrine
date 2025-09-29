@@ -99,15 +99,15 @@ namespace API.Controllers
                 return BadRequest();
             }
 
-            var hotel = new Hotel
+            var hotel = await _context.Hotels.FirstOrDefaultAsync(h => h.Id == id);
+            if (hotel == null)
             {
-                Id = hotelDto.Id,
-                Name = hotelDto.Name,
-                Address = hotelDto.Address,
-               
-            };
+                return NotFound();
+            }
 
-            _context.Entry(hotel).State = EntityState.Modified;
+            hotel.Name = hotelDto.Name;
+            hotel.Address = hotelDto.Address;
+            hotel.UpdatedAt = DateTime.UtcNow;
 
             try
             {
@@ -138,7 +138,6 @@ namespace API.Controllers
         {
             var hotel = await _context.Hotels.FindAsync(id);
             if (hotel == null)
-                
             {
                 return NotFound();
             }

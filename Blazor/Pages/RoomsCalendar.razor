@@ -1,0 +1,68 @@
+﻿@page "/calendar/rooms"
+@using Blazor.Models
+@using DomainModels.DTOs
+@inject Blazor.Services.APIService Api
+@inject NavigationManager Nav
+
+<h1 class="site-title">Календарь бронирования номеров</h1>
+<div class="jp">Обзор занятости на 2–4 недели</div>
+<p class="site-sub">Цветные ячейки: зелёный — свободно, красный — занято</p>
+
+<div class="test-root">
+  <div class="book-card">
+    <div class="actions">
+      <select class="form-select" @bind="selectedHotelId" style="max-width:260px">
+        <option value="">Все отели</option>
+        @foreach (var h in hotels)
+        {
+          <option value="@h.Id">@h.Name</option>
+        }
+      </select>
+      <select class="form-select" @bind="days" style="max-width:180px">
+        <option value="14">2 недели</option>
+        <option value="28">4 недели</option>
+      </select>
+      <button class="btn btn-red" @onclick="ReloadAsync">Обновить</button>
+      <a class="btn btn-ghost" href="/">Назад</a>
+    </div>
+
+    @if (loading)
+    {
+      <div class="loading">Загрузка...</div>
+    }
+    else if (rows.Count == 0)
+    {
+      <div class="empty">Нет данных по номерам.</div>
+    }
+    else
+    {
+      <RoomsAvailability Rows="rows" Days="days" StartDate="startDate" />
+    }
+  </div>
+</div>
+
+@code {
+  bool loading = true;
+  int days = 28;
+  string? selectedHotelId;
+  DateTime startDate = DateTime.UtcNow.Date;
+  List<HotelReadDto> hotels = new();
+  List<RoomAvailabilityVM> rows = new();
+
+  protected override async Task OnInitializedAsync()
+  {
+    hotels = await Api.GetAllHotels();
+    await ReloadAsync();
+  }
+
+  async Task ReloadAsync()
+  {
+    loading = true;
+    StateHasChanged();
+    int? hid = null;
+    if (int.TryParse(selectedHotelId, out var parsed)) hid = parsed;
+    startDate = DateTime.UtcNow.Date;
+    rows = await Api.GetRoomAvailabilityAsync(days, hid);
+    loading = false;
+  }
+}
