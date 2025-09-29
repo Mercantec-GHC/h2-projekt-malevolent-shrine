@@ -52,6 +52,8 @@ namespace API.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<UserInfo> UserInfos { get; set; }
         public DbSet<CleaningTask> CleaningTasks { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<TicketMessage> TicketMessages { get; set; }
         /// <summary>
         /// Konfigurerer konteksten ved opstart.
         /// Her sætter vi kompatibilitet for Npgsql-tidsstempler.
@@ -168,6 +170,46 @@ modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
             modelBuilder.Entity<RefreshToken>().HasIndex(rt => rt.TokenHash).IsUnique();
             modelBuilder.Entity<RefreshToken>().Property(rt => rt.CreatedAt).HasDefaultValueSql("now()");
             modelBuilder.Entity<RefreshToken>().Property(rt => rt.UpdatedAt).HasDefaultValueSql("now()");
+            
+            // Ticket relations
+            modelBuilder.Entity<Ticket>()
+                .HasOne(t => t.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(t => t.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Ticket>()
+                .HasOne(t => t.AssignedToUser)
+                .WithMany()
+                .HasForeignKey(t => t.AssignedToUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Ticket>()
+                .Property(t => t.CreatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<Ticket>()
+                .Property(t => t.UpdatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<Ticket>()
+                .HasIndex(t => new { t.CreatedByUserId, t.Status });
+            modelBuilder.Entity<Ticket>()
+                .HasIndex(t => new { t.TargetRoleName, t.Status });
+
+            // TicketMessage relations
+            modelBuilder.Entity<TicketMessage>()
+                .HasOne(m => m.Ticket)
+                .WithMany(t => t.Messages)
+                .HasForeignKey(m => m.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TicketMessage>()
+                .HasOne(m => m.SenderUser)
+                .WithMany()
+                .HasForeignKey(m => m.SenderUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TicketMessage>()
+                .Property(m => m.CreatedAt).HasDefaultValueSql("now()");
+            modelBuilder.Entity<TicketMessage>()
+                .Property(m => m.UpdatedAt).HasDefaultValueSql("now()");
         }
     }
 }

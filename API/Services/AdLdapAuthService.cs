@@ -58,12 +58,43 @@ namespace API.Services
                 .ToList();
             var primaryRole = ChoosePrimaryRole(mappedRoles, mapping);
             var user = await EnsureLocalUserAsync(adUser, primaryRole, ct);
+
+            // Генерируем пары токенов
             var accessToken = _jwt.GenerateToken(user, roleName: user.Role?.Name ?? primaryRole ?? RoleNames.Kunde);
+            var refreshToken = _jwt.GenerateRefreshToken();
+
+            // Ограничиваем количество активных refresh токенов (до 5 на пользователя)
+            var activeTokens = await _db.RefreshTokens
+                .Where(t => t.UserId == user.Id && !t.IsRevoked && t.ExpiryDate > DateTime.UtcNow)
+                .OrderBy(t => t.CreatedAt)
+                .ToListAsync(ct);
+            if (activeTokens.Count >= 5)
+            {
+                var oldestActive = activeTokens.First();
+                oldestActive.IsRevoked = true;
+                oldestActive.RevokedAt = DateTime.UtcNow;
+                oldestActive.RevokedByIp = null;
+                oldestActive.RevokedReason = "exceeded_limit";
+            }
+
+            // Сохраняем новый refresh токен (хранится только хеш)
+            var rtEntity = new RefreshToken();
+            rtEntity.SetToken(refreshToken);
+            rtEntity.ExpiryDate = _jwt.GetRefreshTokenExpiry();
+            rtEntity.UserId = user.Id;
+            rtEntity.CreatedAt = DateTime.UtcNow;
+            rtEntity.UpdatedAt = DateTime.UtcNow;
+            _db.RefreshTokens.Add(rtEntity);
+
+            await _db.SaveChangesAsync(ct);
+
             return new DTOs.AdLoginResponseDto
             {
                 Message = "Успешный вход через Active Directory",
                 AccessToken = accessToken,
                 AccessTokenExpiry = _jwt.GetAccessTokenExpiry(),
+                RefreshToken = refreshToken,
+                RefreshTokenExpiry = _jwt.GetRefreshTokenExpiry(),
                 Email = adUser.Email,
                 DisplayName = string.IsNullOrEmpty(adUser.DisplayName) ? adUser.Name : adUser.DisplayName,
                 Username = adUser.Username,

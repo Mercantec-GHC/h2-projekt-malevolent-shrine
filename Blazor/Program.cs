@@ -41,6 +41,9 @@ public class Program
             client.BaseAddress = new Uri(apiEndpoint);
         });
 
+        // TicketHubClient для SignalR (подключится в страницах)
+        builder.Services.AddScoped<TicketHubClient>();
+
         await builder.Build().RunAsync();
     }
 }

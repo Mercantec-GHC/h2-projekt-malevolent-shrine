@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Reflection;
 using Microsoft.AspNetCore.Identity;
+using API.Hubs;
 
 
 namespace API;
@@ -19,6 +20,8 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddControllers();
+        builder.Services.AddSignalR();
+        builder.Services.AddScoped<TicketRoutingService>();
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddSwaggerGen(c =>
@@ -87,6 +90,7 @@ public class Program
                         )
                         .AllowAnyMethod()
                         .AllowAnyHeader()
+                        .AllowCredentials() // для SignalR с авторизацией
                         .WithExposedHeaders("Content-Disposition");
                 }
             );
@@ -124,6 +128,21 @@ public class Program
                     IssuerSigningKey = new SymmetricSecurityKey(
                         System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? Environment.GetEnvironmentVariable("JWT__SecretKey") 
                             ?? throw new InvalidOperationException("JWT SecretKey must be configured")))
+                };
+
+                // Это нужно, чтобы SignalR мог принимать токен из query (?access_token=...)
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/tickets"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
                 };
             });
         builder.Services.AddAuthorization();
@@ -173,6 +192,7 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+        app.MapHub<TicketHub>("/hubs/tickets");
 
         app.Run();
     }

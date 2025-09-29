@@ -18,5 +18,7 @@ namespace API.DTOs
         public string? Username { get; set; }
         public List<string> AdGroups { get; set; } = new();
         public string? AppRole { get; set; }
+        public string RefreshToken { get; set; } = string.Empty;
+        public DateTime RefreshTokenExpiry { get; set; }
     }
 }

@@ -1,0 +1,16 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#c92a2a" stop-opacity="1"/>
+      <stop offset="70%" stop-color="#3a0c10" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#0b0b0d" stop-opacity="1"/>
+    </radialGradient>
+  </defs>
+  <rect width="120" height="120" rx="16" fill="url(#g)"/>
+  <g stroke="#e8e8ee" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Руна "общее": простой символ двери/портала -->
+    <rect x="38" y="28" width="44" height="64" rx="8"/>
+    <circle cx="72" cy="60" r="3"/>
+  </g>
+</svg>
+

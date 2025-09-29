@@ -324,6 +324,100 @@ namespace API.Migrations
                     b.UseTptMappingStrategy();
                 });
 
+            modelBuilder.Entity("API.Models.Ticket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedToUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("BookingId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RoomId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TargetRoleName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedToUserId");
+
+                    b.HasIndex("CreatedByUserId", "Status");
+
+                    b.HasIndex("TargetRoleName", "Status");
+
+                    b.ToTable("Tickets");
+                });
+
+            modelBuilder.Entity("API.Models.TicketMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int>("SenderUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("TicketMessages");
+                });
+
             modelBuilder.Entity("API.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -513,6 +607,43 @@ namespace API.Migrations
                     b.Navigation("Hotel");
                 });
 
+            modelBuilder.Entity("API.Models.Ticket", b =>
+                {
+                    b.HasOne("API.Models.User", "AssignedToUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedToUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("API.Models.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AssignedToUser");
+
+                    b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("API.Models.TicketMessage", b =>
+                {
+                    b.HasOne("API.Models.User", "SenderUser")
+                        .WithMany()
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("API.Models.Ticket", "Ticket")
+                        .WithMany("Messages")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SenderUser");
+
+                    b.Navigation("Ticket");
+                });
+
             modelBuilder.Entity("API.Models.User", b =>
                 {
                     b.HasOne("API.Models.Role", "Role")
@@ -547,6 +678,11 @@ namespace API.Migrations
             modelBuilder.Entity("API.Models.Hotel", b =>
                 {
                     b.Navigation("Rooms");
+                });
+
+            modelBuilder.Entity("API.Models.Ticket", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("API.Models.User", b =>

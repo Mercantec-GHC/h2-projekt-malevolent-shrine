@@ -18,7 +18,7 @@ namespace API.Controllers
         }
 
         [HttpGet("groups")]
-        public async Task<IActionResult> GetAllGroups()
+        public IActionResult GetAllGroups()
         {
             try
             {
@@ -32,7 +32,7 @@ namespace API.Controllers
         }
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetAllUsers()
+        public IActionResult GetAllUsers()
         {
             try
             {
@@ -46,7 +46,7 @@ namespace API.Controllers
         }
 
         [HttpGet("users/search/{searchTerm}")]
-        public async Task<IActionResult> SearchUsers(string searchTerm)
+        public IActionResult SearchUsers(string searchTerm)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace API.Controllers
         }
 
         [HttpPost("test-connection")]
-        public async Task<IActionResult> TestConnection()
+        public IActionResult TestConnection()
         {
             try
             {
