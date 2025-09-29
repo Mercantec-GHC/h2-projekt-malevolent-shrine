@@ -22,6 +22,10 @@ public class Program
         builder.Services.AddControllers();
         builder.Services.AddSignalR();
         builder.Services.AddScoped<TicketRoutingService>();
+        
+        // HttpClientFactory и Telegram уведомления
+        builder.Services.AddHttpClient();
+        builder.Services.AddSingleton<TelegramNotifier>();
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddSwaggerGen(c =>

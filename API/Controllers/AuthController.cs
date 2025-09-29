@@ -64,20 +64,23 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Приводим email к нижнему регистру
-            if (!string.IsNullOrWhiteSpace(request.Email))
-                request.Email = request.Email.ToLowerInvariant();
+            // Разрешаем вводить сюда и e-mail, и username (одно поле)
+            var loginValue = request.Email?.Trim();
+            if (string.IsNullOrWhiteSpace(loginValue))
+                return BadRequest("Введите e-mail или логин.");
+            var loginLower = loginValue.ToLowerInvariant();
 
+            // Ищем по email ИЛИ по username (case-insensitive для username)
             var user = await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.RefreshTokens)
-                .FirstOrDefaultAsync(u => u.Email == request.Email);
+                .FirstOrDefaultAsync(u => u.Email == loginLower || u.Username.ToLower() == loginLower);
 
             if (user == null)
-                return BadRequest("Неверный логин или password.");
+                return BadRequest("Неверный логин или пароль.");
 
-            // Если пользователь создан через AD, у него может не быть локального пароля
-            if (string.IsNullOrWhiteSpace(user.HashedPassword))
+            // Аккаунты, созданные через AD, не имеют локального пароля — не даём войти обычным способом
+            if (string.IsNullOrWhiteSpace(user.HashedPassword) || string.Equals(user.HashedPassword, "AD", StringComparison.Ordinal))
                 return BadRequest("Этот аккаунт создан через AD. Войдите через /api/adauth/login или используйте кнопку 'Login with AD'.");
 
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.HashedPassword))
@@ -95,13 +98,12 @@ namespace API.Controllers
             var refreshToken = _jwtService.GenerateRefreshToken();
 
             var refreshTokenEntity = new RefreshToken();
-            refreshTokenEntity.SetToken(refreshToken);  // Устанавливаем токен и автоматически вычисляем хеш
+            refreshTokenEntity.SetToken(refreshToken);
             refreshTokenEntity.ExpiryDate = _jwtService.GetRefreshTokenExpiry();
             refreshTokenEntity.UserId = user.Id;
             refreshTokenEntity.CreatedAt = DateTime.UtcNow;
             refreshTokenEntity.UpdatedAt = DateTime.UtcNow;
-            
-// Ограничиваем количество активных токенов на пользователя (например, 5)
+
             var activeTokensCount = user.RefreshTokens.Count(t => t.IsActive);
             if (activeTokensCount >= 5)
             {
@@ -109,17 +111,15 @@ namespace API.Controllers
                     .Where(t => t.IsActive)
                     .OrderBy(t => t.CreatedAt)
                     .First();
-    
+
                 oldestActive.IsRevoked = true;
                 oldestActive.RevokedAt = DateTime.UtcNow;
                 oldestActive.RevokedByIp = HttpContext.Connection.RemoteIpAddress?.ToString();
-                oldestActive.RevokedReason = "exceeded_limit"; // Используем RevokedReason
+                oldestActive.RevokedReason = "exceeded_limit";
             }
-            
 
             user.RefreshTokens.Add(refreshTokenEntity);
 
-            // Удаляем старые неактивные токены
             var inactiveTokens = user.RefreshTokens
                 .Where(t => !t.IsActive)
                 .ToList();
@@ -127,8 +127,7 @@ namespace API.Controllers
             foreach (var token in inactiveTokens)
             {
                 _context.RefreshTokens.Remove(token);
-                user.RefreshTokens.Remove(token); 
-                
+                user.RefreshTokens.Remove(token);
             }
 
             await _context.SaveChangesAsync();

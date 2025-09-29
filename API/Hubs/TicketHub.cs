@@ -25,6 +25,12 @@ namespace API.Hubs
             if (!string.IsNullOrEmpty(role))
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"role-{role}");
+                // Админы и менеджеры получают общие тосты
+                if (string.Equals(role, RoleNames.Admin, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(role, RoleNames.Manager, StringComparison.OrdinalIgnoreCase))
+                {
+                    await Groups.AddToGroupAsync(Context.ConnectionId, "admins");
+                }
             }
             await base.OnConnectedAsync();
         }

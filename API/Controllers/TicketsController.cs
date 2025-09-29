@@ -20,12 +20,14 @@ namespace API.Controllers
         private readonly AppDBContext _db;
         private readonly TicketRoutingService _routing;
         private readonly IHubContext<TicketHub> _hub;
+        private readonly TelegramNotifier _notifier;
 
-        public TicketsController(AppDBContext db, TicketRoutingService routing, IHubContext<TicketHub> hub)
+        public TicketsController(AppDBContext db, TicketRoutingService routing, IHubContext<TicketHub> hub, TelegramNotifier notifier)
         {
             _db = db;
             _routing = routing;
             _hub = hub;
+            _notifier = notifier;
         }
 
         // 1) Создать тикет: создаём запись и первое сообщение, рассылаем событие в группу роли
@@ -66,6 +68,10 @@ namespace API.Controllers
             var read = ToReadDto(ticket);
             // Сообщаем всем сотрудникам нужной роли о новом тикете
             await _hub.Clients.Group($"role-{targetRole}").SendAsync("TicketCreated", read);
+            // Тост для админов/менеджеров
+            await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "Новый тикет", Message = $"#{ticket.Id} {ticket.Title} → {targetRole}", Level = "info", Ts = DateTime.UtcNow });
+            // Telegram уведомление (если настроено)
+            await _notifier.SendAsync($"🆕 Тикет #{ticket.Id} — <b>{ticket.Title}</b> ({ticket.Category}) для роли <b>{targetRole}</b>");
 
             return Ok(read);
         }
@@ -144,6 +150,8 @@ namespace API.Controllers
             await _db.SaveChangesAsync();
 
             await _hub.Clients.Group($"ticket-{ticket.Id}").SendAsync("TicketUpdated", ToReadDto(ticket));
+            // Тост
+            await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "Тикет взят", Message = $"#{ticket.Id} взят в работу", Level = "info", Ts = DateTime.UtcNow });
             return Ok(ToReadDto(ticket));
         }
 
@@ -159,6 +167,8 @@ namespace API.Controllers
             ticket.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
             await _hub.Clients.Group($"ticket-{ticket.Id}").SendAsync("TicketUpdated", ToReadDto(ticket));
+            await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "Статус тикета", Message = $"#{ticket.Id}: {dto.Status}", Level = "success", Ts = DateTime.UtcNow });
+            await _notifier.SendAsync($"✅ Тикет #{ticket.Id} статус: <b>{dto.Status}</b>");
             return Ok(ToReadDto(ticket));
         }
 

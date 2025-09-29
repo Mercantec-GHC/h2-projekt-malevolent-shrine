@@ -15,6 +15,7 @@ namespace Blazor.Services
         public event Func<TicketRead, Task>? OnTicketCreated;   // для роли
         public event Func<TicketRead, Task>? OnTicketUpdated;   // для участников тикета
         public event Func<TicketMessageRead, Task>? OnNewMessage; // для чата
+        public event Func<ToastPayload, Task>? OnToast; // для тостов админке
 
         public TicketHubClient(APIService api, ILogger<TicketHubClient> logger)
         {
@@ -41,6 +42,7 @@ namespace Blazor.Services
             _conn.On<TicketRead>("TicketCreated", async t => { if (OnTicketCreated != null) await OnTicketCreated(t); });
             _conn.On<TicketRead>("TicketUpdated", async t => { if (OnTicketUpdated != null) await OnTicketUpdated(t); });
             _conn.On<TicketMessageRead>("NewMessage", async m => { if (OnNewMessage != null) await OnNewMessage(m); });
+            _conn.On<ToastPayload>("toast", async payload => { if (OnToast != null) await OnToast(payload); });
 
             try
             {

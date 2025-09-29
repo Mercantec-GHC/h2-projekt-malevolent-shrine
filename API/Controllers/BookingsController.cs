@@ -5,6 +5,9 @@ using API.Data;
 using API.Models;
 using API.DTOs;
 using Microsoft.AspNetCore.Authorization; 
+using API.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using API.Services;
 
 
 
@@ -16,11 +19,15 @@ public class BookingsController : ControllerBase
 {
     private readonly AppDBContext _context;
     private readonly ILogger<BookingsController> _logger;
+    private readonly IHubContext<TicketHub> _hub;
+    private readonly TelegramNotifier _notifier;
 
-    public BookingsController(AppDBContext context, ILogger<BookingsController> logger)
+    public BookingsController(AppDBContext context, ILogger<BookingsController> logger, IHubContext<TicketHub> hub, TelegramNotifier notifier)
     {
         _context = context;
         _logger = logger;
+        _hub = hub;
+        _notifier = notifier;
     }
 
     // GET: api/bookings
@@ -158,7 +165,9 @@ public class BookingsController : ControllerBase
         _context.Bookings.Add(booking);
         await _context.SaveChangesAsync();
         
-        
+        // Уведомления
+        await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "Новая бронь", Message = $"Бронь #{booking.Id} комната {booking.RoomId} с {booking.CheckInDate:d}", Level = "info", Ts = DateTime.UtcNow });
+        await _notifier.SendAsync($"📅 Новая бронь #{booking.Id} — Комната {booking.RoomId}, с {booking.CheckInDate:d} по {booking.CheckOutDate:d}, сумма: {totalPrice:C}");
 
         var bookingReadDto = new BookingReadDto
         {
@@ -323,3 +332,4 @@ public class BookingsController : ControllerBase
         return _context.Bookings.Any(e => e.Id == id);
     }
 }
+
