@@ -3,28 +3,41 @@ using API.Data;
 using API.Models;
 using API.DTOs;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization; // Добавляем для авторизации
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
+    /// <summary>
+    /// Endpoints for managing rooms.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class RoomsController : ControllerBase
     {
         private readonly AppDBContext _context;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="RoomsController"/>.
+        /// </summary>
         public RoomsController(AppDBContext context)
         {
             _context = context;
         }
 
-        [HttpGet] // Чтение комнат доступно всем
+        /// <summary>
+        /// Returns all rooms.
+        /// </summary>
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
         {
             return await _context.Rooms.ToListAsync();
         }
         
-        [HttpGet("{id}")] // Чтение конкретной комнаты доступно всем
+        /// <summary>
+        /// Returns a specific room by id.
+        /// </summary>
+        /// <param name="id">Room identifier.</param>
+        [HttpGet("{id}")]
         public async Task<ActionResult<Room>> GetRoom(int id)
         {
             var room = await _context.Rooms.FindAsync(id);
@@ -37,7 +50,12 @@ namespace API.Controllers
             return room;
         }
         
-        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Админы, менеджеры, ресепшн и Годжо могут создавать комнаты
+        /// <summary>
+        /// Creates a new room.
+        /// </summary>
+        /// <param name="roomDto">Room creation payload.</param>
+        /// <returns>Created room as <see cref="RoomReadDto"/>.</returns>
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]
         [HttpPost]
         public async Task<ActionResult<RoomReadDto>> PostRoom(RoomCreateDto roomDto)
         {
@@ -68,7 +86,13 @@ namespace API.Controllers
             return CreatedAtAction(nameof(GetRoom), new { id = roomReadDto.Id }, roomReadDto);
         }
         
-        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Админы, менеджеры, ресепшн и Годжо могут обновлять комнаты
+        /// <summary>
+        /// Updates an existing room.
+        /// </summary>
+        /// <param name="id">Room identifier.</param>
+        /// <param name="roomDto">Room update payload.</param>
+        /// <returns>No content on success.</returns>
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRoom(int id, RoomUpdateDto roomDto)
         {
@@ -115,7 +139,12 @@ namespace API.Controllers
             return _context.Rooms.Any(e => e.Id == id);
         }
         
-        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Только админы, менеджеры и Годжо могут удалять комнаты
+        /// <summary>
+        /// Deletes a room by id.
+        /// </summary>
+        /// <param name="id">Room identifier.</param>
+        /// <returns>No content on success.</returns>
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRoom(int id)
         {

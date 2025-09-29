@@ -11,7 +11,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
-    // Контроллер тикетов: супер-простой и понятный
+    /// <summary>
+    /// Endpoints for creating and managing support tickets and their messages.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
@@ -22,6 +24,9 @@ namespace API.Controllers
         private readonly IHubContext<TicketHub> _hub;
         private readonly TelegramNotifier _notifier;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="TicketsController"/>.
+        /// </summary>
         public TicketsController(AppDBContext db, TicketRoutingService routing, IHubContext<TicketHub> hub, TelegramNotifier notifier)
         {
             _db = db;
@@ -30,7 +35,11 @@ namespace API.Controllers
             _notifier = notifier;
         }
 
-        // 1) Создать тикет: создаём запись и первое сообщение, рассылаем событие в группу роли
+        /// <summary>
+        /// Creates a new support ticket and posts the first message.
+        /// </summary>
+        /// <param name="dto">Ticket creation payload.</param>
+        /// <returns>The created ticket.</returns>
         [HttpPost]
         public async Task<ActionResult<TicketReadDto>> Create([FromBody] TicketCreateDto dto)
         {
@@ -69,14 +78,16 @@ namespace API.Controllers
             // Сообщаем всем сотрудникам нужной роли о новом тикете
             await _hub.Clients.Group($"role-{targetRole}").SendAsync("TicketCreated", read);
             // Тост для админов/менеджеров
-            await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "Новый тикет", Message = $"#{ticket.Id} {ticket.Title} → {targetRole}", Level = "info", Ts = DateTime.UtcNow });
+            await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "New ticket", Message = $"#{ticket.Id} {ticket.Title} → {targetRole}", Level = "info", Ts = DateTime.UtcNow });
             // Telegram уведомление (если настроено)
-            await _notifier.SendAsync($"🆕 Тикет #{ticket.Id} — <b>{ticket.Title}</b> ({ticket.Category}) для роли <b>{targetRole}</b>");
+            await _notifier.SendAsync($"🆕 Ticket #{ticket.Id} — <b>{ticket.Title}</b> ({ticket.Category}) for role <b>{targetRole}</b>");
 
             return Ok(read);
         }
 
-        // 2) Мои тикеты (клиент видит только свои)
+        /// <summary>
+        /// Returns tickets created by the current user.
+        /// </summary>
         [HttpGet("mine")]
         public async Task<ActionResult<List<TicketReadDto>>> GetMy()
         {
@@ -88,7 +99,9 @@ namespace API.Controllers
             return Ok(items.Select(ToReadDto).ToList());
         }
 
-        // 3) Тикеты для моей роли (сотрудник видит по своей роли, админ — всё)
+        /// <summary>
+        /// Returns tickets for the current user's role (admins see all).
+        /// </summary>
         [HttpGet("for-role")]
         public async Task<ActionResult<List<TicketReadDto>>> GetForRole()
         {
@@ -107,7 +120,11 @@ namespace API.Controllers
             return Ok(byRole.Select(ToReadDto).ToList());
         }
 
-        // 4) Детали тикета + последние N сообщений (просто 50)
+        /// <summary>
+        /// Returns ticket details with up to the last 200 messages.
+        /// </summary>
+        /// <param name="id">Ticket identifier.</param>
+        /// <returns>Ticket and messages if authorized; 404 if not found.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<object>> GetOne(int id)
         {
@@ -135,7 +152,10 @@ namespace API.Controllers
             });
         }
 
-        // 5) Сотрудник берёт тикет в работу
+        /// <summary>
+        /// Assigns a ticket to the current user and marks it as InProgress.
+        /// </summary>
+        /// <param name="id">Ticket identifier.</param>
         [HttpPost("{id}/assign")]
         [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.Rengøring)]
         public async Task<IActionResult> Assign(int id)
@@ -151,11 +171,15 @@ namespace API.Controllers
 
             await _hub.Clients.Group($"ticket-{ticket.Id}").SendAsync("TicketUpdated", ToReadDto(ticket));
             // Тост
-            await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "Тикет взят", Message = $"#{ticket.Id} взят в работу", Level = "info", Ts = DateTime.UtcNow });
+            await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "Ticket assigned", Message = $"#{ticket.Id} taken into work", Level = "info", Ts = DateTime.UtcNow });
             return Ok(ToReadDto(ticket));
         }
 
-        // 6) Смена статуса
+        /// <summary>
+        /// Updates the status of a ticket.
+        /// </summary>
+        /// <param name="id">Ticket identifier.</param>
+        /// <param name="dto">New status payload.</param>
         [HttpPost("{id}/status")]
         public async Task<IActionResult> SetStatus(int id, [FromBody] TicketStatusUpdateDto dto)
         {
@@ -167,12 +191,16 @@ namespace API.Controllers
             ticket.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
             await _hub.Clients.Group($"ticket-{ticket.Id}").SendAsync("TicketUpdated", ToReadDto(ticket));
-            await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "Статус тикета", Message = $"#{ticket.Id}: {dto.Status}", Level = "success", Ts = DateTime.UtcNow });
-            await _notifier.SendAsync($"✅ Тикет #{ticket.Id} статус: <b>{dto.Status}</b>");
+            await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "Ticket status", Message = $"#{ticket.Id}: {dto.Status}", Level = "success", Ts = DateTime.UtcNow });
+            await _notifier.SendAsync($"✅ Ticket #{ticket.Id} status: <b>{dto.Status}</b>");
             return Ok(ToReadDto(ticket));
         }
 
-        // 7) Добавить сообщение через REST (альтернатива хабу)
+        /// <summary>
+        /// Adds a message to a ticket via REST.
+        /// </summary>
+        /// <param name="dto">Message payload including ticket id.</param>
+        /// <returns>The created ticket message.</returns>
         [HttpPost("messages")]
         public async Task<ActionResult<TicketMessageReadDto>> AddMessage([FromBody] TicketMessageCreateDto dto)
         {
@@ -206,7 +234,7 @@ namespace API.Controllers
         {
             var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(id) || !int.TryParse(id, out var userId))
-                throw new Exception("Некорректный пользователь.");
+                throw new Exception("Invalid user.");
             return userId;
         }
 
@@ -216,11 +244,11 @@ namespace API.Controllers
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
             if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out var uid))
             {
-                if (t.CreatedByUserId == uid) return true; // владелец тикета
-                if (t.AssignedToUserId == uid) return true; // исполнитель
+                if (t.CreatedByUserId == uid) return true;
+                if (t.AssignedToUserId == uid) return true;
             }
-            if (string.Equals(role, RoleNames.Admin, StringComparison.OrdinalIgnoreCase)) return true; // админ
-            if (!string.IsNullOrEmpty(role) && string.Equals(role, t.TargetRoleName, StringComparison.OrdinalIgnoreCase)) return true; // сотрудник нужной роли
+            if (string.Equals(role, RoleNames.Admin, StringComparison.OrdinalIgnoreCase)) return true;
+            if (!string.IsNullOrEmpty(role) && string.Equals(role, t.TargetRoleName, StringComparison.OrdinalIgnoreCase)) return true;
             return false;
         }
 
