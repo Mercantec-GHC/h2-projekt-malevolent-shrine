@@ -1,0 +1,35 @@
+﻿### Health Check
+GET http://localhost:8062/health
+
+### Alive Check  
+GET http://localhost:8062/alive
+
+### Get Roles (should work without auth)
+GET http://localhost:8062/api/Roles
+
+### Register User Test
+POST http://localhost:8062/api/Auth/register
+Content-Type: application/json
+
+{
+  "Username": "testuser",
+  "Email": "test@example.com", 
+  "Password": "TestPassword123",
+  "FirstName": "Test",
+  "LastName": "User"
+}
+
+### Login Test (with superadmin from seed data)
+POST http://localhost:8062/api/Auth/login
+Content-Type: application/json
+
+{
+  "Email": "admin@system.com",
+  "Password": "SuperSecretPassword123!"
+}
+
+### Get Hotels (might need auth)
+GET http://localhost:8062/api/Hotels
+
+### Get Users (likely needs auth)
+GET http://localhost:8062/api/Users

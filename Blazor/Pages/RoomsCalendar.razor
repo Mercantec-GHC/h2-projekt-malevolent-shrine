@@ -28,7 +28,7 @@
 
     @if (loading)
     {
-      <div class="loading">Загрузка...</div>
+      <Skeleton Lines="6" LineHeight="16px" />
     }
     else if (rows.Count == 0)
     {

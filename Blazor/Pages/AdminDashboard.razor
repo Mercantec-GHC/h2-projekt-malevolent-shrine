@@ -7,7 +7,7 @@
 
 <h1 class="site-title">Malevolent Shrine</h1>
 <div class="jp">Ryomen Sukuna</div>
-<p class="site-sub">Панель администратора (просто и понятно)</p>
+<p class="site-sub">Admin Panel</p>
 
 <!-- Декоративная анимация в стиле "проклятой печати" -->
 <div style="position:absolute; right:20px; top:20px; width:120px; opacity:.8; pointer-events:none">
@@ -35,8 +35,8 @@
 
 <div class="test-root">
   <div class="actions">
-    <a class="btn btn-ghost" href="/tickets/me">Мои тикеты</a>
-    <a class="btn btn-ghost" href="/tickets/role">Тикеты моей роли</a>
+    <a class="btn btn-ghost" href="/tickets/me">My Ticket</a>
+    <a class="btn btn-ghost" href="/tickets/role">Ticket for my role</a>
   </div>
 
   <div class="book-card">
@@ -44,7 +44,7 @@
     <div class="profile-row">
       <button class="btn btn-red" @onclick="TestConnection" disabled="@isLoading">
         @if (isLoading) { <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span> }
-        Проверить соединение с AD
+       Checking conection with AD
       </button>
     </div>
     @if (!string.IsNullOrEmpty(connectionStatus))
@@ -79,12 +79,12 @@
         <table class="table table-bordered table-striped">
           <thead class="table-dark">
             <tr>
-              <th>Имя</th>
-              <th>Логин</th>
+              <th>Name</th>
+              <th>Login</th>
               <th>Email</th>
-              <th>Отдел</th>
-              <th>Должность</th>
-              <th>Компания</th>
+              <th>Department</th>
+              <th>Job Title</th>
+              <th>Company</th>
             </tr>
           </thead>
           <tbody>
