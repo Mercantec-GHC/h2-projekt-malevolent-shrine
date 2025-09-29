@@ -178,7 +178,7 @@ namespace API.Controllers
                 }
                 
                 await _context.SaveChangesAsync();
-                return BadRequest("Обнаружен�� повторное использование токена. Все сессии отозваны.");
+                return BadRequest("Обнаружено повторное использование токена. Все сессии отозваны.");
             }
 
             if (!refreshToken.IsActive)
