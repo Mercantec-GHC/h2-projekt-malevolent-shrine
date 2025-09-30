@@ -319,7 +319,7 @@ namespace API.Controllers
                     user.LastName,
                     user.DateOfBirth,
                     user.CreatedAt,
-                    Role = user.Role.Name,
+                    user.Role,
                     user.ProfilePicture
                 });  
             }

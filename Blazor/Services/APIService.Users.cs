@@ -15,6 +15,7 @@ namespace Blazor.Services
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
+            try { 
             var response = await _httpClient.GetAsync("api/Users/me");
 
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
@@ -26,6 +27,12 @@ namespace Blazor.Services
 
             return await response.Content.ReadFromJsonAsync<User>()
                    ?? new User();
+
+            } catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+                return new User();
+            }
         }
 
     }
