@@ -1,0 +1,101 @@
+﻿@page "/test-home"
+@layout Blazor.test.TestLayout
+@using DomainModels.DTOs
+@inject Blazor.Services.APIService Api
+@inject NavigationManager Nav
+
+<div class="hero">
+    <h1 class="site-title">MALEVOLENT SHRINE</h1>
+    <div class="jp">領域展開 — Open your domain</div>
+    <p class="site-sub">Pick a door. Each door is a hotel.</p>
+    <div class="actions">
+        @if (authed)
+        {
+            <a class="btn btn-red" href="/test-profile">Profile</a>
+            <a class="btn btn-ghost" href="#" @onclick="Logout">Logout</a>
+        }
+        else
+        {
+            <a class="btn btn-red" href="/login">Login</a>
+            <a class="btn btn-ghost" href="/register">Register</a>
+        }
+    </div>
+</div>
+
+<div class="container">
+    @if (hotels == null)
+    {
+        <div class="loading">Loading hotels...</div>
+    }
+    else if (hotels.Count == 0)
+    {
+        <div class="empty">No hotels.</div>
+    }
+    else
+    {
+        <div class="door-grid">
+            @foreach (var h in hotels)
+            {
+                var isOpen = openingIds.Contains(h.Id);
+                <div class="door-card @(isOpen ? "open" : string.Empty)">
+                    <div class="door-scene">
+                        <div class="door-frame"></div>
+                        <div class="door-leaf"></div>
+                        <div class="stile"></div>
+                        <div class="handle"></div>
+                        <div class="rune-wrap">
+                            <img class="rune-img" src="/test/rune.svg?ts=@runeTs" alt="rune" />
+                        </div>
+                        <div class="plaque">
+                            <div class="hotel-name">@h.Name</div>
+                            <div class="hotel-addr">@h.Address</div>
+                        </div>
+                        <button class="door-button" @onclick="(() => OpenHotelAnimated(h.Id))" aria-label="Open hotel @h.Name"></button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<HotelReadDto>? hotels;
+    private HashSet<int> openingIds = new();
+    private string runeTs = string.Empty;
+    private bool authed = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        runeTs = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+        hotels = await Api.GetAllHotels();
+        await RefreshAuth();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Подстраховка: если пришли на страницу из другой, пересчитаем статус
+        await RefreshAuth();
+    }
+
+    private async Task RefreshAuth()
+    {
+        var token = await Api.GetToken();
+        authed = !string.IsNullOrWhiteSpace(token);
+        StateHasChanged();
+    }
+
+    private async Task Logout()
+    {
+        await Api.Logout();
+        authed = false;
+        Nav.NavigateTo("/test-home", true);
+    }
+
+    private async Task OpenHotelAnimated(int id)
+    {
+        openingIds.Add(id);
+        StateHasChanged();
+        await Task.Delay(550);
+        Nav.NavigateTo($"/test-hotel/{id}");
+    }
+}

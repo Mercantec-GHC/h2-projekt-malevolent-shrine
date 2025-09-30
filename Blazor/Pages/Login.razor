@@ -10,64 +10,75 @@
         ❌ @errorMessage
     </div>
 }
+@if(!isAdUser) {
+    <div class="form-wrapper">
+        <h3>Login</h3>
+        <EditForm model="user" method="post" OnValidSubmit="() => HandleSubmitAsync()" FormName="LoginForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-<div class="form-wrapper">
-    <h3>Login</h3>
-    <EditForm model="user" method="post" OnValidSubmit="() => HandleSubmitAsync()" FormName="LoginForm">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+            <div class="text-field">
+                <label for="email">E-mail:</label>
+                <InputText id="email" @bind-Value="user.Email" class="input" />
+                <ValidationMessage For="@(() => user.Email)" />
+            </div>
 
-        <div class="text-field">
-            <label for="email">E-mail:</label>
-            <InputText id="email" @bind-Value="user.Email" class="input" />
-            <ValidationMessage For="@(() => user.Email)" />
-        </div>
+            <div class="text-field">
+                <label for="password">Password:</label>
+                <InputText id="password" type="password" @bind-Value="user.Password" class="input" />
+                <ValidationMessage For="@(() => user.Password)" />
+            </div>
 
-        <div class="text-field">
-            <label for="password">Password:</label>
-            <InputText id="password" type="password" @bind-Value="user.Password" class="input" />
-            <ValidationMessage For="@(() => user.Password)" />
-        </div>
+            <button type="submit" class="submit-button">LOGIN</button>
 
-        <button type="submit" class="submit-button">LOGIN</button>
+            <p class="to-register">
+                Don't have an account? <a href="/register">Register now</a>
+            </p>
+            <p class="to-register">
+                <a @onclick="() => chhangeLoginMethod()">Login with AD here</a>
+            </p>
+        </EditForm>
+    </div>
+}
+else {
+    <div class="form-wrapper">
+        <h3>Login with Active Directory</h3>
+        <EditForm model="adForm" OnValidSubmit="() => HandleAdLoginAsync()">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-        <p class="to-register">
-            Don't have an account? <a href="/register">Register now</a>
-        </p>
-    </EditForm>
-</div>
+            <div class="text-field">
+                <label for="ad-username">AD Username (samAccountName):</label>
+                <InputText id="ad-username" @bind-Value="adForm.Username" class="input" />
+            </div>
 
-<hr />
+            <div class="text-field">
+                <label for="ad-password">Password:</label>
+                <InputText id="ad-password" type="password" @bind-Value="adForm.Password" class="input" />
+            </div>
 
-<div class="form-wrapper">
-    <h3>Login with Active Directory</h3>
-    <EditForm model="adForm" OnValidSubmit="() => HandleAdLoginAsync()">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+            <button type="button" class="submit-button" @onclick="HandleAdLoginAsync">LOGIN WITH AD</button>
+            <p class="to-register">
+                <a @onclick="() => chhangeLoginMethod()">Non-staff Login</a>
+            </p>
 
-        <div class="text-field">
-            <label for="ad-username">AD Username (samAccountName):</label>
-            <InputText id="ad-username" @bind-Value="adForm.Username" class="input" />
-        </div>
-
-        <div class="text-field">
-            <label for="ad-password">Password:</label>
-            <InputText id="ad-password" type="password" @bind-Value="adForm.Password" class="input" />
-        </div>
-
-        <button type="button" class="submit-button" @onclick="HandleAdLoginAsync">LOGIN WITH AD</button>
-
-        @if (showAdMessage)
-        {
-            <div class="error-box">❌ @adErrorMessage</div>
-        }
-    </EditForm>
-</div>
-
+            @if (showAdMessage)
+            {
+                <div class="error-box">❌ @adErrorMessage</div>
+            }
+        </EditForm>
+    </div>
+}
 @code {
+    bool isAdUser = false;
     UserLoginDto user = new UserLoginDto();
     string errorMessage = "Incorrect login or password. Please try again.";
     bool showMessage = false;
+
+    private void chhangeLoginMethod()
+    {
+        isAdUser = !isAdUser;
+    }
 
     // AD login state
     private AdLoginModel adForm = new();

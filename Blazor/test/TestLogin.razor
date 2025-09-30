@@ -1,0 +1,47 @@
+﻿@page "/test-login"
+@layout Blazor.test.TestLayout
+@inject Blazor.Services.APIService Api
+@inject NavigationManager Nav
+
+<link href="test/test.css" rel="stylesheet" />
+
+<h1 class="page-title">Login</h1>
+<p class="page-sub">Enter email and password. This will save your token.</p>
+
+<div class="book-card">
+    <EditForm Model="login" OnValidSubmit="DoLogin">
+        <DataAnnotationsValidator />
+        <div class="room-line">
+            <label>Email</label>
+            <input type="email" @bind="login.Email" />
+        </div>
+        <div class="room-line">
+            <label>Password</label>
+            <input type="password" @bind="login.Password" />
+        </div>
+        @if (!string.IsNullOrEmpty(msg))
+        {
+            <div class="msg">@msg</div>
+        }
+        <button class="btn-book" type="submit">Login</button>
+        <button class="btn-ghost" type="button" @onclick="GoProfile">Go to profile</button>
+    </EditForm>
+</div>
+
+@code {
+    private DomainModels.DTOs.UserLoginDto login = new();
+    private string msg = string.Empty;
+
+    private async Task DoLogin()
+    {
+        msg = string.Empty;
+        var ok = await Api.Login(login);
+        msg = ok ? "Login success." : "Login failed.";
+        if (ok)
+        {
+            await Task.Delay(500);
+            Nav.NavigateTo("/test-profile");
+        }
+    }
+    private void GoProfile() => Nav.NavigateTo("/test-profile");
+}

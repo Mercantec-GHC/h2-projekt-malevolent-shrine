@@ -1,0 +1,154 @@
+﻿@page "/test-book/{roomId:int}"
+@layout Blazor.test.TestLayout
+@inject Blazor.Services.APIService Api
+@inject NavigationManager Nav
+
+<h1 class="page-title">Book room</h1>
+<p class="page-sub">Pick dates and make a booking.</p>
+
+@if (room == null && string.IsNullOrEmpty(msg))
+{
+    <div class="loading">Loading room...</div>
+}
+else if (!string.IsNullOrEmpty(msg) && room == null)
+{
+    <div class="msg">@msg</div>
+}
+else if (room != null)
+{
+    <div class="book-card">
+        <div class="room-line"><strong>Room:</strong> @room.Number</div>
+        <div class="room-line"><strong>Price:</strong> @room.PricePerNight.ToString("0") kr/night</div>
+        <div class="room-line"><strong>Status:</strong> @(room.IsAvailable ? "Free" : "Not free")</div>
+
+        <div class="date-grid">
+            <label>Check-in <input type="date" @bind-value="checkIn" /></label>
+            <label>Check-out <input type="date" @bind-value="checkOut" /></label>
+        </div>
+
+        <div class="price-line">
+            <strong>Nights:</strong> @nights
+            <span class="spacer"></span>
+            <strong>Total:</strong> @total.ToString("0") kr
+        </div>
+
+        @if (!string.IsNullOrEmpty(msg))
+        {
+            <div class="msg">@msg</div>
+        }
+
+        <button class="btn-book" disabled="@disableBook" @onclick="BookNow">Book now</button>
+        <button class="btn-ghost" @onclick="GoBack">Back</button>
+    </div>
+}
+
+@code {
+    [Parameter] public int roomId { get; set; }
+
+    private DomainModels.DTOs.RoomReadDto? room;
+    private DateTime? checkIn;
+    private DateTime? checkOut;
+    private int nights => CalcNights();
+    private decimal total => nights > 0 && room != null ? nights * room.PricePerNight : 0;
+    private string msg = string.Empty;
+    private bool authed = false;
+    private int? currentUserId = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var t = await Api.GetToken();
+            authed = !string.IsNullOrWhiteSpace(t);
+            if (authed)
+            {
+                var me = await Api.GetMeAsync<MinimalMe>();
+                currentUserId = me?.Id;
+                if (currentUserId == null || currentUserId <= 0)
+                {
+                    msg = "Cannot read your profile. Try re-login.";
+                }
+            }
+            else
+            {
+                msg = "You are not logged in. Please login first.";
+            }
+            room = await Api.GetRoomAsync(roomId);
+            if (room == null)
+            {
+                msg = string.IsNullOrEmpty(msg) ? "Room not found or server error." : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            msg = "Cannot load room. Check API.";
+            Console.WriteLine(ex);
+        }
+    }
+
+    private bool disableBook => room == null || !room.IsAvailable || nights <= 0 || !authed || currentUserId is null or <= 0;
+
+    private int CalcNights()
+    {
+        if (checkIn.HasValue && checkOut.HasValue)
+        {
+            var n = (checkOut.Value.Date - checkIn.Value.Date).Days;
+            return n > 0 ? n : 0;
+        }
+        return 0;
+    }
+
+    private async Task BookNow()
+    {
+        msg = string.Empty;
+        if (!authed)
+        {
+            msg = "You must login before booking.";
+            return;
+        }
+        if (currentUserId is null or <= 0)
+        {
+            msg = "Cannot detect your user id. Please re-login.";
+            return;
+        }
+        if (room == null)
+        {
+            msg = "Room not loaded.";
+            return;
+        }
+        if (!checkIn.HasValue || !checkOut.HasValue || nights <= 0)
+        {
+            msg = "Dates are not valid.";
+            return;
+        }
+
+        var dto = new DomainModels.DTOs.BookingCreateDto
+        {
+            UserId = currentUserId.Value, // подставляем реальный Id
+            RoomId = room.Id,
+            CheckInDate = checkIn.Value.Date,
+            CheckOutDate = checkOut.Value.Date,
+            TotalPrice = total,
+            Status = "Pending"
+        };
+
+        var (ok, message) = await Api.CreateBookingWithMessageAsync(dto);
+        if (ok)
+        {
+            msg = "Booking created. A manager will contact you.";
+            await Task.Delay(800);
+            Nav.NavigateTo("/test-profile");
+        }
+        else
+        {
+            msg = string.IsNullOrWhiteSpace(message) ? "Booking failed. Check login or dates." : message;
+        }
+    }
+
+    private void GoBack()
+    {
+        Nav.NavigateTo("/test-home");
+    }
+
+    public class MinimalMe { public int Id { get; set; } }
+}
