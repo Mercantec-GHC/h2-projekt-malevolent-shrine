@@ -1,5 +1,7 @@
 ﻿@page "/"
 @using System.Net.Http
+@inject NavigationManager Nav
+
 <div class="greeting">
     <div class="logo">
         <div class="circle">
@@ -42,6 +44,8 @@
             @*<img class="hotel-image" src="@h.Image" alt="Hotel Image" />*@
             <p class="hotel-address"><strong>Address: </strong>@h.Address</p>
             <p class="hotel-rooms">Rooms: @h.Rooms.Count()</p>
+            <button @onclick="() => GoToRoom(h.Id)">See all rooms</button>
+
         </div>
     }
 </div>
@@ -50,6 +54,11 @@
     HealthCheckResponse? healthCheck;
     HealthCheckResponse? dbHealthCheck;
     List<HotelReadDto> hotels = new List<HotelReadDto>();
+
+    private void GoToRoom(int id)
+    {
+        Nav.NavigateTo($"/rooms?id={id}");
+    }
 
     protected override async Task OnInitializedAsync()
     {
