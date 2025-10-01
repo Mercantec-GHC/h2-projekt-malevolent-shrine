@@ -1,6 +1,9 @@
-﻿using System.Net.Http.Headers;
+﻿using System.ComponentModel;
+using System.Diagnostics.Contracts;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using DomainModels.DTOs;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace Blazor.Services
 {
@@ -63,6 +66,19 @@ namespace Blazor.Services
             catch (Exception ex)
             {
                 return (false, $"Network error: {ex.Message}");
+            }
+        }
+
+        public async Task<bool> DeleteBookingAsync(int id)
+        {
+            try
+            {
+                await _httpClient.DeleteAsync($"api/bookings/{id}");
+                return true;
+            }
+            catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+                return false;
             }
         }
 
