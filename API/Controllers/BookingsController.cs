@@ -286,7 +286,9 @@ public class BookingsController : ControllerBase
             CheckOutDate = b.CheckOutDate,
             TotalPrice = b.TotalPrice,
             Status = b.Status,
-            CreatedAt = b.CreatedAt
+            CreatedAt = b.CreatedAt,
+            RoomNumber = b.Room.Number,
+            HotelName = b.Room.Hotel.Name
         }).ToList();
 
         return Ok(bookingReadDtos);

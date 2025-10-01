@@ -8,7 +8,7 @@ namespace Blazor.Services
 {
     public partial class APIService
     {
-        public async Task<User> GetCurrentUserAsync(string? token = null)
+        public async Task<UserReadDto> GetCurrentUserAsync(string? token = null)
         {
             if (!string.IsNullOrEmpty(token))
             {
@@ -25,13 +25,13 @@ namespace Blazor.Services
 
             response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<User>()
-                   ?? new User();
+            return await response.Content.ReadFromJsonAsync<UserReadDto>()
+                   ?? new UserReadDto();
 
             } catch (Exception ex)
             {
                 Console.WriteLine($"{ex.Message}");
-                return new User();
+                return new UserReadDto();
             }
         }
 

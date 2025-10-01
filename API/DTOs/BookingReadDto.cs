@@ -37,4 +37,9 @@ public class BookingReadDto
     /// UTC timestamp when the booking was created.
     /// </summary>
     public DateTime CreatedAt { get; set; }
+
+    public string? RoomNumber { get; set; }
+
+    public string HotelName { get; set; }
+
 }

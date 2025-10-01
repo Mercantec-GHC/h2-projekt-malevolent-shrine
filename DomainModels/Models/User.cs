@@ -37,10 +37,7 @@ namespace DomainModels.Models
 
         public UserInfo? UserInfo { get; set; }
 
-        public string? ProfilePicture { get; set; }
-
-
-
+        public string? ProfilePicture { get; set; } 
         private List<Booking> Bookings { get; set; } = new();
 
         public List<RefreshToken> RefreshTokens { get; set; } = new();

@@ -37,11 +37,19 @@ else
                 @foreach (var b in bookings)
                 {
                     <div class="booking-item">
-                        <div>Room: @b.RoomId</div>
+                        <div>@b.HotelName</div><hr/>
+                        <div>Room: @b.RoomNumber</div>
                         <div>From: @b.CheckInDate.ToString("yyyy-MM-dd")</div>
                         <div>To: @b.CheckOutDate.ToString("yyyy-MM-dd")</div>
                         <div>Status: @b.Status</div>
                         <div>Total: @b.TotalPrice.ToString("0") kr</div>
+                        <button class="cancel-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                            </svg>
+                            Cancel booking
+                        </button>
+
                     </div>
                 }
             </div>
@@ -50,7 +58,7 @@ else
 }
 
 @code {
-    private SimpleUserMe? user;
+    private UserReadDto? user;
     private List<DomainModels.DTOs.BookingReadDto> bookings = new();
     private bool loading = true;
     private bool authed = false;
@@ -59,29 +67,15 @@ else
     {
         var token = await Api.GetToken();
         authed = !string.IsNullOrWhiteSpace(token);
+        user = await Api.GetCurrentUserAsync(token);
+        bookings = await Api.GetMyBookingsAsync();
         if (!authed)
         {
             loading = false;
             return;
         }
-
-        // Получаем текущего пользователя и мои брони через APIService (BaseAddress → API, с Authorization)
-
         loading = false;
     }
 
     [Inject] public HttpClient Http { get; set; } = default!;
-
-    public class SimpleUserMe
-    {
-        public int Id { get; set; }
-        public string Email { get; set; } = string.Empty;
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public bool IsVIP { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public string Role { get; set; } = string.Empty;
-        public string? ProfilePicture { get; set; }
-        public DateTime DateOfBirth { get; set; }
-    }
 }
