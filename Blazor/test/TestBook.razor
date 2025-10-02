@@ -137,7 +137,7 @@ else if (room != null)
         {
             msg = "Booking created. A manager will contact you.";
             await Task.Delay(800);
-            Nav.NavigateTo("/test-profile");
+            Nav.NavigateTo("/profile");
         }
         else
         {
@@ -147,7 +147,7 @@ else if (room != null)
 
     private void GoBack()
     {
-        Nav.NavigateTo("/test-home");
+        Nav.NavigateTo("/");
     }
 
     public class MinimalMe { public int Id { get; set; } }
