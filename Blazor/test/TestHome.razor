@@ -7,18 +7,6 @@
     <h1 class="site-title">MALEVOLENT SHRINE</h1>
     <div class="jp">領域展開 — Open your domain</div>
     <p class="site-sub">Pick a door. Each door is a hotel.</p>
-    <div class="actions">
-        @if (authed)
-        {
-            <a class="btn btn-red" href="/test-profile">Profile</a>
-            <a class="btn btn-ghost" href="#" @onclick="Logout">Logout</a>
-        }
-        else
-        {
-            <a class="btn btn-red" href="/login">Login</a>
-            <a class="btn btn-ghost" href="/register">Register</a>
-        }
-    </div>
 </div>
 
 <div class="container">
@@ -81,13 +69,6 @@
         var token = await Api.GetToken();
         authed = !string.IsNullOrWhiteSpace(token);
         StateHasChanged();
-    }
-
-    private async Task Logout()
-    {
-        await Api.Logout();
-        authed = false;
-        Nav.NavigateTo("/test-home", true);
     }
 
     private async Task OpenHotelAnimated(int id)

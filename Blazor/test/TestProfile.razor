@@ -1,5 +1,4 @@
-﻿@page "/test-profile"
-
+﻿@page "/profile"
 @inject Blazor.Services.APIService Api
 
 <div class="hero">
@@ -22,7 +21,10 @@ else
             <div class="profile-row"><b>Name:</b> @user?.FirstName @user?.LastName</div>
             <div class="profile-row"><b>Email:</b> @user?.Email</div>
             <div class="profile-row"><b>Role:</b> @user?.Role</div>
-            <div class="profile-row"><b>VIP:</b> @(user?.IsVIP == true ? "Yes" : "No")</div>
+            <b>VIP:</b>
+            <span class="vip-status @(user?.IsVIP == true ? "vip-yes" : "vip-no")">
+                @(user?.IsVIP == true ? "Yes" : "No")
+            </span>
             <div class="profile-row"><b>Joined:</b> @user?.CreatedAt.ToString("yyyy-MM-dd")</div>
         </div>
 
@@ -37,7 +39,8 @@ else
                 @foreach (var b in bookings)
                 {
                     <div class="booking-item">
-                        <div>@b.HotelName</div><hr/>
+                        <h3 class="hotel-name">@b.HotelName</h3>
+                        <hr />
                         <div>Room: @b.RoomNumber</div>
                         <div>From: @b.CheckInDate.ToString("yyyy-MM-dd")</div>
                         <div>To: @b.CheckOutDate.ToString("yyyy-MM-dd")</div>
