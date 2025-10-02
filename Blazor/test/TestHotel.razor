@@ -52,6 +52,10 @@ else
                 {
                     var vip = vipMap.TryGetValue(r.Id, out var isVip) && isVip;
                     <div class="room-card @(r.IsAvailable ? "free" : "busy")">
+                        <div class="hotel-img">
+                            <img src="@r.ImageUrl" alt="Room @r.Number" />
+                        </div>
+                        <hr />
                         <div class="room-row">
                             <span class="room-num">Room @r.Number</span>
                             @if (vip)
@@ -61,7 +65,11 @@ else
                         </div>
                         <div class="room-info">Floor: @r.Floor • People: @r.Capacity</div>
                         <div class="room-price">@r.PricePerNight.ToString("0") kr/night</div>
-                        <div class="room-status">@(r.IsAvailable ? "Free" : "Not free")</div>
+                        <div class="room-status">@(r.IsAvailable ? "Free" : "Not free")</div><hr />
+                        <div class="desc">
+                            <h4>Description</h4>
+                            <p>@r.Description</p>
+                        </div>
                         <button class="btn-book" disabled="@(!r.IsAvailable)" @onclick="(() => Book(r.Id))">Book</button>
                     </div>
                 }

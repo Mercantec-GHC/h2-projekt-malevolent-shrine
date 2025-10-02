@@ -36,7 +36,9 @@ namespace API.Controllers
                         PricePerNight = r.PricePerNight,
                         Floor = r.Floor,
                         IsAvailable = r.IsAvailable,
-                        HotelId = r.HotelId
+                        HotelId = r.HotelId,
+                        ImageUrl = r.ImageUrl,
+                        Description = r.Description
                     }).ToList()
                 })
                 .ToListAsync();

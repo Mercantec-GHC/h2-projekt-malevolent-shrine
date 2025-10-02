@@ -33,4 +33,7 @@ public class RoomReadDto
     /// Owning hotel identifier, if available.
     /// </summary>
     public int? HotelId { get; set; }
+
+    public string Description { get; set; } = string.Empty;
+    public string ImageUrl { get; set; } = string.Empty;
 }
