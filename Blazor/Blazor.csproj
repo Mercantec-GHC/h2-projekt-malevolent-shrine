@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -36,7 +36,6 @@
 
   <ItemGroup>
     <None Include="wwwroot\test\rune.svg" />
-    <None Include="wwwroot\test\test.css" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,27 @@
 ﻿@inherits LayoutComponentBase
 
-<link href="/test/test.css?v=dev4" rel="stylesheet" />
+<div class="page">
+    
+    <div class="sidebar @(collapseSidebar ? "collapsed" : "open")">
+        <NavMenu OnToggleSidebar="ToggleSidebar" IsSidebarCollapsed="@collapseSidebar" />
+    </div>
+    <!-- Кнопка для разворачивания/сворачивания -->
+    <button class="sidebar-toggle" @onclick="ToggleSidebar">
+        @(collapseSidebar ? "⮞" : "⮜")
+    </button>
 
-<div class="test-root">
-    @Body
+    <main>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
 </div>
+
+@code {
+    private bool collapseSidebar = false;
+
+    private void ToggleSidebar()
+    {
+        collapseSidebar = !collapseSidebar;
+    }
+}
