@@ -19,7 +19,7 @@ public class Program
         // Read API endpoint from Blazor appsettings (wwwroot/appsettings*.json) with a safe local fallback
         var configuredApi = builder.Configuration["ApiEndpoint"];
         var apiEndpoint = string.IsNullOrWhiteSpace(configuredApi)
-            ? "http://localhost:8062/"
+            ? "https://malevolentshrineapi.mercantec.tech/"
             : configuredApi;
 
         Console.WriteLine($"Blazor Environment: {builder.HostEnvironment.Environment}");
