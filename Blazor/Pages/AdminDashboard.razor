@@ -3,7 +3,6 @@
 @using Blazor.Services
 @inject ActiveDirectoryService ADService
 @inject APIService Api
-@inject TicketHubClient Hub
 
 <h1 class="site-title jp">Malevolent Shrine</h1>
 <div class="jp">Ryomen Sukuna</div>
@@ -148,17 +147,6 @@
   </div>
 </div>
 
-<!-- Тосты админке: появляется в правом верхнем углу -->
-<div class="ms-toasts">
-  @foreach (var t in _toasts)
-  {
-    <div class="ms-toast @t.Level">
-      <div class="ms-toast-title">@t.Title</div>
-      <div class="ms-toast-msg">@t.Message</div>
-    </div>
-  }
-</div>
-
 @code {
     private List<ADUser>? users = null;
     private List<ADGroup>? groups = null;
@@ -174,32 +162,8 @@
 
     private IEnumerable<ADGroup> FilteredGroups => groups?.Where(g => allowedGroups.Contains(g.Name)) ?? Enumerable.Empty<ADGroup>();
 
-    private readonly List<ToastPayload> _toasts = new();
-
     protected override async Task OnInitializedAsync()
     {
-        // Подключаемся к SignalR, чтобы ловить тосты для админов/менеджеров
-        try
-        {
-            if (!Hub.IsConnected)
-            {
-                await Hub.StartAsync(Api.GetBaseAddress());
-            }
-            Hub.OnToast += async payload =>
-            {
-                _toasts.Add(payload);
-                StateHasChanged();
-                // Автоматическое скрытие через 5 секунд
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(5000);
-                    _toasts.Remove(payload);
-                    await InvokeAsync(StateHasChanged);
-                });
-            };
-        }
-        catch { /* тихо, чтобы не мешать остальной странице */ }
-
         await LoadInitialData();
     }
 

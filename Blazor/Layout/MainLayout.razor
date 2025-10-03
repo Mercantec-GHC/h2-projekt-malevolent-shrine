@@ -1,4 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@using Blazor.Models
+@inject Blazor.Services.APIService Api
+@inject Blazor.Services.TicketHubClient Hub
 
 <div class="page">
     
@@ -17,8 +20,53 @@
     </main>
 </div>
 
+<!-- Глобальные тосты -->
+@if (_toasts.Count > 0)
+{
+    <div class="ms-toasts">
+        @foreach (var t in _toasts)
+        {
+            <div class="ms-toast @t.Level">
+                <div class="ms-toast-title">@t.Title</div>
+                <div class="ms-toast-msg">@t.Message</div>
+            </div>
+        }
+    </div>
+}
+
 @code {
     private bool collapseSidebar = false;
+    private readonly List<ToastPayload> _toasts = new();
+    private bool _hubInitialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_hubInitialized)
+        {
+            try
+            {
+                await Hub.StartAsync(Api.GetBaseAddress());
+                Hub.OnToast += async payload =>
+                {
+                    _toasts.Add(payload);
+                    StateHasChanged();
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(5000);
+                            _toasts.Remove(payload);
+                            await InvokeAsync(StateHasChanged);
+                        }
+                        catch { }
+                    });
+                    await Task.CompletedTask;
+                };
+                _hubInitialized = true;
+            }
+            catch { /* тихо, чтобы не мешать основному UI */ }
+        }
+    }
 
     private void ToggleSidebar()
     {
