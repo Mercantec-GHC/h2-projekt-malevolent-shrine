@@ -79,8 +79,10 @@ namespace API.Controllers
             await _hub.Clients.Group($"role-{targetRole}").SendAsync("TicketCreated", read);
             // Тост для админов/менеджеров
             await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "New ticket", Message = $"#{ticket.Id} {ticket.Title} → {targetRole}", Level = "info", Ts = DateTime.UtcNow });
-            // Telegram уведомление (если настроено)
-            await _notifier.SendAsync($"🆕 Ticket #{ticket.Id} — <b>{ticket.Title}</b> ({ticket.Category}) for role <b>{targetRole}</b>");
+
+            // Telegram: централизованный шаблон
+            var tgText = _notifier.FormatTicketCreated(ticket.Id, ticket.Title, ticket.Category, targetRole, locale: "en");
+            await _notifier.SendAsync(tgText);
 
             return Ok(read);
         }
@@ -192,7 +194,10 @@ namespace API.Controllers
             await _db.SaveChangesAsync();
             await _hub.Clients.Group($"ticket-{ticket.Id}").SendAsync("TicketUpdated", ToReadDto(ticket));
             await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "Ticket status", Message = $"#{ticket.Id}: {dto.Status}", Level = "success", Ts = DateTime.UtcNow });
-            await _notifier.SendAsync($"✅ Ticket #{ticket.Id} status: <b>{dto.Status}</b>");
+
+            // Telegram: централизованный шаблон
+            var tgText = _notifier.FormatTicketStatus(ticket.Id, dto.Status, locale: "ru");
+            await _notifier.SendAsync(tgText);
             return Ok(ToReadDto(ticket));
         }
 
