@@ -1,0 +1,43 @@
+﻿@using Blazor.Models
+
+<div class="legend">
+  <span class="legend-item"><span class="legend-dot free"></span> Свободно</span>
+  <span class="legend-item"><span class="legend-dot occupied"></span> Занято</span>
+</div>
+<div class="calendar-wrap">
+  <div class="calendar-grid" style="--cols:@Days">
+    <div class="cal-cell head room-col">Номер</div>
+    @for (int i = 0; i < Days; i++)
+    {
+      var d = StartDate.AddDays(i);
+      <div class="cal-cell head">
+        <div class="date-top">@d.ToString("dd.MM")</div>
+        <div class="date-sub">@d.ToString("ddd")</div>
+      </div>
+    }
+
+    @foreach (var r in Rows)
+    {
+      <div class="cal-cell room-col">
+        <div class="room-id">Комната @r.RoomNumber</div>
+        @if (r.HotelId.HasValue)
+        {
+          <div class="room-hotel">Отель #@r.HotelId</div>
+        }
+      </div>
+      @for (int i = 0; i < Days; i++)
+      {
+        var day = r.Days.Count > i ? r.Days[i] : new AvailabilityDayVM { Date = StartDate.AddDays(i) };
+        var cls = day.IsOccupied ? "cal-cell occupied" : "cal-cell free";
+        <div class="@cls" title="@(day.IsOccupied ? $"Занято (бронь #{day.BookingId})" : "Свободно")"></div>
+      }
+    }
+  </div>
+</div>
+
+@code {
+  [Parameter] public List<RoomAvailabilityVM> Rows { get; set; } = new();
+  [Parameter] public int Days { get; set; } = 28;
+  [Parameter] public DateTime StartDate { get; set; } = DateTime.UtcNow.Date;
+}
+

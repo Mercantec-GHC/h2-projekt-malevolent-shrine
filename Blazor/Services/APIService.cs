@@ -12,5 +12,7 @@ namespace Blazor.Services
             _httpClient = httpClient;
             _js = js;
         }
+
+        public Uri GetBaseAddress() => _httpClient.BaseAddress ?? new Uri("/");
     }
 }

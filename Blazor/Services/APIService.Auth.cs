@@ -36,19 +36,31 @@ namespace Blazor.Services
 
         public async Task<bool> Login(UserLoginDto user)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/auth/login", user);
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/Auth/login", user);
 
-            if (!response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Login failed: {response.StatusCode} - {errorContent}");
+                    return false;
+                }
+
+                var result = await response.Content.ReadFromJsonAsync<AuthResponseDto>();
+
+                if (result == null || string.IsNullOrEmpty(result.AccessToken))
+                    return false;
+
+                await _js.InvokeVoidAsync("localStorage.setItem", TOKEN_KEY, result.AccessToken);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Login exception: {ex.Message}");
                 return false;
-
-            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
-
-            if (result?.Token == null)
-                return false;
-
-            await _js.InvokeVoidAsync("localStorage.setItem", TOKEN_KEY, result.Token);
-
-            return true;
+            }
         }
 
         public async Task<string?> GetToken()

@@ -3,35 +3,40 @@ using API.Data;
 
 namespace API.Controllers
 {
+    /// <summary>
+    /// Simple health and ping endpoints for the API and database connectivity.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class StatusController : ControllerBase
     {
         private readonly AppDBContext _context;
 
-        // Внедрение DbContext через DI
+        /// <summary>
+        /// Injects the application DbContext.
+        /// </summary>
         public StatusController(AppDBContext context)
         {
             _context = context;
         }
 
         /// <summary>
-        /// Tjekker om API'en kører korrekt.
+        /// Checks whether the API is running.
         /// </summary>
-        /// <returns>Status og besked om API'ens tilstand.</returns>
-        /// <response code="200">API'en er kørende.</response>
+        /// <returns>Status object indicating the API is healthy.</returns>
+        /// <response code="200">API is running.</response>
         [HttpGet("healthcheck")]
         public IActionResult HealthCheck()
         {
-            return Ok(new { status = "OK", message = "API'en er kørende!" });
+            return Ok(new { status = "OK", message = "API is running" });
         }
 
         /// <summary>
-        /// Tjekker om databasen er tilgængelig via EFCore.
+        /// Checks whether the database is reachable via EF Core.
         /// </summary>
-        /// <returns>Status og besked om databaseforbindelse.</returns>
-        /// <response code="200">Database er kørende.</response>
-        /// <response code="500">Der er en fejl med databaseforbindelsen.</response>
+        /// <returns>Status object indicating database connectivity.</returns>
+        /// <response code="200">Database connection succeeded.</response>
+        /// <response code="500">Database connection failed.</response>
         [HttpGet("dbhealthcheck")]
         public IActionResult DBHealthCheck()
         {
@@ -39,24 +44,24 @@ namespace API.Controllers
             {
                 if (_context.Database.CanConnect())
                 {
-                    return Ok(new { status = "OK", message = "Database er kørende!" });
+                    return Ok(new { status = "OK", message = "Database is available" });
                 }
                 else
                 {
-                    return StatusCode(500, new { status = "Error", message = "Kan ikke forbinde til databasen." });
+                    return StatusCode(500, new { status = "Error", message = "Cannot connect to the database." });
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { status = "Error", message = "Fejl ved forbindelse til database: " + ex.Message });
+                return StatusCode(500, new { status = "Error", message = "Database connection error: " + ex.Message });
             }
         }
 
         /// <summary>
-        /// Simpelt ping-endpoint til at teste API'en.
+        /// Simple ping endpoint to test API responsiveness.
         /// </summary>
-        /// <returns>Status og "Pong" besked.</returns>
-        /// <response code="200">API'en svarede med Pong.</response>
+        /// <returns>Status object with a pong message.</returns>
+        /// <response code="200">API responded with Pong.</response>
         [HttpGet("ping")]
         public IActionResult Ping()
         {

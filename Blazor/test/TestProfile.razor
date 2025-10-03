@@ -1,0 +1,131 @@
+﻿@page "/profile"
+@inject Blazor.Services.APIService Api
+
+<div class="hero">
+    <h1 class="site-title">My profile</h1>
+    <p class="site-sub">See your info and bookings.</p>
+</div>
+
+@if (showConfirmation)
+{
+    <div class="confirm-window-overlay" @onclick="CloseModal">
+        <div class="confirm-window" @onclick:stopPropagation>
+            <h2 class="confirm-header">Are you sure you want to cancel this booking?</h2>
+            <button class="btn-yes" @onclick="ConfirmCancel">Yes, send this booking to the void! (ง •̀_•́)ง</button>
+            <button class="btn-no" @onclick="CloseModal">No, let me keep it (ಥᗩಥ)</button>
+        </div>
+    </div>
+}
+
+
+@if (loading)
+{
+    <div class="loading">Loading...</div>
+}
+else if (!authed)
+{
+    <div class="hero"><div class="msg">Please log in first.</div></div>
+}
+else
+{
+    <div class="container">
+        <div class="profile-card">
+            <div class="profile-row"><b>Name:</b> @user?.FirstName @user?.LastName</div>
+            <div class="profile-row"><b>Email:</b> @user?.Email</div>
+            <div class="profile-row"><b>Role:</b> @user?.Role</div>
+            <div class="profile-row">
+                <b>VIP:</b>
+                <span class="vip-status @(user?.IsVIP == true ? "vip-yes" : "vip-no")">
+                    @(user?.IsVIP == true ? "Yes" : "No")
+                </span>
+            </div>
+            <div class="profile-row"><b>Joined:</b> @user?.CreatedAt.ToString("yyyy-MM-dd")</div>
+        </div>
+
+
+        <h2 class="block-title">My bookings</h2>
+        @if (bookings.Count == 0)
+        {
+            <div class="empty">No bookings yet.</div>
+        }
+        else
+        {
+            <div class="bookings-list">
+                @foreach (var b in bookings)
+                {
+                    <div class="booking-item">
+                        <h3 class="hotel-name">@b.HotelName</h3>
+                        <hr />
+                        <div>Room: @b.RoomNumber</div>
+                        <div>From: @b.CheckInDate.ToString("yyyy-MM-dd")</div>
+                        <div>To: @b.CheckOutDate.ToString("yyyy-MM-dd")</div>
+                        <div>Status: @b.Status</div>
+                        <div>Total: @b.TotalPrice.ToString("0") kr</div>
+                        <button class="cancel-btn" @onclick="() => ShowCancelConfirmation(b.Id)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                            </svg>
+                            Cancel booking
+                        </button>
+                    </div>
+                }
+            </div>
+
+        }
+    </div>
+}
+
+@code {
+    private bool showConfirmation = false;
+    private UserReadDto? user;
+    private List<DomainModels.DTOs.BookingReadDto> bookings = new();
+    private bool loading = true;
+    private bool authed = false;
+    private bool CancelationSuccessful = false;
+   private int bookingToCancelId = -1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await Api.GetToken();
+        authed = !string.IsNullOrWhiteSpace(token);
+        user = await Api.GetCurrentUserAsync(token);
+        bookings = await Api.GetMyBookingsAsync();
+        if (!authed)
+        {
+            loading = false;
+            return;
+        }
+        loading = false;
+    }
+
+    private void ShowCancelConfirmation(int id)
+    {
+        bookingToCancelId = id;
+        showConfirmation = true;
+    }
+
+    private void CloseModal()
+    {
+        showConfirmation = false;
+        bookingToCancelId = -1;
+    }
+
+    private async Task ConfirmCancel()
+    {
+        if (bookingToCancelId != -1)
+        {
+            var success = await Api.DeleteBookingAsync(bookingToCancelId);
+            if (success)
+            {
+                var booking = bookings.FirstOrDefault(b => b.Id == bookingToCancelId);
+                if (booking != null)
+                {
+                    bookings.Remove(booking);
+                }
+            }
+        }
+        CloseModal();
+    }
+
+
+}

@@ -1,0 +1,113 @@
+﻿@page "/tickets/me"
+@using Blazor.Models
+@inject Blazor.Services.APIService Api
+@inject NavigationManager Nav
+
+<h1 class="site-title">Malevolent Shrine</h1>
+<div class="jp">Ryomen Sukuna</div>
+<p class="site-sub">Мои тикеты (мои обращения)</p>
+
+<div class="test-root">
+  <div class="actions">
+    <button class="btn btn-red" @onclick="() => showCreate = !showCreate">@((showCreate?"Скрыть":"Создать тикет"))</button>
+    <a class="btn btn-ghost" href="/tickets/role">Тикеты моей роли</a>
+  </div>
+
+  @if (showCreate)
+  {
+    <div class="book-card">
+      <h3 class="page-title">Новый тикет</h3>
+      <div class="profile-row">
+        <label>Краткий заголовок</label>
+        <input class="form-control" @bind="create.Title" placeholder="Например: Шумит кондиционер" />
+      </div>
+      <div class="profile-row">
+        <label>Категория</label>
+        <select class="form-select" @bind="create.Category">
+          <option value="@TicketCategory.Cleaning">Уборка</option>
+          <option value="@TicketCategory.Technical">Техническое</option>
+          <option value="@TicketCategory.General">Общее</option>
+        </select>
+      </div>
+      <div class="profile-row">
+        <label>Описание (что случилось)</label>
+        <textarea class="form-control" @bind="create.Description" rows="4" placeholder="Опишите проблему простыми словами"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn btn-red" @onclick="CreateAsync">Создать</button>
+        <button class="btn btn-ghost" @onclick="() => showCreate=false">Отмена</button>
+      </div>
+    </div>
+  }
+
+  @if (loading)
+  {
+    <div class="loading">Загрузка...</div>
+  }
+  else if (items.Count == 0)
+  {
+    <div class="empty">У вас пока нет тикетов. Нажмите "Создать тикет".</div>
+  }
+  else
+  {
+    <div class="door-grid">
+      @foreach (var t in items)
+      {
+        <div class="door-card" @onclick="@(() => Nav.NavigateTo(LinkTo(t)))">
+          <div class="door-scene">
+            <div class="door-frame"></div>
+            <div class="door-leaf"></div>
+            <div class="rune-wrap"><img class="rune-img" src="@($"img/runes/rune-{RuneFor(t.Category)}.svg")" alt="rune" /></div>
+          </div>
+          <div class="plaque">
+            <div class="door-name">@t.Title</div>
+            <div class="door-addr">Статус: @t.Status | Для роли: @t.TargetRoleName</div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@code {
+  bool loading = true;
+  bool showCreate = false;
+  List<TicketRead> items = new();
+  TicketCreate create = new();
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+  }
+
+  async Task LoadAsync()
+  {
+    loading = true;
+    items = await Api.GetMyTicketsAsync();
+    loading = false;
+    StateHasChanged();
+  }
+
+  async Task CreateAsync()
+  {
+    if (string.IsNullOrWhiteSpace(create.Title) || string.IsNullOrWhiteSpace(create.Description))
+      return;
+    var res = await Api.CreateTicketAsync(create);
+    if (res != null)
+    {
+      showCreate = false;
+      create = new();
+      await LoadAsync();
+      Nav.NavigateTo($"/tickets/chat/{res.Id}");
+    }
+  }
+
+  string LinkTo(TicketRead t) => $"/tickets/chat/{t.Id}";
+
+  string RuneFor(TicketCategory cat) => cat switch
+  {
+    TicketCategory.Cleaning => "clean",
+    TicketCategory.Technical => "tech",
+    _ => "general"
+  };
+}

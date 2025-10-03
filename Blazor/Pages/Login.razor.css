@@ -127,6 +127,7 @@ h3 {
         text-decoration: underline;
         font-weight: bold;
         transition: color 0.3s;
+        cursor: pointer;
     }
 
         .to-register a:hover {

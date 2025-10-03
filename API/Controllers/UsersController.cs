@@ -12,7 +12,7 @@ using System.Security.Claims;
 namespace API.Controllers
 {
     /// <summary>
-    /// Controller til brugere.
+    /// User management endpoints (CRUD, role updates, and current user lookup).
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -24,24 +24,11 @@ namespace API.Controllers
         
         
         /// <summary>
-        /// Initialiserer UsersController med nødvendige services.
+        /// Initializes a new instance of <see cref="UsersController"/>.
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="jwtService"></param>
-        /// <param name="logger"></param>
-        /// /// <remarks>
-        /// Dette er konstruktøren for UsersController, der bruger Dependency Injection til at få
-        ///  AppDBContext, JwtService.
-        ///  logger bruges til at logge informationer og fejl.
-        ///  Dette sikrer, at controlleren har adgang til databasen, JWT-tjenesten
-        ///  for at håndtere brugerautentificering og
-        ///  autorisation.
-        ///  Denne controller håndterer CRUD-operationer for brugere, herunder oprettelse,
-        ///  læsning, opdatering og sletning af brugere.
-        ///  Den er også ansvarlig for at hente den aktuelle bruger og ændre brugerroller
-        ///  samt hente alle tilgængelige roller.
-        /// </remarks>
-        /// <returns> </returns>    
+        /// <param name="context">Application database context.</param>
+        /// <param name="jwtService">JWT issuance service.</param>
+        /// <param name="logger">Logger for this controller.</param>
         public UsersController(AppDBContext context, JwtService jwtService, ILogger<UsersController> logger)
         {
             _context = context;
@@ -49,20 +36,20 @@ namespace API.Controllers
             _logger = logger;
         }
         
-       /// <summary>    
-       /// Henter alle brugere
-       /// Kun for autoriserede brugere
+       /// <summary>
+       /// Returns all users.
+       /// Requires authorization with appropriate roles.
        /// </summary>
-       /// <returns>En liste af UserReadDto</returns>
+       /// <returns>List of users mapped to <see cref="UserReadDto"/>.</returns>
       
-        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsers()
         {
             try
             {
                 var users = await _context.Users
-                    .Include(u => u.UserInfo) // Загружаем связанные данные!
+                    .Include(u => u.UserInfo)
                     .ToListAsync();
 
                 var userReadDtos = users.Select(u => new UserReadDto
@@ -71,37 +58,33 @@ namespace API.Controllers
                     FirstName = u.FirstName,
                     LastName = u.LastName,
                     Email = u.Email,
-                    PhoneNumber = u.UserInfo?.PhoneNumber ?? "", // Через UserInfo!
-                    Address = u.UserInfo?.Address ?? "" // Через UserInfo!
+                    PhoneNumber = u.UserInfo?.PhoneNumber ?? "",
+                    Address = u.UserInfo?.Address ?? ""
                 }).ToList();
 
                 return Ok(userReadDtos);
             }
             catch (Exception ex)
             {
-                // Используем наш "журналист" (_logger)
-                _logger.LogError(ex, "Ошибка при получении списка пользователей.");
-
-                // Возвращаем пользователю понятную ошибку
-                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+                _logger.LogError(ex, "Error while retrieving users.");
+                return StatusCode(500, "An internal server error occurred. Please try again later.");
             }
             
         }
 
         /// <summary>
-        ///  Hentér en specifik bruger
-        ///  Kun for autoriserede brugere med roller Admin eller Manager
+        /// Returns details of a specific user by id.
         /// </summary>
-        /// <param name="id">Users unikke ID</param>
-        /// <returns>En UserReadDTO hvis brugeren findes</returns>
-        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
+        /// <param name="id">Unique user identifier.</param>
+        /// <returns><see cref="UserReadDto"/> if found; 404 otherwise.</returns>
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] 
         [HttpGet("{id}")]
         public async Task<ActionResult<UserReadDto>> GetUser(int id)
         {
             try
             {
                 var user = await _context.Users
-                    .Include(u => u.UserInfo) // Загружаем связанные данные!
+                    .Include(u => u.UserInfo)
                     .FirstOrDefaultAsync(u => u.Id == id);
 
                 if (user == null)
@@ -115,29 +98,26 @@ namespace API.Controllers
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     Email = user.Email,
-                    PhoneNumber = user.UserInfo?.PhoneNumber ?? "", // Через UserInfo!
-                    Address = user.UserInfo?.Address ?? "" // Через UserInfo!
+                    PhoneNumber = user.UserInfo?.PhoneNumber ?? "",
+                    Address = user.UserInfo?.Address ?? ""
                 };
 
                 return Ok(userReadDto);
             }
             catch (Exception ex)
             {
-                // Используем наш "журналист" (_logger)
-                _logger.LogError(ex, "Ошибка при получении пользователя с ID {UserId}.", id);
-
-                // Возвращаем пользователю понятную ошибку
-                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+                _logger.LogError(ex, "Error while retrieving user with ID {UserId}.", id);
+                return StatusCode(500, "An internal server error occurred. Please try again later.");
             }
         }
 
         /// <summary>
-        ///  Opretter en ny bruger
-        ///  Kun for autoriserede brugere med roller Admin eller Manager
+        /// Creates a new user.
+        /// Admin/Manager/InfiniteVoid only.
         /// </summary>
-        /// <param name="userDto"></param>
-        /// <returns>Returnerer en UserReadDto med oprettede brugerens ID og detaljer</returns>
-        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]// Добавляем InfiniteVoid
+        /// <param name="userDto">Payload to create a new user.</param>
+        /// <returns>Created <see cref="UserReadDto"/> with route to <see cref="GetUser"/>.</returns>
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]
         [HttpPost]
         public async Task<ActionResult<UserReadDto>> PostUser(UserCreateDto userDto)
 
@@ -150,10 +130,10 @@ namespace API.Controllers
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
             
             if (await _context.Users.AnyAsync(u => u.Email == userDto.Email))
-                return BadRequest("Пользователь с таким email уже существует.");
+                return BadRequest("A user with this email already exists.");
 
             if (await _context.Users.AnyAsync(u => u.Username == userDto.Username))
-                return BadRequest("Пользователь с таким именем уже существует.");
+                return BadRequest("A user with this username already exists.");
 
             
             try
@@ -165,11 +145,11 @@ namespace API.Controllers
                     Email = userDto.Email,
                     Username = userDto.Username,
                     HashedPassword = hashedPassword,
-                    RoleId = 4, // Роль "Kunde" по умолчанию
+                    RoleId = 4,
                     UserInfo = new UserInfo
                     {
                         PhoneNumber = userDto.PhoneNumber,
-                        Address = userDto.Address // Создаем UserInfo с данными из DTO
+                        Address = userDto.Address
                     }
                 };
                 
@@ -181,29 +161,26 @@ namespace API.Controllers
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     Email = user.Email,
-                    PhoneNumber = user.UserInfo.PhoneNumber, // Через UserInfo! 
-                    Address = user.UserInfo.Address // Через UserInfo!
+                    PhoneNumber = user.UserInfo.PhoneNumber,
+                    Address = user.UserInfo.Address
                 };
                 return CreatedAtAction(nameof(GetUser), new { id = userReadDto.Id }, userReadDto);
             }
             catch (Exception ex)
             {
-                // Используем наш "журналист" (_logger)
-                _logger.LogError(ex, "Ошибка при создании пользователя.");
-
-                // Возвращаем пользователю понятную ошибку
-                return StatusCode(500, $"Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже. {ex.Message}\n\n{ex}");
+                _logger.LogError(ex, "Error while creating user.");
+                return StatusCode(500, $"An internal server error occurred. Please try again later. {ex.Message}\n\n{ex}");
             }
         }
         
         /// <summary>
-        /// Opdaterer en eksisterende bruger
-        /// Kun for autoriserede brugere med roller Admin eller Manager
+        /// Updates an existing user.
+        /// Admin/Manager/InfiniteVoid only.
         /// </summary>
-        /// <param name="id">Brugerens unikke ID</param>
-        /// <param name="userDto">Brugerens opdaterede data</param>
-        /// <returns>Returnerer NoContent hvis opdateringen lykkedes</returns>
-        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
+        /// <param name="id">User identifier.</param>
+        /// <param name="userDto">Updated user data.</param>
+        /// <returns>No content on success; 404 if not found.</returns>
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UserUpdateDto userDto)
         {
@@ -217,15 +194,14 @@ namespace API.Controllers
                 return BadRequest();
             }
             
-            // Проверка уникальности email и username
             if (await _context.Users.AnyAsync(u => u.Email == userDto.Email && u.Id != id))
-                return BadRequest("Пользователь с таким email уже существует.");
+                return BadRequest("A user with this email already exists.");
             if (await _context.Users.AnyAsync(u => u.Username == userDto.Username && u.Id != id))
-                return BadRequest("Пользователь с таким именем уже существует.");
+                return BadRequest("A user with this username already exists.");
 
 
             var user = await _context.Users
-                .Include(u => u.UserInfo) // Загружаем связанные данные!
+                .Include(u => u.UserInfo)
                 .FirstOrDefaultAsync(u => u.Id == id);
             if (user == null)
             {
@@ -237,11 +213,11 @@ namespace API.Controllers
             user.Email = userDto.Email;
             if (user.UserInfo == null)
             {
-                user.UserInfo = new UserInfo(); // Создаем UserInfo, если его нет
+                user.UserInfo = new UserInfo();
             }
 
             user.UserInfo.PhoneNumber = userDto.PhoneNumber;
-            user.UserInfo.Address = userDto.Address; // Обновляем данные UserInfo
+            user.UserInfo.Address = userDto.Address;
             _context.Entry(user).State = EntityState.Modified;
             try
             {
@@ -269,13 +245,13 @@ namespace API.Controllers
         }
         
         /// <summary>
-        /// Sletter en eksisterende bruger
-        /// Kun for autoriserede brugere med roller Admin eller Manager
+        /// Deletes an existing user.
+        /// Admin/Manager/InfiniteVoid only.
         /// </summary>
-        /// <param name="id">Brugerens unikke ID</param>
-        /// <returns>Returnerer NoContent hvis sletningen lykkedes</returns>
+        /// <param name="id">User identifier.</param>
+        /// <returns>No content on success; 404 if not found.</returns>
       
-        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)] // Добавляем InfiniteVoid
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -294,26 +270,20 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                // Используем наш "журналист" (_logger)
-                _logger.LogError(ex, "Ошибка при удалении пользователя.");
-
-                // Возвращаем пользователю понятную ошибку
-                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+                _logger.LogError(ex, "Error while deleting user.");
+                return StatusCode(500, "An internal server error occurred. Please try again later.");
             }
             
         }
 
         /// <summary>
-        ///  Henter den aktuelle bruger
-        ///  Kun for autoriserede brugere
-        ///  </summary>
-        /// <returns>En UserReadDto med den aktuelle brugers detaljer</returns>
+        /// Returns the currently authenticated user profile.
+        /// </summary>
+        /// <returns>Basic user data including role name.</returns>
         /// <remarks>
-        /// Dette endpoint henter information om den nuværende bruger ved at bruge ClaimTypes.NameIdentifier fra autorisationstokenet.
-        /// Hvis brugerens ID ikke kan konverteres til int, returneres status 400 BadRequest.
-        /// Hvis brugeren findes, returneres status 200 OK med information om brugeren.
+        /// Uses <see cref="ClaimTypes.NameIdentifier"/> to resolve the current user id from the access token.
         /// </remarks>
-        [Authorize] // Этот endpoint доступен всем авторизованным пользователям
+        [Authorize]
         [HttpGet("me")]
         public async Task<ActionResult<User>> GetCurrentUser()
         {
@@ -324,27 +294,24 @@ namespace API.Controllers
 
                 if (userIdClaim == null)
                 {
-                    return Unauthorized("Пользователь не найден в токене.");
+                    return Unauthorized("User id not found in token.");
                 }
 
                 if (!int.TryParse(userIdClaim, out int userId))
                 {
-                    return BadRequest("Неверный формат ID пользователя.");
+                    return BadRequest("Invalid user id format.");
                 }
 
                 var user = await _context.Users
-                    .Include(u => u.Role) // У вас Role (единственное число), а не Roles
+                    .Include(u => u.Role)
                     .Include(u => u.UserInfo)
                     .FirstOrDefaultAsync(u => u.Id == userId);
 
                 if (user == null)
-                    return NotFound("Пользователь не найден в базе данных.");
+                    return NotFound("User not found.");
 
                 return Ok(new
                 {
-                    // Старый способ new { Id = user.Id }
-                    // Новый способ (сокращенный)
-                
                     user.Id,
                     user.Email,
                     user.FirstName,
@@ -352,75 +319,68 @@ namespace API.Controllers
                     user.LastName,
                     user.DateOfBirth,
                     user.CreatedAt,
-                    Role = user.Role.Name, // Извлекаем только Name из объекта Role
+                    Role = user.Role.Name,
                     user.ProfilePicture
                 });  
             }
             catch (Exception ex)
             {
-                // Используем наш "журналист" (_logger)
-                _logger.LogError(ex, "Ошибка при получении текущего пользователя.");
-
-                // Возвращаем пользователю понятную ошибку
-                return StatusCode(500, $"Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже\n\n{ex.Message} {ex.StackTrace}");
+                _logger.LogError(ex, "Error while retrieving current user.");
+                return StatusCode(500, $"An internal server error occurred. Please try again later\n\n{ex.Message} {ex.StackTrace}");
             }
         }
 
         /// <summary>
-        /// Ændrer en brugers rolle
-        /// Kun for autoriserede brugere med rolle Admin
+        /// Changes a user's role by ids.
+        /// Admin/InfiniteVoid only.
         /// </summary>
-        /// <param name="userId">ID af brugeren hvis rolle skal ændres</param>
-        /// <param name="roleId">ID af den nye rolle</param>
-        /// <returns>Returnerer NoContent hvis ændringen lykkedes</returns>
-        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)] // Только для администраторов
+        /// <param name="userId">Target user id.</param>
+        /// <param name="roleId">New role id to assign.</param>
+        /// <returns>200 OK with a message, 404 if user/role not found.</returns>
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)]
         [HttpPut("{userId}/role/{roleId}")]
         public async Task<IActionResult> ChangeUserRole(int userId, int roleId)
         {
-            // Проверяем существование пользователя
             var user = await _context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Id == userId);
             
             if (user == null)
             {
-                return NotFound("Пользователь не найден.");
+                return NotFound("User not found.");
             }
 
-            // Проверяем существование роли
             var role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
             if (role == null)
             {
-                return NotFound("Роль не найдена.");
+                return NotFound("Role not found.");
             }
 
-            // Запрещаем назначать роль InfiniteVoid (только для Сатору Годжо)
             if (roleId == 5 && userId != 1)
             {
-                return BadRequest("Роль InfiniteVoid может быть только у Сатору Годжо.");
+                return BadRequest("Role 'InfiniteVoid' can be assigned to a specific user only.");
             }
 
-            // Изменяем роль пользователя
             user.RoleId = roleId;
             user.UpdatedAt = DateTime.UtcNow;
 
             try
             {
                 await _context.SaveChangesAsync();
-                return Ok(new { Message = $"Роль пользователя {user.FirstName} {user.LastName} изменена на {role.Name}" });
+                return Ok(new { Message = $"Role for user {user.FirstName} {user.LastName} changed to {role.Name}" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, "Ошибка при изменении роли пользователя.");
+                return StatusCode(500, "Error while changing user's role.");
             }
         }
 
         /// <summary>
-        /// Ændrer en brugers rolle (POST version)
-        /// Kun for autoriserede brugere med rolle Admin
+        /// Changes a user's role using a DTO payload.
+        /// Admin/InfiniteVoid only.
         /// </summary>
-        /// <param name="roleUpdateDto">DTO med bruger ID og ny rolle ID</param>
-        /// <returns>Returnerer besked om succes eller fejl</returns>
+        /// <param name="roleUpdateDto">DTO with user id and new role id.</param>
+        /// <returns>200 OK with details, 404 if user/role not found.</returns>
         [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)]
         [HttpPost("change-role")]
         public async Task<IActionResult> ChangeUserRoleByDto([FromBody] UserRoleUpdateDto roleUpdateDto)
@@ -429,32 +389,28 @@ namespace API.Controllers
             {
                 return BadRequest(ModelState);
             }
-            // Проверяем существование пользователя
             var user = await _context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Id == roleUpdateDto.UserId);
             
             if (user == null)
             {
-                return NotFound("Пользователь не найден.");
+                return NotFound("User not found.");
             }
 
-            // Проверяем существование роли
             var role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleUpdateDto.RoleId);
             if (role == null)
             {
-                return NotFound("Роль не найдена.");
+                return NotFound("Role not found.");
             }
 
-            // Запрещаем назначать роль InfiniteVoid кому-то кроме Сатору Годжо
             if (roleUpdateDto.RoleId == 5 && roleUpdateDto.UserId != 1)
             {
-                return BadRequest("Роль InfiniteVoid может быть только у Сатору Годжо.");
+                return BadRequest("Role 'InfiniteVoid' can be assigned to a specific user only.");
             }
 
             var oldRoleName = user.Role.Name;
             
-            // Изменяем роль пользователя
             user.RoleId = roleUpdateDto.RoleId;
             user.UpdatedAt = DateTime.UtcNow;
 
@@ -463,23 +419,22 @@ namespace API.Controllers
                 await _context.SaveChangesAsync();
                 return Ok(new 
                 { 
-                    Message = $"Роль пользователя {user.FirstName} {user.LastName} изменена с '{oldRoleName}' на '{role.Name}'",
+                    Message = $"Role for user {user.FirstName} {user.LastName} changed from '{oldRoleName}' to '{role.Name}'",
                     UserId = user.Id,
                     OldRole = oldRoleName,
                     NewRole = role.Name
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, "Ошибка при изменении роли пользователя.");
+                return StatusCode(500, "Error while changing user's role.");
             }
         }
 
         /// <summary>
-        /// Henter alle tilgængelige roller
-        /// Kun for autoriserede brugere med rolle Admin eller Manager
+        /// Returns all available roles (id and name only).
         /// </summary>
-        /// <returns>Liste af alle roller</returns>
+        /// <returns>List of roles.</returns>
         [Authorize(Roles = "Admin,Manager,InfiniteVoid")]
         [HttpGet("roles")]
         public async Task<ActionResult<IEnumerable<object>>> GetAllRoles()
@@ -494,11 +449,44 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                // Используем наш "журналист" (_logger)
-                _logger.LogError(ex, "Ошибка при получении списка ролей.");
+                _logger.LogError(ex, "Error while retrieving roles.");
+                return StatusCode(500, "An internal server error occurred. Please try again later.");
+            }
+        }
 
-                // Возвращаем пользователю понятную ошибку
-                return StatusCode(500, "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+        /// <summary>
+        /// Returns users filtered by role name.
+        /// </summary>
+        /// <param name="roleName">Role name to filter by (e.g., 'Rengøring').</param>
+        /// <returns>List of <see cref="UserReadDto"/> for users in the given role.</returns>
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.InfiniteVoid)]
+        [HttpGet("by-role/{roleName}")]
+        public async Task<ActionResult<IEnumerable<UserReadDto>>> GetUsersByRole(string roleName)
+        {
+            try
+            {
+                var users = await _context.Users
+                    .Include(u => u.Role)
+                    .Include(u => u.UserInfo)
+                    .Where(u => u.Role.Name == roleName)
+                    .ToListAsync();
+
+                var result = users.Select(u => new UserReadDto
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    PhoneNumber = u.UserInfo?.PhoneNumber ?? string.Empty,
+                    Address = u.UserInfo?.Address ?? string.Empty
+                }).ToList();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while retrieving users by role {Role}", roleName);
+                return StatusCode(500, "An internal server error occurred.");
             }
         }
     }

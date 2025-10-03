@@ -1,0 +1,13 @@
+﻿<div class="skeleton">
+  @for (int i = 0; i < Lines; i++)
+  {
+    <div class="skeleton-line" style="height:@LineHeight; border-radius:@Radius"></div>
+  }
+</div>
+
+@code {
+  [Parameter] public int Lines { get; set; } = 3;
+  [Parameter] public string LineHeight { get; set; } = "14px";
+  [Parameter] public string Radius { get; set; } = "8px";
+}
+

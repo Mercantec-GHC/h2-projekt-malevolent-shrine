@@ -5,7 +5,7 @@ namespace API.Models
         public const string Admin = "Admin";
         public const string Manager = "Manager";
         public const string Receptionist = "Receptionist";
-        public const string Rengoring = "Rengøring";
+        public const string Rengøring = "Rengøring";
         public const string Kunde = "Kunde";
         public const string InfiniteVoid = "InfiniteVoid";
     }

@@ -96,9 +96,11 @@
     display: flex;
     justify-content: space-around;
     padding: 1rem;
+    text-align: center;
     border-top: 2px solid white;
     background-color: rgba(0, 0, 0, 0.8);
     box-shadow: 0 -4px 0 #e60012;
+    flex-direction: column;
     position: relative; /* было static */
     bottom: auto; /* чтобы не прилипало к самому низу */
     margin-bottom: 2.5rem; /* поднимем вверх на немного */
@@ -145,16 +147,14 @@
             .bottom-nav .nav-link.register[href*="profile"] {
                 background-color: #333;
             }
+    .bottom-nav .nav-link:hover {
+        background-color: lime !important;
+        color: black !important;
+        transform: scale(1.2) !important;
+        box-shadow: 0 0 15px lime !important;
+    }
 
-        /* Hover для всех */
-        .bottom-nav .nav-link:hover {
-            background-color: white;
-            color: #e60012;
-            box-shadow: 0 0 10px red;
-            border-color: red;
-        }
 
-/* ===== Responsive ===== */
 
 /* Desktop */
 @media (min-width: 769px) {

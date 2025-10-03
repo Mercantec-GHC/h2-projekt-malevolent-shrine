@@ -1,0 +1,81 @@
+﻿@page "/tickets/role"
+@using Blazor.Models
+@inject APIService Api
+@inject TicketHubClient Hub
+@inject NavigationManager Nav
+
+<h1 class="site-title">Malevolent Shrine</h1>
+<div class="jp">Ryomen Sukuna</div>
+<p class="site-sub">Тикеты моей роли (для сотрудников)</p>
+
+<div class="test-root">
+  <div class="actions">
+    <a class="btn btn-ghost" href="/tickets/me">Мои тикеты</a>
+  </div>
+
+  @if (loading)
+  {
+    <div class="loading">Загрузка...</div>
+  }
+  else if (items.Count == 0)
+  {
+    <div class="empty">Для вашей роли пока нет тикетов.</div>
+  }
+  else
+  {
+    <div class="door-grid">
+      @foreach (var t in items)
+      {
+        <div class="door-card" @onclick="@(() => Nav.NavigateTo(LinkTo(t)))">
+          <div class="door-scene">
+            <div class="door-frame"></div>
+            <div class="door-leaf"></div>
+            <div class="rune-wrap"><img class="rune-img" src="@($"img/runes/rune-{RuneFor(t.Category)}.svg")" alt="rune" /></div>
+          </div>
+          <div class="plaque">
+            <div class="door-name">@t.Title</div>
+            <div class="door-addr">Статус: @t.Status | Для роли: @t.TargetRoleName</div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@code {
+  bool loading = true;
+  List<TicketRead> items = new();
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+    await Hub.StartAsync(Api.GetBaseAddress());
+    Hub.OnTicketCreated += async (t) => {
+      items.Insert(0, t);
+      StateHasChanged();
+      await Task.CompletedTask;
+    };
+    Hub.OnTicketUpdated += async (t) => {
+      var i = items.FindIndex(x => x.Id == t.Id);
+      if (i >= 0) { items[i] = t; StateHasChanged(); }
+      await Task.CompletedTask;
+    };
+  }
+
+  async Task LoadAsync()
+  {
+    loading = true;
+    items = await Api.GetTicketsForMyRoleAsync();
+    loading = false;
+    StateHasChanged();
+  }
+
+  string LinkTo(TicketRead t) => $"/tickets/chat/{t.Id}";
+
+  string RuneFor(TicketCategory cat) => cat switch
+  {
+    TicketCategory.Cleaning => "clean",
+    TicketCategory.Technical => "tech",
+    _ => "general"
+  };
+}

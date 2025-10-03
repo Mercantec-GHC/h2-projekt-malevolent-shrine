@@ -8,4 +8,6 @@ public class RoomReadDto
     public int Floor { get; set; }
     public bool IsAvailable { get; set; }
     public int? HotelId { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public string ImageUrl { get; set; } = string.Empty;
 }

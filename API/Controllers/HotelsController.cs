@@ -36,7 +36,9 @@ namespace API.Controllers
                         PricePerNight = r.PricePerNight,
                         Floor = r.Floor,
                         IsAvailable = r.IsAvailable,
-                        HotelId = r.HotelId
+                        HotelId = r.HotelId,
+                        ImageUrl = r.ImageUrl,
+                        Description = r.Description
                     }).ToList()
                 })
                 .ToListAsync();
@@ -85,7 +87,7 @@ namespace API.Controllers
             return CreatedAtAction(nameof(GetHotel), new { id = hotelReadDto.Id }, hotelReadDto);
         }
         
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы и Годжо могут обновлять отели
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)] // Только админы и Годжо могут обновлять отели
         [HttpPut("{id}")]
         public async Task<IActionResult> PutHotel(int id, HotelUpdateDto hotelDto)
         {
@@ -99,15 +101,15 @@ namespace API.Controllers
                 return BadRequest();
             }
 
-            var hotel = new Hotel
+            var hotel = await _context.Hotels.FirstOrDefaultAsync(h => h.Id == id);
+            if (hotel == null)
             {
-                Id = hotelDto.Id,
-                Name = hotelDto.Name,
-                Address = hotelDto.Address,
-               
-            };
+                return NotFound();
+            }
 
-            _context.Entry(hotel).State = EntityState.Modified;
+            hotel.Name = hotelDto.Name;
+            hotel.Address = hotelDto.Address;
+            hotel.UpdatedAt = DateTime.UtcNow;
 
             try
             {
@@ -132,13 +134,12 @@ namespace API.Controllers
             return _context.Hotels.Any(e => e.Id == id);
         }
         
-        [Authorize(Roles = "Admin,Manager,InfiniteVoid")] // Только админы и Годжо могут удалять отели
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.InfiniteVoid)] // Только админы и Годжо могут удалять отели
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteHotel(int id)
         {
             var hotel = await _context.Hotels.FindAsync(id);
             if (hotel == null)
-                
             {
                 return NotFound();
             }

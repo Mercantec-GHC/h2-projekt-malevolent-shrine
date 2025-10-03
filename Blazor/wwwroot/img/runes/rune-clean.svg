@@ -1,0 +1,19 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#c92a2a" stop-opacity="1"/>
+      <stop offset="70%" stop-color="#6b0f14" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#0b0b0d" stop-opacity="1"/>
+    </radialGradient>
+  </defs>
+  <rect width="120" height="120" rx="16" fill="url(#g)"/>
+  <g stroke="#e8e8ee" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Руна "чистоты": метла и искры -->
+    <path d="M25 90 L55 60"/>
+    <path d="M40 105 L70 75"/>
+    <path d="M55 60 L75 40 L95 60"/>
+    <path d="M30 50 q10 -10 20 0"/>
+    <path d="M20 65 q8 -8 16 0"/>
+  </g>
+</svg>
+

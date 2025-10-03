@@ -1,0 +1,106 @@
+﻿@page "/test-hotel/{id:int}"
+
+@using DomainModels.DTOs
+@inject Blazor.Services.APIService Api
+@inject NavigationManager Nav
+
+<div class="hero">
+    <h1 class="site-title">Hotel rooms</h1>
+    <p class="site-sub">See free rooms and book.</p>
+</div>
+
+@if (hotel == null)
+{
+    <div class="container"><div class="loading">Loading hotel...</div></div>
+}
+else
+{
+    <div class="container">
+        <div class="hotel-head">
+            <div>
+                <svg class="hotel-rune" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="gh" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#ff4d4d" />
+                            <stop offset="100%" stop-color="#6b0f14" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="64" cy="64" r="40" stroke="url(#gh)" stroke-width="6" fill="none" />
+                    <path d="M64 26 L74 44 L54 44 Z" fill="#c92a2a" />
+                    <path d="M64 102 L74 84 L54 84 Z" fill="#c92a2a" />
+                    <path d="M26 64 L44 54 L44 74 Z" fill="#c92a2a" />
+                    <path d="M102 64 L84 54 L84 74 Z" fill="#c92a2a" />
+                    <path d="M64 36 L64 92" stroke="#c92a2a" stroke-width="4" />
+                    <path d="M36 64 L92 64" stroke="#c92a2a" stroke-width="4" />
+                    <circle cx="64" cy="64" r="7" fill="#ff5757" />
+                </svg>
+            </div>
+            <div>
+                <div class="hotel-name">@hotel.Name</div>
+                <div class="hotel-addr">@hotel.Address</div>
+            </div>
+        </div>
+
+        @if (hotel.Rooms == null || hotel.Rooms.Count == 0)
+        {
+            <div class="empty">No rooms.</div>
+        }
+        else
+        {
+            <div class="room-grid">
+                @foreach (var r in hotel.Rooms.OrderBy(r => r.Number))
+                {
+                    var vip = vipMap.TryGetValue(r.Id, out var isVip) && isVip;
+                    <div class="room-card @(r.IsAvailable ? "free" : "busy")">
+                        <div class="hotel-img">
+                            <img src="@r.ImageUrl" alt="Room @r.Number" />
+                        </div>
+                        <hr />
+                        <div class="room-row">
+                            <span class="room-num">Room @r.Number</span>
+                            @if (vip)
+                            {
+                                <span class="vip-tag">VIP</span>
+                            }
+                        </div>
+                        <div class="room-info">Floor: @r.Floor • People: @r.Capacity</div>
+                        <div class="room-price">@r.PricePerNight.ToString("0") kr/night</div>
+                        <div class="room-status">@(r.IsAvailable ? "Free" : "Not free")</div><hr />
+                        <div class="desc">
+                            <h4>Description</h4>
+                            <p>@r.Description</p>
+                        </div>
+                        <button class="btn-book" disabled="@(!r.IsAvailable)" @onclick="(() => Book(r.Id))">Book</button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+    private HotelReadDto? hotel;
+    private Dictionary<int, bool> vipMap = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var hotels = await Api.GetAllHotels();
+        hotel = hotels?.FirstOrDefault(h => h.Id == id);
+
+        if (hotel?.Rooms != null)
+        {
+            var tasks = hotel.Rooms.Select(async r =>
+            {
+                var isVip = await Api.IsVipRoom(r.Id);
+                vipMap[r.Id] = isVip;
+            });
+            await Task.WhenAll(tasks);
+        }
+    }
+
+    private void Book(int roomId)
+    {
+        Nav.NavigateTo($"/test-book/{roomId}");
+    }
+}

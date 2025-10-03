@@ -1,0 +1,130 @@
+﻿@page "/tickets/chat/{Id:int}"
+@using Blazor.Models
+@inject APIService Api
+@inject TicketHubClient Hub
+@inject NavigationManager Nav
+
+<h1 class="site-title">Malevolent Shrine</h1>
+<div class="jp">Ryomen Sukuna</div>
+<p class="site-sub">Чат тикета (переписка по проблеме)</p>
+
+@if (loading)
+{
+  <div class="loading">Loading...</div>
+}
+else if (data == null)
+{
+  <div class="empty">Тикет не найден.</div>
+}
+else
+{
+  <div class="test-root">
+    <div class="book-card">
+      <h3 class="page-title">@data.Ticket.Title</h3>
+      <div class="room-line">Категория: @data.Ticket.Category | Статус: <b>@data.Ticket.Status</b></div>
+      <div class="room-line">Для роли: @data.Ticket.TargetRoleName</div>
+      <div class="actions">
+        <button class="btn btn-red" @onclick="AssignAsync">Взять в работу</button>
+        <button class="btn btn-ghost" @onclick="() => SetStatusAsync(TicketStatus.Resolved)">Отметить "Решено"</button>
+        <button class="btn btn-ghost" @onclick="() => SetStatusAsync(TicketStatus.Closed)">Закрыть</button>
+        <a class="btn btn-ghost" href="/tickets/me">Назад</a>
+      </div>
+    </div>
+
+    <div class="book-card">
+      <h4 class="page-title">Сообщения</h4>
+      @if (messages.Count == 0)
+      {
+        <div class="empty">Пока нет сообщений. Напишите первое ниже.</div>
+      }
+      else
+      {
+        <div>
+          @foreach (var m in messages)
+          {
+            <div class="booking-item">
+              <div><b>Пользователь #@m.SenderUserId</b> написал:</div>
+              <div>@m.Content</div>
+              <div class="room-addr" style="color:var(--muted);font-size:12px;">@m.CreatedAt.ToLocalTime()</div>
+            </div>
+          }
+        </div>
+      }
+      <div class="profile-row">
+        <label>Ваше сообщение</label>
+        <textarea class="form-control" @bind="newMessage" rows="3" placeholder="Напишите коротко и понятно"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn btn-red" @onclick="SendAsync">Отправить</button>
+      </div>
+    </div>
+  </div>
+}
+
+@code {
+  [Parameter] public int Id { get; set; }
+  bool loading = true;
+  TicketWithMessages? data;
+  List<TicketMessageRead> messages = new();
+  string newMessage = string.Empty;
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+    await Hub.StartAsync(Api.GetBaseAddress());
+    await Hub.JoinTicket(Id);
+
+    Hub.OnNewMessage += async (m) => {
+      if (m.TicketId == Id)
+      {
+        messages.Add(m);
+        StateHasChanged();
+      }
+      await Task.CompletedTask;
+    };
+    Hub.OnTicketUpdated += async (t) => {
+      if (data != null && t.Id == data.Ticket.Id)
+      {
+        data.Ticket = t; StateHasChanged();
+      }
+      await Task.CompletedTask;
+    };
+  }
+
+  async Task LoadAsync()
+  {
+    loading = true;
+    data = await Api.GetTicketWithMessagesAsync(Id);
+    messages = data?.Messages ?? new();
+    loading = false;
+  }
+
+  async Task SendAsync()
+  {
+    if (string.IsNullOrWhiteSpace(newMessage) || data == null) return;
+    await Hub.SendMessage(Id, newMessage);
+    newMessage = string.Empty;
+  }
+
+  async Task AssignAsync()
+  {
+    if (data == null) return;
+    var updated = await Api.AssignTicketAsync(Id);
+    if (updated != null)
+    {
+      data.Ticket = updated;
+      StateHasChanged();
+    }
+  }
+
+  async Task SetStatusAsync(TicketStatus s)
+  {
+    if (data == null) return;
+    var updated = await Api.SetTicketStatusAsync(Id, s);
+    if (updated != null)
+    {
+      data.Ticket = updated;
+      StateHasChanged();
+    }
+  }
+}

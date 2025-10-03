@@ -14,6 +14,7 @@
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/mshrine-tickets.css" />
 </head>
 
 <body>
@@ -49,9 +50,27 @@
             }
         }
 
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) { return null; }
+        }
+
         window.auth = {
             getToken: function () {
                 return localStorage.getItem("access_token");
+            },
+            getRole: function () {
+                const t = localStorage.getItem("access_token");
+                if (!t) return null;
+                const p = parseJwt(t);
+                if (!p) return null;
+                return p.role || p["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || null;
             }
         };
     </script>

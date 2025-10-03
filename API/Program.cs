@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Reflection;
 using Microsoft.AspNetCore.Identity;
+using API.Hubs;
 
 
 namespace API;
@@ -19,6 +20,12 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddControllers();
+        builder.Services.AddSignalR();
+        builder.Services.AddScoped<TicketRoutingService>();
+        
+        // HttpClientFactory и Telegram уведомления
+        builder.Services.AddHttpClient();
+        builder.Services.AddSingleton<TelegramNotifier>();
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddSwaggerGen(c =>
@@ -70,21 +77,16 @@ public class Program
                             "http://localhost:8052",
                             "https://h2.mercantec.tech",
                             "https://malevolentshrine.mercantec.tech",
-                            "http://localhost:3000",    // React dev server
-                            "http://localhost:3001",    // React альтернативный порт
-                            "http://127.0.0.1:3000",    // React альтернативный хост
-                            "http://localhost:5173",    // Vite стандартный порт
-                            "http://localhost:5174",    // Vite альтернативный порт
-                            "https://localhost:5173",   // HTTPS версии
                             "https://localhost:7285",
                             "https://localhost:5174",
-                            "http://localhost:3000",    // React dev server альтернативный
                             "http://127.0.0.1:5173",    // localhost через IP
                             "http://127.0.0.1:5174",
-                            "http://127.0.0.1:3001"     // React альтернативный хост
+                            "http://localhost:9026",     // Blazor docker dev
+                            "https://localhost:9026"     // Blazor docker dev (https)
                         )
                         .AllowAnyMethod()
                         .AllowAnyHeader()
+                        .AllowCredentials() // для SignalR с авторизацией
                         .WithExposedHeaders("Content-Disposition");
                 }
             );
@@ -97,7 +99,7 @@ public class Program
         string connectionString = Configuration.GetConnectionString("DefaultConnection")
         ?? Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
 
-        Console.WriteLine("connectionString: " + connectionString);
+        Console.WriteLine("connectionString: " + (string.IsNullOrWhiteSpace(connectionString) ? "<empty>" : "<provided>"));
        
 
 
@@ -116,21 +118,53 @@ public class Program
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? Environment.GetEnvironmentVariable("Jwt_Issuer"),
-                    ValidAudience = builder.Configuration["Jwt:Audience"] ?? Environment.GetEnvironmentVariable("Jwt_Audience"),
+                    ClockSkew = TimeSpan.Zero, // ← ДОБАВИТЬ ЭТУ СТРОКУ
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? Environment.GetEnvironmentVariable("JWT__Issuer"),
+                    ValidAudience = builder.Configuration["Jwt:Audience"] ?? Environment.GetEnvironmentVariable("JWT__Audience"),
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? Environment.GetEnvironmentVariable("Jwt_SecretKey")!))
+                        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? Environment.GetEnvironmentVariable("JWT__SecretKey") 
+                            ?? throw new InvalidOperationException("JWT SecretKey must be configured")))
+                };
+
+                // Это нужно, чтобы SignalR мог принимать токен из query (?access_token=...)
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/tickets"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
                 };
             });
         builder.Services.AddAuthorization();
+        builder.Services.AddScoped<AdLdapAuthService>();
+        
         builder.Services.AddScoped<DataSeederService>(); 
         builder.Services.AddScoped<PasswordHasher<User>>();
+        // Active Directory services
+        builder.Services.AddScoped<API.AD.ActiveDirectoryService>();
         
-        
-        builder.Services.AddDbContext<AppDBContext>(options =>
+        // Подключение БД: если строка подключения отсутствует, используем InMemory для стабильного старта API
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            options.UseNpgsql(connectionString);
-        });
+            Console.WriteLine("WARNING: No DefaultConnection configured. Using InMemory database 'AppDb' for this run.");
+            builder.Services.AddDbContext<AppDBContext>(options =>
+            {
+                options.UseInMemoryDatabase("AppDb");
+            });
+        }
+        else
+        {
+            builder.Services.AddDbContext<AppDBContext>(options =>
+            {
+                options.UseNpgsql(connectionString);
+            });
+        }
         var app = builder.Build();
             
         
@@ -166,6 +200,29 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+        app.MapHub<TicketHub>("/hubs/tickets");
+
+        // Автонакат миграций для реальной БД (пропускаем InMemory)
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            var sp = scope.ServiceProvider;
+            var db = (AppDBContext?)sp.GetService(typeof(AppDBContext));
+            var provider = db?.Database.ProviderName ?? string.Empty;
+            if (db != null && !provider.Contains("InMemory", StringComparison.OrdinalIgnoreCase))
+            {
+                db.Database.Migrate();
+                Console.WriteLine($"Database migrated successfully using provider '{provider}'.");
+            }
+            else
+            {
+                Console.WriteLine("Database migration skipped (InMemory provider or DbContext not resolved).");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("WARNING: Database migration failed: " + ex.Message);
+        }
 
         app.Run();
     }

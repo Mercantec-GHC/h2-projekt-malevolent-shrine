@@ -1,0 +1,20 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#c92a2a" stop-opacity="1"/>
+      <stop offset="70%" stop-color="#4a0d0d" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#0b0b0d" stop-opacity="1"/>
+    </radialGradient>
+  </defs>
+  <rect width="120" height="120" rx="16" fill="url(#g)"/>
+  <g stroke="#e8e8ee" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Руна "техника": шестерёнка + молния -->
+    <circle cx="60" cy="60" r="20"/>
+    <path d="M60 28 L60 12"/>
+    <path d="M60 108 L60 92"/>
+    <path d="M92 60 L108 60"/>
+    <path d="M12 60 L28 60"/>
+    <path d="M48 75 L58 62 L52 62 L64 45"/>
+  </g>
+</svg>
+
