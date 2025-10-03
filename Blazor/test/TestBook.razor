@@ -124,7 +124,7 @@ else if (room != null)
 
         var dto = new DomainModels.DTOs.BookingCreateDto
         {
-            UserId = currentUserId.Value, // подставляем реальный Id
+            UserId = currentUserId.Value,
             RoomId = room.Id,
             CheckInDate = checkIn.Value.Date,
             CheckOutDate = checkOut.Value.Date,
