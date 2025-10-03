@@ -48,7 +48,10 @@ namespace Blazor.Services
                 {
                     _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 }
-                var resp = await _httpClient.PostAsJsonAsync("api/Bookings", dto);
+                
+                // Используем TryWithTokenRefresh для автообновления токена при 401
+                var resp = await TryWithTokenRefresh(() => _httpClient.PostAsJsonAsync("api/Bookings", dto));
+                
                 if (resp.IsSuccessStatusCode)
                 {
                     return (true, null);

@@ -26,7 +26,7 @@ namespace Blazor.Services
         public async Task<List<TicketRead>> GetMyTicketsAsync()
         {
             await EnsureAuthAsync();
-            var res = await _httpClient.GetAsync("api/tickets/mine");
+            var res = await TryWithTokenRefresh(() => _httpClient.GetAsync("api/tickets/mine"));
             res.EnsureSuccessStatusCode();
             return await res.Content.ReadFromJsonAsync<List<TicketRead>>() ?? new();
         }
@@ -34,7 +34,7 @@ namespace Blazor.Services
         public async Task<List<TicketRead>> GetTicketsForMyRoleAsync()
         {
             await EnsureAuthAsync();
-            var res = await _httpClient.GetAsync("api/tickets/for-role");
+            var res = await TryWithTokenRefresh(() => _httpClient.GetAsync("api/tickets/for-role"));
             res.EnsureSuccessStatusCode();
             return await res.Content.ReadFromJsonAsync<List<TicketRead>>() ?? new();
         }
@@ -42,7 +42,7 @@ namespace Blazor.Services
         public async Task<TicketWithMessages?> GetTicketWithMessagesAsync(int id)
         {
             await EnsureAuthAsync();
-            var res = await _httpClient.GetAsync($"api/tickets/{id}");
+            var res = await TryWithTokenRefresh(() => _httpClient.GetAsync($"api/tickets/{id}"));
             if (!res.IsSuccessStatusCode) return null;
             return await res.Content.ReadFromJsonAsync<TicketWithMessages>();
         }

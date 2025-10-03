@@ -7,12 +7,15 @@
     <h1 class="site-title jp">MALEVOLENT SHRINE</h1>
     <div class="jp">領域展開 — Open your domain</div>
     <p class="site-sub">Pick a door. Each door is a hotel.</p>
+    <div style="margin-top:16px; display:flex; justify-content:center;">
+        <a class="btn btn-red" href="/calendar">Calendar</a>
+    </div>
 </div>
 
 <div class="container">
     @if (hotels == null)
     {
-        <div class="loading">Loading hotels...</div>
+        <Skeleton Lines="5" LineHeight="120px" />
     }
     else if (hotels.Count == 0)
     {

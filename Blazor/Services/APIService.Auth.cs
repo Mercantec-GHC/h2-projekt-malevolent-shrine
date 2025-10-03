@@ -52,8 +52,11 @@ namespace Blazor.Services
                 if (result == null || string.IsNullOrEmpty(result.AccessToken))
                     return false;
 
+                // Сохраняем оба токена
                 await _js.InvokeVoidAsync("localStorage.setItem", TOKEN_KEY, result.AccessToken);
+                await SaveRefreshToken(result.RefreshToken);
 
+                Console.WriteLine("✅ Login successful with refresh token");
                 return true;
             }
             catch (Exception ex)
@@ -70,7 +73,7 @@ namespace Blazor.Services
 
         public async Task Logout()
         {
-            await _js.InvokeVoidAsync("localStorage.removeItem", TOKEN_KEY);
+            await RevokeTokens();
         }
     }
 
