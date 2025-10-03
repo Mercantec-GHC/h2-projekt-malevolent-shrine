@@ -133,6 +133,7 @@ h1, h2, h3 {
     margin: 16px 8px 4px;
     letter-spacing: 2px;
     text-transform: uppercase;
+    
 }
 
 .site-sub, .page-sub {
@@ -174,7 +175,7 @@ h1, h2, h3 {
 
 .site-title {
     font-family: 'UnifrakturMaguntia',system-ui,Segoe UI,Roboto,Arial,sans-serif;
-    font-size: 44px;
+    font-size: 55px;
     letter-spacing: 4px;
     text-transform: uppercase;
     text-shadow: 0 0 6px rgba(201,42,42,.9),0 0 28px rgba(201,42,42,.45),0 0 60px rgba(201,42,42,.25);

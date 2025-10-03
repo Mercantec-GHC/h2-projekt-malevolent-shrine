@@ -80,7 +80,7 @@ namespace API.Controllers
             // Тост для админов/менеджеров
             await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "New ticket", Message = $"#{ticket.Id} {ticket.Title} → {targetRole}", Level = "info", Ts = DateTime.UtcNow });
             // Telegram уведомление (если настроено)
-            await _notifier.SendAsync($"🆕 Ticket #{ticket.Id} — <b>{ticket.Title}</b> ({ticket.Category}) for role <b>{targetRole}</b>");
+            await _notifier.SendAsync($"🆕 Ticket #{ticket.Id} — {ticket.Title} ({ticket.Category})\nText: {firstMessage.Content}\nfor role: {targetRole}");
 
             return Ok(read);
         }
