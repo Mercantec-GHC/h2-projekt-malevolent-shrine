@@ -13,12 +13,48 @@
 
   <div class="toc">
     <b>Разделы:</b>
+    <a @onclick="@(() => ScrollToSection("map"))" style="cursor: pointer;">Карта проекта</a>
+    <a @onclick="@(() => ScrollToSection("config"))" style="cursor: pointer;">Конфигурация</a>
+    <a @onclick="@(() => ScrollToSection("wiring"))" style="cursor: pointer;">Подключение в Program.cs</a>
     <a @onclick="@(() => ScrollToSection("ad-basics"))" style="cursor: pointer;">Основы Active Directory</a>
     <a @onclick="@(() => ScrollToSection("ad-ldap"))" style="cursor: pointer;">LDAP протокол</a>
     <a @onclick="@(() => ScrollToSection("ad-auth"))" style="cursor: pointer;">Аутентификация</a>
     <a @onclick="@(() => ScrollToSection("ad-groups"))" style="cursor: pointer;">Группы и роли</a>
+    <a @onclick="@(() => ScrollToSection("endpoints"))" style="cursor: pointer;">Точки API</a>
+    <a @onclick="@(() => ScrollToSection("flow"))" style="cursor: pointer;">Как всё работает вместе</a>
+    <a @onclick="@(() => ScrollToSection("http"))" style="cursor: pointer;">HTTP примеры</a>
+    <a @onclick="@(() => ScrollToSection("faq"))" style="cursor: pointer;">FAQ / Ошибки</a>
     <a @onclick="@(() => ScrollToSection("ad-quiz"))" style="cursor: pointer;">Финальный квиз</a>
   </div>
+
+  <h2 id="map">Карта проекта (где живёт AD)</h2>
+  <ul>
+    <li><code>API/AD/ActiveDirectoryService.*</code> — работа с LDAP: подключение, поиск пользователей и групп, расширенный поиск.</li>
+    <li><code>API/Controllers/AdAuthController.cs</code> — вход через AD: <code>POST /api/adauth/login</code> (возвращает JWT, роли из AD-групп).</li>
+    <li><code>API/Controllers/ActiveDirectoryController.cs</code> — служебные эндпоинты для админов/менеджеров: пользователи, группы, тест соединения.</li>
+    <li><code>API/appsettings.json</code> — секция <code>ActiveDirectory</code> (Server/Domain/Username/Password) и <code>ADRoleMapping</code> (маппинг групп на роли приложения).</li>
+    <li><code>API/Program.cs</code> — регистрация сервисов: <code>AddScoped&lt;AdLdapAuthService&gt;()</code>, <code>AddScoped&lt;API.AD.ActiveDirectoryService&gt;()</code>.</li>
+  </ul>
+
+  <h2 id="config">Конфигурация</h2>
+  <ul>
+    <li><b>ActiveDirectory</b>: сервер, домен, технический пользователь и пароль (используются для Bind/поиска).</li>
+    <li><b>ADRoleMapping</b>:
+      <ul>
+        <li><code>LdapGroupToAppRole</code> — маппинг названий AD-групп в роли приложения (например, <code>Hotel_Admins → Admin</code>).</li>
+        <li><code>AppRolePriority</code> — приоритет, если пользователь состоит в нескольких группах.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2 id="wiring">Подключение в Program.cs</h2>
+  <p>Сервисы регистрируются в DI, чтобы контроллеры могли их использовать.</p>
+  <pre>
+// Program.cs (важные строки)
+builder.Services.AddScoped&lt;AdLdapAuthService&gt;();
+builder.Services.AddScoped&lt;API.AD.ActiveDirectoryService&gt;();
+  </pre>
+  <p>Контроллер <code>AdAuthController</code> доступен анонимно для входа; <code>ActiveDirectoryController</code> закрыт для ролей Admin/Manager.</p>
 
   <h2 id="ad-basics">Основы Active Directory</h2>
   <p>Active Directory — служба каталогов от Microsoft для управления пользователями и ресурсами.</p>
@@ -29,27 +65,71 @@
   </ul>
 
   <h2 id="ad-ldap">LDAP протокол</h2>
-  <p>Lightweight Directory Access Protocol — протокол для доступа к AD.</p>
+  <p>Как мы работаем с LDAP в проекте.</p>
   <ul>
-    <li>Distinguished Name (DN) — уникальный путь к объекту</li>
-    <li>LDAP фильтры для поиска: <code>(sAMAccountName=user)</code></li>
-    <li>Порты: 389 (LDAP), 636 (LDAPS), 3268 (Global Catalog)</li>
+    <li><b>Подключение</b>: <code>LdapConnection</code> + <code>NetworkCredential("{Username}&#64;{Domain}", Password)</code>, <code>AuthType.Negotiate</code>, затем <code>Bind()</code> — проверка связи.</li>
+    <li><b>Base DN</b>: строится из домена, напр. <code>malevolentshrine.local → DC=malevolentshrine,DC=local</code>.</li>
+    <li><b>Поиск</b>: <code>SearchRequest(baseDn, filter, SearchScope.Subtree, attrs...)</code>.
+      Примеры фильтров:
+      <ul>
+        <li>Пользователи: <code>(objectClass=user)</code></li>
+        <li>Группы: <code>(objectClass=group)</code></li>
+        <li>Пользователь по имени входа: <code>(samAccountName=jdoe)</code></li>
+        <li>Фулл‑текст по нескольким полям: <code>(|(cn=*john*)(mail=*john*)(department=*IT*)(title=*Lead*))</code></li>
+      </ul>
+    </li>
+    <li><b>Рекурсивные группы</b>: фильтр с OID <code>member:1.2.840.113556.1.4.1941:</code> (если сервер поддерживает).</li>
   </ul>
 
   <h2 id="ad-auth">Аутентификация через AD</h2>
-  <p>Проверка учетных данных пользователей в Active Directory.</p>
   <ul>
-    <li>PrincipalContext — класс для подключения к AD</li>
-    <li>ValidateCredentials() — проверка логина/пароля</li>
-    <li>Bind операция для проверки подлинности</li>
+    <li>Эндпоинт: <code>POST /api/adauth/login</code> принимает <code>{ username, password }</code>.</li>
+    <li>Сервис <code>AdLdapAuthService</code> валидирует учётные данные в AD, собирает группы пользователя и мапит их в роль по <code>ADRoleMapping</code>.</li>
+    <li>Ответ: <code>AdLoginResponseDto</code> — JWT <code>AccessToken</code> + <code>RefreshToken</code>, <code>AdGroups</code>, <code>AppRole</code>, <code>DisplayName</code>, <code>Email</code>.</li>
   </ul>
 
   <h2 id="ad-groups">Группы и маппинг ролей</h2>
-  <p>Использование групп AD для управления доступом в приложении.</p>
   <ul>
-    <li>GetAuthorizationGroups() — получение всех групп пользователя</li>
-    <li>Маппинг AD групп на роли приложения</li>
-    <li>Кэширование групп для производительности</li>
+    <li><code>GetUserGroups(username)</code> — находим DN пользователя и ищем группы по атрибуту <code>member</code> (при наличии — используем рекурсивный поиск).</li>
+    <li><b>Маппинг</b>: названия групп из AD → роли приложения по <code>ADRoleMapping.LdapGroupToAppRole</code>. Если несколько ролей подходят — берём по <code>AppRolePriority</code>.</li>
+  </ul>
+
+  <h2 id="endpoints">Точки API (коротко)</h2>
+  <pre>
+POST /api/adauth/login          // вход через AD (AllowAnonymous)
+GET  /api/ActiveDirectory/users // все пользователи (Admin/Manager)
+GET  /api/ActiveDirectory/groups// все группы (Admin/Manager)
+GET  /api/ActiveDirectory/users/search/{term} // поиск пользователей
+POST /api/ActiveDirectory/test-connection    // проверить соединение с AD
+  </pre>
+
+  <h2 id="flow">Как всё работает вместе</h2>
+  <ol>
+    <li>Пользователь вводит AD-логин и пароль → запрос на <code>/api/adauth/login</code>.</li>
+    <li>Сервер проверяет логин/пароль в AD, определяет роль по группам → выдаёт пару токенов (JWT).</li>
+    <li>Дальше клиент (Blazor) ходит по API с <code>Authorization: Bearer</code> и правами этой роли.</li>
+    <li>Админы/менеджеры могут смотреть сервисные эндпоинты AD (списки пользователей/групп, тест соединения).</li>
+  </ol>
+
+  <h2 id="http">HTTP примеры</h2>
+  <pre>
+POST /api/adauth/login
+Content-Type: application/json
+{ "username": "jdoe", "password": "P@ssw0rd" }
+// Ответ: { accessToken, refreshToken, adGroups: [...], appRole: "Manager", ... }
+
+GET /api/ActiveDirectory/users         // требуется роль Admin/Manager
+GET /api/ActiveDirectory/groups        // то же
+GET /api/ActiveDirectory/users/search/john
+POST /api/ActiveDirectory/test-connection
+  </pre>
+
+  <h2 id="faq">FAQ / Ошибки</h2>
+  <ul>
+    <li><b>Bind ошибся</b> — проверьте <code>Server/Domain/Username/Password</code> в конфиге, открыт ли порт 389, корректен ли UPN <code>user@domain</code>.</li>
+    <li><b>Нет групп</b> — пользователь не состоит в нужных AD-группах; проверьте фильтр и рекурсивный поиск (OID может не поддерживаться).</li>
+    <li><b>Роль не назначилась</b> — проверьте <code>ADRoleMapping.LdapGroupToAppRole</code> и приоритет <code>AppRolePriority</code>.</li>
+    <li><b>Вход через обычный логин не работает</b> — AD-аккаунтам нужно входить через <code>/api/adauth/login</code> (локальный пароль отсутствует).</li>
   </ul>
 
   <h2 id="ad-quiz">Финальный квиз</h2>
@@ -126,6 +206,7 @@
 
   private List<QuizQuestion> _questions = new();
   private bool _scoreVisible;
+  private readonly Random _rng = new Random();
   
   int CorrectCount => _questions.Count(q => q.Answered && q.SelectedIndex == q.CorrectIndex);
   string ScoreComment => CorrectCount switch
@@ -168,7 +249,29 @@
       if (_questions.Count == 0)
       {
           _questions = BuildQuestions();
+          // Перемешиваем варианты ответов при загрузке
+          foreach (var q in _questions)
+          {
+              ShuffleOptions(q);
+          }
       }
+  }
+
+  void ShuffleOptions(QuizQuestion q)
+  {
+      if (q.Options.Count <= 1) return;
+      var n = q.Options.Count;
+      var idx = Enumerable.Range(0, n).ToList();
+      for (int i = n - 1; i > 0; i--)
+      {
+          int j = _rng.Next(i + 1);
+          (idx[i], idx[j]) = (idx[j], idx[i]);
+      }
+      var newOptions = new List<string>(n);
+      for (int k = 0; k < n; k++) newOptions.Add(q.Options[idx[k]]);
+      var newCorrect = idx.IndexOf(q.CorrectIndex);
+      q.Options = newOptions;
+      q.CorrectIndex = newCorrect;
   }
 
   List<QuizQuestion> BuildQuestions()
@@ -188,24 +291,44 @@
             "DN — полный путь к объекту, например: CN=User,OU=Users,DC=domain,DC=com"),
           
           Q("Какой класс используется для подключения к AD в .NET?",
-            new[]{"PrincipalContext", "SqlConnection", "HttpClient"}, 0,
-            "PrincipalContext из System.DirectoryServices.AccountManagement для работы с AD."),
+            new[]{"LdapConnection", "SqlConnection", "HttpClient"}, 0,
+            "Мы используем System.DirectoryServices.Protocols: LdapConnection + Bind."),
           
-          Q("Как проверить пароль пользователя в AD?",
-            new[]{"ValidateCredentials()", "CheckPassword()", "AuthenticateUser()"}, 0,
-            "ValidateCredentials() проверяет, правильны ли логин и пароль пользователя."),
+          Q("Как проверить логин/пароль пользователя в AD?",
+            new[]{"Bind() с NetworkCredential", "CheckPassword()", "AuthenticateUser()"}, 0,
+            "Создаём LdapConnection с UPN user@domain и делаем Bind() — сервер подтвердит или отклонит."),
           
           Q("Что такое sAMAccountName?",
             new[]{"Логин пользователя в AD", "Email адрес", "Номер телефона"}, 0,
-            "sAMAccountName — это имя учетной записи для входа (login)."),
+            "sAMAccountName — это имя учетной записи (login)."),
           
           Q("Как получить группы пользователя?",
-            new[]{"GetAuthorizationGroups()", "GetGroups()", "FetchUserGroups()"}, 0,
-            "GetAuthorizationGroups() возвращает все группы безопасности пользователя."),
+            new[]{"Фильтр (member={userDN})", "GetGroups()", "FetchUserGroups()"}, 0,
+            "Ищем группы, где member равен DN пользователя; при возможности используем рекурсивный OID."),
           
           Q("Зачем мапить AD группы на роли приложения?",
-            new[]{"Для управления доступом в приложении", "Для красоты кода", "Для ускорения работы"}, 0,
-            "Маппинг позволяет использовать AD группы как роли в вашем приложении (Admin, Manager и т.д.)."),
+            new[]{"Для управления доступом", "Для красоты кода", "Для ускорения работы"}, 0,
+            "Маппинг позволяет использовать AD группы как роли (Admin/Manager/...)."),
+
+          Q("Где хранится маппинг групп → ролей?",
+            new[]{"appsettings.json → ADRoleMapping", "В базе данных", "В коде Razor"}, 0,
+            "Секция ADRoleMapping: LdapGroupToAppRole и AppRolePriority."),
+
+          Q("Какой эндпоинт логина через AD у нас в проекте?",
+            new[]{"POST /api/adauth/login", "POST /api/Auth/login", "GET /api/ActiveDirectory/login"}, 0,
+            "AdAuthController: Route \"api/adauth\", action \"login\"."),
+
+          Q("Кто может вызывать /api/ActiveDirectory/users?",
+            new[]{"Роли Admin или Manager", "Любой авторизованный", "Анонимно"}, 0,
+            "На контроллере стоит [Authorize(Roles = Admin,Manager)]."),
+
+          Q("Как формируется Base DN из домена malevolentshrine.local?",
+            new[]{"DC=malevolentshrine,DC=local", "CN=malevolentshrine,OU=local", "OU=malevolentshrine,DC=local"}, 0,
+            "Берём части домена и склеиваем в DC=..."),
+
+          Q("Как сделать полнотекстовый поиск пользователей по нескольким полям?",
+            new[]{"Фильтр с OR: (|(cn=*x*)(mail=*x*)(department=*x*)(title=*x*))", "SELECT * WHERE ...", "GET /search?q=..."}, 0,
+            "LDAP-фильтры поддерживают композицию (|) — логическое ИЛИ по атрибутам."),
       };
   }
 
@@ -220,4 +343,3 @@
       };
   }
 }
-

@@ -1,1 +1,342 @@
-﻿
+﻿@page "/telegram-quiz"
+@inject IJSRuntime JS
+
+<PageTitle>Telegram Quiz — Уведомления через бота</PageTitle>
+
+<link href="css/jwt-learn.css" rel="stylesheet" />
+
+<div class="jwt-page">
+  <h1>Telegram Quiz — Уведомления через бота</h1>
+  <p>
+    Разбираем, как наш сервер шлёт сообщения в Telegram: от настройки токена до кода контроллеров, что и когда отправляют. Просто, коротко, понятно.
+  </p>
+
+  <div class="toc">
+    <b>Разделы:</b>
+    <a @onclick="@(() => ScrollToSection("map"))" style="cursor: pointer;">Карта проекта</a>
+    <a @onclick="@(() => ScrollToSection("basics"))" style="cursor: pointer;">Основы (что такое бот)</a>
+    <a @onclick="@(() => ScrollToSection("config"))" style="cursor: pointer;">Конфигурация</a>
+    <a @onclick="@(() => ScrollToSection("wiring"))" style="cursor: pointer;">Подключение в Program.cs</a>
+    <a @onclick="@(() => ScrollToSection("service"))" style="cursor: pointer;">Сервис TelegramNotifier</a>
+    <a @onclick="@(() => ScrollToSection("usage"))" style="cursor: pointer;">Где вызывается (контроллеры)</a>
+    <a @onclick="@(() => ScrollToSection("frontend"))" style="cursor: pointer;">Как связано с фронтом</a>
+    <a @onclick="@(() => ScrollToSection("test"))" style="cursor: pointer;">Как проверить</a>
+    <a @onclick="@(() => ScrollToSection("faq"))" style="cursor: pointer;">FAQ / Ошибки</a>
+    <a @onclick="@(() => ScrollToSection("quiz"))" style="cursor: pointer;">Финальный квиз</a>
+  </div>
+
+  <h2 id="map">Карта проекта (где живёт Telegram)</h2>
+  <ul>
+    <li><code>API/Services/TelegramNotifier.cs</code> — мини-сервис, отправляет HTTP-запрос в Telegram Bot API.</li>
+    <li><code>API/Program.cs</code> — регистрация <b>AddHttpClient()</b> и <b>AddSingleton&lt;TelegramNotifier&gt;()</b>.</li>
+    <li><code>API/appsettings.json</code> — настройки <code>Telegram:BotToken</code> и <code>Telegram:ChatId</code>.</li>
+    <li><code>API/Controllers/TicketsController.cs</code> — шлёт уведомления при событиях с тикетами.</li>
+    <li><code>API/Controllers/BookingsController.cs</code> — шлёт уведомления при создании брони.</li>
+  </ul>
+
+  <h2 id="basics">Основы: что происходит</h2>
+  <ul>
+    <li>У вас есть Telegram-бот (токен от <b>&#64;BotFather</b>) и <b>ChatId</b> (личный или групповой).</li>
+    <li>Сервер отправляет POST запрос на <code>https://api.telegram.org/bot{TOKEN}/sendMessage</code>.</li>
+    <li>В теле: <code>chat_id</code>, <code>text</code>, <code>parse_mode=HTML</code> (для жирного/курсива), <code>disable_web_page_preview=true</code>.</li>
+    <li>Бот доставляет сообщение в чат. Это <b>одностороннее</b> уведомление из нашего API в Telegram.</li>
+  </ul>
+
+  <h2 id="config">Конфигурация (откуда берём токен и чат)</h2>
+  <ul>
+    <li>Файл <code>API/appsettings.json</code> содержит секцию:
+      <pre>{
+  "Telegram": {
+    "BotToken": "...",
+    "ChatId": "..."
+  }
+}</pre>
+    </li>
+    <li>Можно переопределить переменными окружения: <code>TELEGRAM__BotToken</code>, <code>TELEGRAM__ChatId</code>.</li>
+    <li>Важное: токены лучше хранить в секретах/переменных окружения, а не коммитить.</li>
+  </ul>
+
+  <h2 id="wiring">Подключение в Program.cs</h2>
+  <p>Чтобы сервис работал, в <code>API/Program.cs</code> мы регистрируем:</p>
+  <pre>
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton&lt;TelegramNotifier&gt;();
+  </pre>
+  <ul>
+    <li><b>AddHttpClient</b> — даёт управляемый HttpClient (пулы, DNS, таймауты).</li>
+    <li><b>AddSingleton</b> — один экземпляр на всё приложение, этого достаточно (статуса он не хранит).</li>
+  </ul>
+
+  <h2 id="service">Сервис TelegramNotifier: как устроен и почему так</h2>
+  <ul>
+    <li>В конструкторе читает настройки: <code>cfg["Telegram:BotToken"]</code> и <code>cfg["Telegram:ChatId"]</code> или одноимённые переменные окружения.</li>
+    <li>Метод <b>SendAsync(text)</b>:
+      <ol>
+        <li>Если токен/чат не заданы — тихо возвращается (чтобы не падал основной сценарий).</li>
+        <li>Строит URL: <code>https://api.telegram.org/bot{token}/sendMessage</code>.</li>
+        <li>Отправляет <b>FormUrlEncodedContent</b> с полями <code>chat_id</code>, <code>text</code>, <code>parse_mode=HTML</code>, <code>disable_web_page_preview=true</code>.</li>
+        <li>Ошибки запроса проглатываются: логика API (бронирование/тикеты) не должна ломаться из‑за Telegram.</li>
+      </ol>
+    </li>
+    <li>Почему <b>parse_mode=HTML</b>: можно выделять <i>текст</i>, вставлять ссылки и эмодзи красиво.</li>
+    <li>Почему <b>disable_web_page_preview=true</b>: не хотим «раскрытых» превью ссылок, чтобы сообщения были компактнее.</li>
+  </ul>
+
+  <h2 id="usage">Где используется (контроллеры)</h2>
+  <ul>
+    <li><b>TicketsController</b> (API/Controllers/TicketsController.cs):
+      <ul>
+        <li>При создании тикета — шлёт в нужную роль событие через SignalR и отправляет уведомление в Telegram (текст с эмодзи).</li>
+        <li>При смене статуса — отправляет «галочку» о статусе.</li>
+      </ul>
+    </li>
+    <li><b>BookingsController</b> (API/Controllers/BookingsController.cs):
+      <ul>
+        <li>При создании брони: после сохранения — отправляет в Telegram сводку (даты, сумма).</li>
+      </ul>
+    </li>
+  </ul>
+  <div class="callout info">
+    <div class="title">Связка с остальным</div>
+    <div>Уведомления в Telegram дополняют события в SignalR (группы "admins"). Внутри контроллеров мы делаем и то, и другое: тосты для админки + сообщение в Telegram.</div>
+  </div>
+
+  <h2 id="frontend">Как связано с фронтом</h2>
+  <ul>
+    <li>Фронт (Blazor) напрямую с Telegram <b>не общается</b>.</li>
+    <li>Пользователь делает действие в UI → Blazor вызывает API → контроллер меняет данные → вызывает <b>TelegramNotifier.SendAsync</b>.</li>
+    <li>То есть Telegram — это чисто <b>серверная</b> интеграция.</li>
+  </ul>
+
+  <h2 id="test">Как проверить (практика)</h2>
+  <ol>
+    <li>Создайте бота у <b>&#64;BotFather</b> и получите <b>BotToken</b>.</li>
+    <li>Получите <b>ChatId</b> (например, добавьте бота в группу и заберите id через спец-бота или Bot API).</li>
+    <li>Запишите токен и чат в <code>appsettings.json</code> или в переменные окружения <code>TELEGRAM__BotToken</code>/<code>TELEGRAM__ChatId</code>.</li>
+    <li>Создайте бронь или тикет — проверьте, что сообщение пришло в нужный чат.</li>
+  </ol>
+
+  <h2 id="faq">FAQ / Частые проблемы</h2>
+  <ul>
+    <li><b>Сообщения не приходят</b> — проверьте токен/чат, добавлен ли бот в чат, не ограничен ли он, корректен ли ChatId (для групп обычно начинается с «-100 ...»).</li>
+    <li><b>API не падает, но сообщений нет</b> — так задумано: ошибки Telegram не роняют основной процесс (смотрим логи и настройки).</li>
+    <li><b>Хочу жирный текст/ссылку</b> — используйте HTML (например, <code>&lt;b&gt;Текст&lt;/b&gt;</code>). У нас уже <code>parse_mode=HTML</code>.</li>
+    <li><b>Хочу отключать Telegram в dev</b> — не указывайте токен/чат в dev-конфиге или добавьте флаг в настройках и проверку перед SendAsync.</li>
+    <li><b>Хочу получать ответы из Telegram</b> — сейчас реализованы только <b>исходящие</b> уведомления. Приём входящих требует вебхука/пула обновлений — этого в проекте нет.</li>
+  </ul>
+
+  <h2 id="quiz">Финальный квиз</h2>
+  <p>Проверь, как ты понял Telegram-интеграцию. Варианты перемешиваются, правильный ответ — на случайной позиции.</p>
+  <div class="quiz">
+    @for (int i = 0; i < _questions.Count; i++)
+    {
+        var questionIndex = i;
+        var q = _questions[questionIndex];
+        <div class="q">
+          <div class="qtext"><b>@(questionIndex+1).</b> @q.Text</div>
+          <div class="opts">
+            @for (int j = 0; j < q.Options.Count; j++)
+            {
+                var optionIndex = j;
+                var opt = q.Options[optionIndex];
+                var chosen = q.SelectedIndex == optionIndex;
+                var cls = q.Answered
+                    ? (optionIndex == q.CorrectIndex ? "opt correct" : (chosen ? "opt wrong" : "opt"))
+                    : (chosen ? "opt chosen" : "opt");
+                <button class="@cls" type="button" @onclick="@(() => SelectAnswer(questionIndex, optionIndex))" disabled="@q.Answered">@opt</button>
+            }
+          </div>
+          @if (q.Answered)
+          {
+            var isCorrect = q.SelectedIndex == q.CorrectIndex;
+            <div class="feedback @(isCorrect ? "correct" : "wrong")">
+                @(isCorrect ? "Верно! ✓" : "Неверно. ✗")
+            </div>
+            @if (!string.IsNullOrWhiteSpace(q.Explanation))
+            {
+              <div class="explain"><b>Объяснение:</b> @q.Explanation</div>
+            }
+          }
+        </div>
+    }
+    <div class="quiz-actions">
+      <button class="btn" type="button" @onclick="ShowScore">Показать результат</button>
+      <button class="btn ghost" type="button" @onclick="ResetQuiz">Сбросить</button>
+    </div>
+    @if (_scoreVisible)
+    {
+      <div class="score">Результат: <b>@CorrectCount</b> из <b>@_questions.Count</b> — @(ScoreComment)</div>
+    }
+  </div>
+
+  <div class="nav-buttons">
+    <a href="/" class="btn">На главную</a>
+  </div>
+</div>
+
+@code {
+  private async Task ScrollToSection(string sectionId)
+  {
+      try
+      {
+          await JS.InvokeVoidAsync("eval", $"document.getElementById('{sectionId}')?.scrollIntoView({{ behavior: 'smooth', block: 'start' }});");
+      }
+      catch (Exception ex)
+      {
+          Console.WriteLine($"[SCROLL] Error: {ex.Message}");
+      }
+  }
+
+  class QuizQuestion
+  {
+      public string Text { get; set; } = string.Empty;
+      public List<string> Options { get; set; } = new();
+      public int CorrectIndex { get; set; }
+      public string? Explanation { get; set; }
+      public int? SelectedIndex { get; set; }
+      public bool Answered { get; set; }
+  }
+
+  private List<QuizQuestion> _questions = new();
+  private bool _scoreVisible;
+  private readonly Random _rng = new Random();
+  
+  int CorrectCount => _questions.Count(q => q.Answered && q.SelectedIndex == q.CorrectIndex);
+  string ScoreComment => CorrectCount switch
+  {
+      >= 12 => "Telegram-мастер! 📣",
+      >= 9 => "Отлично! 👍",
+      >= 6 => "Неплохо! 🙂",
+      _ => "Повтори материал 📚"
+  };
+
+  void SelectAnswer(int qi, int oi)
+  {
+      if (qi < 0 || qi >= _questions.Count) return;
+      var q = _questions[qi];
+      if (oi < 0 || oi >= q.Options.Count) return;
+      q.SelectedIndex = oi;
+      q.Answered = true;
+      StateHasChanged();
+  }
+
+  void ShowScore()
+  {
+      _scoreVisible = true;
+      StateHasChanged();
+  }
+
+  void ResetQuiz()
+  {
+      foreach (var q in _questions)
+      {
+          q.SelectedIndex = null;
+          q.Answered = false;
+      }
+      _scoreVisible = false;
+      StateHasChanged();
+  }
+
+  protected override void OnInitialized()
+  {
+      if (_questions.Count == 0)
+      {
+          _questions = BuildQuestions();
+          // Перемешиваем варианты ответов у каждого вопроса один раз при инициализации
+          foreach (var q in _questions)
+          {
+              ShuffleOptions(q);
+          }
+      }
+  }
+
+  void ShuffleOptions(QuizQuestion q)
+  {
+      if (q.Options.Count <= 1) return;
+      var n = q.Options.Count;
+      var idx = Enumerable.Range(0, n).ToList();
+      for (int i = n - 1; i > 0; i--)
+      {
+          int j = _rng.Next(i + 1);
+          (idx[i], idx[j]) = (idx[j], idx[i]);
+      }
+      var newOptions = new List<string>(n);
+      for (int k = 0; k < n; k++) newOptions.Add(q.Options[idx[k]]);
+      var newCorrect = idx.IndexOf(q.CorrectIndex);
+      q.Options = newOptions;
+      q.CorrectIndex = newCorrect;
+  }
+
+  List<QuizQuestion> BuildQuestions()
+  {
+      return new List<QuizQuestion>
+      {
+          Q("Где находится код сервиса, отправляющего сообщения в Telegram?",
+            new[]{"API/Services/TelegramNotifier.cs", "Blazor/Services/TicketHubClient.cs", "API/Hubs/TicketHub.cs"}, 0,
+            "Сервис TelegramNotifier реализован в API/Services/TelegramNotifier.cs."),
+
+          Q("Куда сервер делает запрос, чтобы отправить сообщение?",
+            new[]{"https://api.telegram.org/bot{TOKEN}/sendMessage", "https://telegram.org/send", "wss://api.telegram.org/socket"}, 0,
+            "Используется Telegram Bot API: endpoint sendMessage с токеном бота."),
+
+          Q("Из какого места берутся BotToken и ChatId?",
+            new[]{"appsettings.json → Telegram секция или переменные окружения", "из базы данных", "из Blazor localStorage"}, 0,
+            "Значения читаются из конфигурации: Telegram:BotToken/ChatId или TELEGRAM__BotToken/ChatId."),
+
+          Q("Почему в сервисе используется AddHttpClient()?",
+            new[]{"Чтобы правильно управлять HttpClient (пулы/ресурсы)", "Потому что так быстрее чем WebClient", "Иначе не будет работать parse_mode"}, 0,
+            "Factory даёт правильно настроенный HttpClient и решает проблемы с сокетами/таймаутами."),
+
+          Q("Почему SendAsync не бросает исключение при ошибке Telegram?",
+            new[]{"Чтобы не ломать основной бизнес-поток", "Потому что try/catch обязателен", "Чтобы скрыть все ошибки от разработчика"}, 0,
+            "Уведомление — вторично; бронирования/тикеты не должны падать из‑за Telegram."),
+
+          Q("На каком этапе вызывается TelegramNotifier в Booking?",
+            new[]{"После успешного сохранения брони", "Перед проверкой дат", "При старте приложения"}, 0,
+            "Сначала сохраняем в БД, затем отправляем уведомления в SignalR и Telegram."),
+
+          Q("Какие поля мы шлём в sendMessage?",
+            new[]{"chat_id, text, parse_mode, disable_web_page_preview", "token, roomId, status", "user, pass, key"}, 0,
+            "Минимально нужен chat_id и text; мы также задаём parse_mode и отключаем превью."),
+
+          Q("Какой parse_mode мы используем и зачем?",
+            new[]{"HTML — для форматирования текста", "Markdown — для кода", "Нет parse_mode — по умолчанию"}, 0,
+            "HTML позволяет делать жирный/курсив/ссылки в сообщениях."),
+
+          Q("Как фронт подключается к Telegram?",
+            new[]{"Никак, это серверная интеграция", "Через WebSocket к Telegram", "Через слой Blazor Telegram SDK"}, 0,
+            "Фронт триггерит API, а уже сервер шлёт в Telegram. Прямой связи фронта с Telegram нет."),
+
+          Q("Где регистрируется TelegramNotifier?",
+            new[]{"API/Program.cs как Singleton", "В Blazor Program.cs", "В TicketsController через new"}, 0,
+            "Сервис регистрируется в DI: AddHttpClient() + AddSingleton<TelegramNotifier>()."),
+
+          Q("Если BotToken/ChatId не заданы, что делает сервис?",
+            new[]{"Тихо выходит, ничего не отправляет", "Бросает исключение", "Пишет в консоль и падает"}, 0,
+            "Проверка на пустые значения — ранний возврат без ошибок."),
+
+          Q("Какие контроллеры используют TelegramNotifier?",
+            new[]{"TicketsController и BookingsController", "RoomsController", "AuthController"}, 0,
+            "Сообщения отправляются при создании тикетов/изменениях и при создании брони."),
+
+          Q("Как задать ChatId для группового чата?",
+            new[]{"Использовать отрицательный id вида -100...", "Написать @имя-группы", "Просто 0 — бот сам найдёт"}, 0,
+            "У групп ChatId обычно начинается с -100. Нужно добавить бота в группу."),
+
+          Q("Зачем disable_web_page_preview=true?",
+            new[]{"Чтобы не показывать большие превью ссылок", "Чтобы ускорить отправку", "Чтобы включить Markdown"}, 0,
+            "Так сообщения остаются компактными и читабельными."),
+      };
+  }
+
+  static QuizQuestion Q(string text, string[] options, int correct, string? explanation = null)
+  {
+      return new QuizQuestion
+      {
+          Text = text,
+          Options = options.ToList(),
+          CorrectIndex = correct,
+          Explanation = explanation
+      };
+  }
+}
