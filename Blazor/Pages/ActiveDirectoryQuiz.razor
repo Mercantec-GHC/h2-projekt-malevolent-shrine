@@ -1,0 +1,223 @@
+﻿@page "/ad-quiz"
+@inject IJSRuntime JS
+
+<PageTitle>Active Directory Quiz</PageTitle>
+
+<link href="css/jwt-learn.css" rel="stylesheet" />
+
+<div class="jwt-page">
+  <h1>Active Directory Quiz</h1>
+  <p>
+    Проверь свои знания по интеграции Active Directory с .NET приложениями. LDAP, аутентификация, группы безопасности и многое другое.
+  </p>
+
+  <div class="toc">
+    <b>Разделы:</b>
+    <a @onclick="@(() => ScrollToSection("ad-basics"))" style="cursor: pointer;">Основы Active Directory</a>
+    <a @onclick="@(() => ScrollToSection("ad-ldap"))" style="cursor: pointer;">LDAP протокол</a>
+    <a @onclick="@(() => ScrollToSection("ad-auth"))" style="cursor: pointer;">Аутентификация</a>
+    <a @onclick="@(() => ScrollToSection("ad-groups"))" style="cursor: pointer;">Группы и роли</a>
+    <a @onclick="@(() => ScrollToSection("ad-quiz"))" style="cursor: pointer;">Финальный квиз</a>
+  </div>
+
+  <h2 id="ad-basics">Основы Active Directory</h2>
+  <p>Active Directory — служба каталогов от Microsoft для управления пользователями и ресурсами.</p>
+  <ul>
+    <li>Централизованное управление пользователями</li>
+    <li>Группы безопасности для управления доступом</li>
+    <li>Доменная структура и organizational units (OU)</li>
+  </ul>
+
+  <h2 id="ad-ldap">LDAP протокол</h2>
+  <p>Lightweight Directory Access Protocol — протокол для доступа к AD.</p>
+  <ul>
+    <li>Distinguished Name (DN) — уникальный путь к объекту</li>
+    <li>LDAP фильтры для поиска: <code>(sAMAccountName=user)</code></li>
+    <li>Порты: 389 (LDAP), 636 (LDAPS), 3268 (Global Catalog)</li>
+  </ul>
+
+  <h2 id="ad-auth">Аутентификация через AD</h2>
+  <p>Проверка учетных данных пользователей в Active Directory.</p>
+  <ul>
+    <li>PrincipalContext — класс для подключения к AD</li>
+    <li>ValidateCredentials() — проверка логина/пароля</li>
+    <li>Bind операция для проверки подлинности</li>
+  </ul>
+
+  <h2 id="ad-groups">Группы и маппинг ролей</h2>
+  <p>Использование групп AD для управления доступом в приложении.</p>
+  <ul>
+    <li>GetAuthorizationGroups() — получение всех групп пользователя</li>
+    <li>Маппинг AD групп на роли приложения</li>
+    <li>Кэширование групп для производительности</li>
+  </ul>
+
+  <h2 id="ad-quiz">Финальный квиз</h2>
+  <p>Проверь знания Active Directory!</p>
+  <div class="quiz">
+    @for (int i = 0; i < _questions.Count; i++)
+    {
+        var questionIndex = i;
+        var q = _questions[questionIndex];
+        <div class="q">
+          <div class="qtext"><b>@(questionIndex+1).</b> @q.Text</div>
+          <div class="opts">
+            @for (int j = 0; j < q.Options.Count; j++)
+            {
+                var optionIndex = j;
+                var opt = q.Options[optionIndex];
+                var chosen = q.SelectedIndex == optionIndex;
+                var cls = q.Answered
+                    ? (optionIndex == q.CorrectIndex ? "opt correct" : (chosen ? "opt wrong" : "opt"))
+                    : (chosen ? "opt chosen" : "opt");
+                <button class="@cls" type="button" @onclick="@(() => SelectAnswer(questionIndex, optionIndex))" disabled="@q.Answered">@opt</button>
+            }
+          </div>
+          @if (q.Answered)
+          {
+            var isCorrect = q.SelectedIndex == q.CorrectIndex;
+            <div class="feedback @(isCorrect ? "correct" : "wrong")">
+                @(isCorrect ? "Верно! ✓" : "Неверно. ✗")
+            </div>
+            @if (!string.IsNullOrWhiteSpace(q.Explanation))
+            {
+              <div class="explain"><b>Объяснение:</b> @q.Explanation</div>
+            }
+          }
+        </div>
+    }
+    <div class="quiz-actions">
+      <button class="btn" type="button" @onclick="ShowScore">Показать результат</button>
+      <button class="btn ghost" type="button" @onclick="ResetQuiz">Сбросить</button>
+    </div>
+    @if (_scoreVisible)
+    {
+      <div class="score">Результат: <b>@CorrectCount</b> из <b>@_questions.Count</b> — @(ScoreComment)</div>
+    }
+  </div>
+
+  <div class="nav-buttons">
+    <a href="/" class="btn">На главную</a>
+  </div>
+</div>
+
+@code {
+  private async Task ScrollToSection(string sectionId)
+  {
+      try
+      {
+          await JS.InvokeVoidAsync("eval", $"document.getElementById('{sectionId}')?.scrollIntoView({{ behavior: 'smooth', block: 'start' }});");
+      }
+      catch (Exception ex)
+      {
+          Console.WriteLine($"[SCROLL] Error: {ex.Message}");
+      }
+  }
+
+  class QuizQuestion
+  {
+      public string Text { get; set; } = string.Empty;
+      public List<string> Options { get; set; } = new();
+      public int CorrectIndex { get; set; }
+      public string? Explanation { get; set; }
+      public int? SelectedIndex { get; set; }
+      public bool Answered { get; set; }
+  }
+
+  private List<QuizQuestion> _questions = new();
+  private bool _scoreVisible;
+  
+  int CorrectCount => _questions.Count(q => q.Answered && q.SelectedIndex == q.CorrectIndex);
+  string ScoreComment => CorrectCount switch
+  {
+      >= 8 => "AD эксперт! 🎯",
+      >= 6 => "Отлично разбираешься! 👍",
+      >= 4 => "Хорошие знания! 🙂",
+      _ => "Нужно подучить AD 📚"
+  };
+
+  void SelectAnswer(int qi, int oi)
+  {
+      if (qi < 0 || qi >= _questions.Count) return;
+      var q = _questions[qi];
+      if (oi < 0 || oi >= q.Options.Count) return;
+      q.SelectedIndex = oi;
+      q.Answered = true;
+      StateHasChanged();
+  }
+
+  void ShowScore()
+  {
+      _scoreVisible = true;
+      StateHasChanged();
+  }
+
+  void ResetQuiz()
+  {
+      foreach (var q in _questions)
+      {
+          q.SelectedIndex = null;
+          q.Answered = false;
+      }
+      _scoreVisible = false;
+      StateHasChanged();
+  }
+
+  protected override void OnInitialized()
+  {
+      if (_questions.Count == 0)
+      {
+          _questions = BuildQuestions();
+      }
+  }
+
+  List<QuizQuestion> BuildQuestions()
+  {
+      return new List<QuizQuestion>
+      {
+          Q("Что такое Active Directory?",
+            new[]{"Служба каталогов от Microsoft", "База данных SQL", "Web-сервер"}, 0,
+            "Active Directory — централизованная служба для управления пользователями, компьютерами и ресурсами."),
+          
+          Q("Какой порт используется для LDAP?",
+            new[]{"389", "443", "8080"}, 0,
+            "Стандартный LDAP порт — 389, LDAPS (защищенный) — 636."),
+          
+          Q("Что такое Distinguished Name (DN)?",
+            new[]{"Уникальный путь к объекту в AD", "Имя пользователя", "IP адрес"}, 0,
+            "DN — полный путь к объекту, например: CN=User,OU=Users,DC=domain,DC=com"),
+          
+          Q("Какой класс используется для подключения к AD в .NET?",
+            new[]{"PrincipalContext", "SqlConnection", "HttpClient"}, 0,
+            "PrincipalContext из System.DirectoryServices.AccountManagement для работы с AD."),
+          
+          Q("Как проверить пароль пользователя в AD?",
+            new[]{"ValidateCredentials()", "CheckPassword()", "AuthenticateUser()"}, 0,
+            "ValidateCredentials() проверяет, правильны ли логин и пароль пользователя."),
+          
+          Q("Что такое sAMAccountName?",
+            new[]{"Логин пользователя в AD", "Email адрес", "Номер телефона"}, 0,
+            "sAMAccountName — это имя учетной записи для входа (login)."),
+          
+          Q("Как получить группы пользователя?",
+            new[]{"GetAuthorizationGroups()", "GetGroups()", "FetchUserGroups()"}, 0,
+            "GetAuthorizationGroups() возвращает все группы безопасности пользователя."),
+          
+          Q("Зачем мапить AD группы на роли приложения?",
+            new[]{"Для управления доступом в приложении", "Для красоты кода", "Для ускорения работы"}, 0,
+            "Маппинг позволяет использовать AD группы как роли в вашем приложении (Admin, Manager и т.д.)."),
+      };
+  }
+
+  static QuizQuestion Q(string text, string[] options, int correct, string? explanation = null)
+  {
+      return new QuizQuestion
+      {
+          Text = text,
+          Options = options.ToList(),
+          CorrectIndex = correct,
+          Explanation = explanation
+      };
+  }
+}
+
