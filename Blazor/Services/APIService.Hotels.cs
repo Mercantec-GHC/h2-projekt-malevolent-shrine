@@ -18,5 +18,21 @@ namespace Blazor.Services
                 return new List<HotelReadDto>();
             }
         }
+
+        public async Task<List<HotelNamesDto>> GetHotelNamesAsync()
+        {
+            try
+            {
+                var hotels = await GetAllHotels();
+                return hotels
+                .Select(h => new HotelNamesDto { Id = h.Id, HotelName = h.Name })
+                .ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return new List<HotelNamesDto>();
+            }
+        }
     }
 }

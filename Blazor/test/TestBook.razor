@@ -8,7 +8,7 @@
 
 @if (room == null && string.IsNullOrEmpty(msg))
 {
-    <div class="loading">Loading room...</div>
+    <Skeleton Lines="5" LineHeight="50px" />
 }
 else if (!string.IsNullOrEmpty(msg) && room == null)
 {

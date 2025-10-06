@@ -18,7 +18,7 @@ namespace API.Controllers
             _context = context;
         }
 
-        [HttpGet] // Чтение отелей доступно всем
+        [HttpGet] 
         public async Task<ActionResult<IEnumerable<HotelReadDto>>> GetHotels()
         {
             var hotels = await _context.Hotels
@@ -28,6 +28,7 @@ namespace API.Controllers
                     Id = h.Id,
                     Name = h.Name,
                     Address = h.Address,
+                    ImageUrl = h.ImageUrl,
                     Rooms = h.Rooms.Select(r => new RoomReadDto
                     {
                         Id = r.Id,

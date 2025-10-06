@@ -2,70 +2,120 @@
 @inject Blazor.Services.APIService Api
 
 <div class="hero">
-    <h1 class="site-title">My profile</h1>
-    <p class="site-sub">See your info and bookings.</p>
+    <h1 class="site-title jp">MALEVOLENT SHRINE</h1>
+    <div class="jp">領域展開 — Your domain</div>
+    <p class="site-sub">Manage your cursed techniques and bookings.</p>
 </div>
 
 @if (showConfirmation)
 {
     <div class="confirm-window-overlay" @onclick="CloseModal">
-        <div class="confirm-window" @onclick:stopPropagation>
-            <h2 class="confirm-header">Are you sure you want to cancel this booking?</h2>
-            <button class="btn-yes" @onclick="ConfirmCancel">Yes, send this booking to the void! (ง •̀_•́)ง</button>
-            <button class="btn-no" @onclick="CloseModal">No, let me keep it (ಥᗩಥ)</button>
+        <div class="confirm-window malevolent-modal" @onclick:stopPropagation>
+            <h2 class="confirm-header">⛩️ Domain Expansion: Void Cancellation ⛩️</h2>
+            <p class="modal-text">Are you sure you want to send this booking into the void?</p>
+            <div class="modal-actions">
+                <button class="btn btn-red" @onclick="ConfirmCancel">
+                    <span>🔥 Yes, void it!</span>
+                </button>
+                <button class="btn btn-ghost" @onclick="CloseModal">
+                    <span>← Keep it</span>
+                </button>
+            </div>
         </div>
     </div>
 }
 
-
 @if (loading)
 {
-    <div class="loading">Loading...</div>
+    <div class="container">
+        <Skeleton Lines="6" LineHeight="18px" />
+    </div>
 }
 else if (!authed)
 {
-    <div class="hero"><div class="msg">Please log in first.</div></div>
+    <div class="hero"><div class="msg">⛩️ Please enter the domain first (log in).</div></div>
 }
 else
 {
-    <div class="container">
-        <div class="profile-card">
-            <div class="profile-row"><b>Name:</b> @user?.FirstName @user?.LastName</div>
-            <div class="profile-row"><b>Email:</b> @user?.Email</div>
-            <div class="profile-row"><b>Role:</b> @user?.Role</div>
-            <div class="profile-row">
-                <b>VIP:</b>
-                <span class="vip-status @(user?.IsVIP == true ? "vip-yes" : "vip-no")">
-                    @(user?.IsVIP == true ? "Yes" : "No")
-                </span>
+    <div class="container profile-shrine">
+        <div class="profile-card malevolent-card">
+            <div class="card-ornament"></div>
+            <h2 class="card-title">🗡️ Sorcerer Profile</h2>
+            <div class="profile-grid">
+                <div class="profile-row">
+                    <span class="label">Name:</span>
+                    <span class="value">@user?.FirstName @user?.LastName</span>
+                </div>
+                <div class="profile-row">
+                    <span class="label">Email:</span>
+                    <span class="value">@user?.Email</span>
+                </div>
+                <div class="profile-row">
+                    <span class="label">Role:</span>
+                    <span class="value role-badge">@user?.Role</span>
+                </div>
+                <div class="profile-row">
+                    <span class="label">VIP Status:</span>
+                    <span class="vip-status @(user?.IsVIP == true ? "vip-yes" : "vip-no")">
+                        @(user?.IsVIP == true ? "⭐ Special Grade" : "Standard Grade")
+                    </span>
+                </div>
+                <div class="profile-row">
+                    <span class="label">Domain Entered:</span>
+                    <span class="value">@user?.CreatedAt.ToString("yyyy-MM-dd")</span>
+                </div>
             </div>
-            <div class="profile-row"><b>Joined:</b> @user?.CreatedAt.ToString("yyyy-MM-dd")</div>
+        </div>
+        <h2 class="block-title">⛩️ Active Bindings (Bookings)</h2>
+
+        <h1 class="sort-title">Sort bindings:</h1>
+        <div class="select-wrapper">
+            <select class="filter" @bind="selectedHotelId">
+                <option value="0">All hotels</option>
+                @foreach (var h in hotelNames)
+                {
+                    <option value="@h.Id">@h.HotelName</option>
+                }
+            </select>
         </div>
 
-
-        <h2 class="block-title">My bookings</h2>
         @if (bookings.Count == 0)
         {
-            <div class="empty">No bookings yet.</div>
+            <div class="empty-shrine">
+                <div class="shrine-icon">🏮</div>
+                <p>No cursed bindings found. The shrine awaits your reservation.</p>
+            </div>
         }
         else
         {
-            <div class="bookings-list">
-                @foreach (var b in bookings)
+            <div class="bookings-grid">
+                @foreach (var b in bookings.Where(b => (selectedHotelId == 0 || b.HotelId == selectedHotelId)))
                 {
-                    <div class="booking-item">
-                        <h3 class="hotel-name">@b.HotelName</h3>
-                        <hr />
-                        <div>Room: @b.RoomNumber</div>
-                        <div>From: @b.CheckInDate.ToString("yyyy-MM-dd")</div>
-                        <div>To: @b.CheckOutDate.ToString("yyyy-MM-dd")</div>
-                        <div>Status: @b.Status</div>
-                        <div>Total: @b.TotalPrice.ToString("0") kr</div>
+                    <div class="booking-card malevolent-card">
+                        <div class="card-ornament-small"></div>
+                        <h3 class="booking-hotel">🏯 @b.HotelName</h3>
+                        <div class="booking-details">
+                            <div class="detail-row">
+                                <span class="icon">🚪</span>
+                                <span>Room @b.RoomNumber</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="icon">📅</span>
+                                <span>@b.CheckInDate.ToString("dd.MM.yyyy") → @b.CheckOutDate.ToString("dd.MM.yyyy")</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="icon">💰</span>
+                                <span class="price">@b.TotalPrice.ToString("0") kr</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="status-badge status-@b.Status.ToLower()">@b.Status</span>
+                            </div>
+                        </div>
                         <button class="cancel-btn" @onclick="() => ShowCancelConfirmation(b.Id)">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
                             </svg>
-                            Cancel booking
+                            <span>Void Binding</span>
                         </button>
                     </div>
                 }
@@ -82,7 +132,9 @@ else
     private bool loading = true;
     private bool authed = false;
     private bool CancelationSuccessful = false;
-   private int bookingToCancelId = -1;
+    private int bookingToCancelId = -1;
+    private int selectedHotelId { get; set; } = 0;
+    List<HotelNamesDto> hotelNames = new List<HotelNamesDto>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -90,6 +142,7 @@ else
         authed = !string.IsNullOrWhiteSpace(token);
         user = await Api.GetCurrentUserAsync(token);
         bookings = await Api.GetMyBookingsAsync();
+        hotelNames = await Api.GetHotelNamesAsync();
         if (!authed)
         {
             loading = false;

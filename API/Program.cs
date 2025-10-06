@@ -8,7 +8,7 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Reflection;
 using Microsoft.AspNetCore.Identity;
-using API.Hubs;
+using API.Hubs; // добавлено для SignalR hubs
 
 
 namespace API;
@@ -100,8 +100,7 @@ public class Program
         ?? Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
 
         Console.WriteLine("connectionString: " + (string.IsNullOrWhiteSpace(connectionString) ? "<empty>" : "<provided>"));
-       
-
+        
 
         // Tilføj basic health checks
         builder.Services.AddHealthChecks()
@@ -118,15 +117,18 @@ public class Program
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ClockSkew = TimeSpan.Zero, // ← ДОБАВИТЬ ЭТУ СТРОКУ
+                    ClockSkew = TimeSpan.Zero, // строгое время жизни токена
                     ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? Environment.GetEnvironmentVariable("JWT__Issuer"),
                     ValidAudience = builder.Configuration["Jwt:Audience"] ?? Environment.GetEnvironmentVariable("JWT__Audience"),
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? Environment.GetEnvironmentVariable("JWT__SecretKey") 
-                            ?? throw new InvalidOperationException("JWT SecretKey must be configured")))
+                        System.Text.Encoding.UTF8.GetBytes(
+                            builder.Configuration["Jwt:SecretKey"]
+                            ?? Environment.GetEnvironmentVariable("JWT__SecretKey")
+                            ?? throw new InvalidOperationException("JWT SecretKey must be configured")
+                        ))
                 };
 
-                // Это нужно, чтобы SignalR мог принимать токен из query (?access_token=...)
+                // разрешаем принимать токен из query для SignalR (/?access_token=...)
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
@@ -142,29 +144,21 @@ public class Program
                 };
             });
         builder.Services.AddAuthorization();
-        builder.Services.AddScoped<AdLdapAuthService>();
-        
         builder.Services.AddScoped<DataSeederService>(); 
         builder.Services.AddScoped<PasswordHasher<User>>();
-        // Active Directory services
+        // дополнительные сервисы
+        builder.Services.AddScoped<AdLdapAuthService>();
         builder.Services.AddScoped<API.AD.ActiveDirectoryService>();
         
-        // Подключение БД: если строка подключения отсутствует, используем InMemory для стабильного старта API
+        
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            Console.WriteLine("WARNING: No DefaultConnection configured. Using InMemory database 'AppDb' for this run.");
-            builder.Services.AddDbContext<AppDBContext>(options =>
-            {
-                options.UseInMemoryDatabase("AppDb");
-            });
+            throw new InvalidOperationException("DefaultConnection is not configured. Set connection string or environment variable DEFAULT_CONNECTION.");
         }
-        else
+        builder.Services.AddDbContext<AppDBContext>(options =>
         {
-            builder.Services.AddDbContext<AppDBContext>(options =>
-            {
-                options.UseNpgsql(connectionString);
-            });
-        }
+            options.UseNpgsql(connectionString);
+        });
         var app = builder.Build();
             
         
@@ -200,9 +194,9 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
-        app.MapHub<TicketHub>("/hubs/tickets");
+        app.MapHub<TicketHub>("/hubs/tickets"); // добавлен SignalR hub
 
-        // Автонакат миграций для реальной БД (пропускаем InMemory)
+        // автоматическое применение миграций (кроме InMemory)
         try
         {
             using var scope = app.Services.CreateScope();

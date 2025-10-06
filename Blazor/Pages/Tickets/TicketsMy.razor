@@ -3,7 +3,7 @@
 @inject Blazor.Services.APIService Api
 @inject NavigationManager Nav
 
-<h1 class="site-title">Malevolent Shrine</h1>
+<h1 class="site-title jp">Malevolent Shrine</h1>
 <div class="jp">Ryomen Sukuna</div>
 <p class="site-sub">Мои тикеты (мои обращения)</p>
 
@@ -42,7 +42,7 @@
 
   @if (loading)
   {
-    <div class="loading">Загрузка...</div>
+    <Skeleton Lines="4" LineHeight="100px" />
   }
   else if (items.Count == 0)
   {

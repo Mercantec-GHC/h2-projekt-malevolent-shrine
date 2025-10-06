@@ -1,0 +1,123 @@
+﻿@using Blazor.Models
+@using DomainModels.DTOs
+@inject Blazor.Services.APIService Api
+@inject NavigationManager Nav
+
+<div class="test-root">
+  <div class="book-card">
+    <div class="actions">
+      <select class="form-select" @bind="_selectedHotelId" style="max-width:260px">
+        <option value="">All hotels</option>
+        @foreach (var h in _hotels)
+        {
+          <option value="@h.Id">@h.Name</option>
+        }
+      </select>
+      <select class="form-select" @bind="_days" style="max-width:180px">
+        <option value="14">2 weeks</option>
+        <option value="28">4 weeks</option>
+      </select>
+      <button class="btn btn-red" @onclick="ReloadAsync">Reload</button>
+    </div>
+
+    @if (_loading)
+    {
+      <Skeleton Lines="8" LineHeight="18px" />
+    }
+    else if (_rows.Count == 0)
+    {
+      <div class="empty">No rooms to show.</div>
+    }
+    else
+    {
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot free"></span> Free</span>
+        <span class="legend-item"><span class="legend-dot occupied"></span> Occupied</span>
+      </div>
+      <div class="calendar-wrap">
+        <div class="calendar-grid" style="--cols:@_days">
+          <div class="cal-cell head room-col">Room</div>
+          @for (int i = 0; i < _days; i++)
+          {
+            var d = _startDate.AddDays(i);
+            <div class="cal-cell head">
+              <div class="date-top">@d.ToString("dd.MM")</div>
+              <div class="date-sub">@d.ToString("ddd")</div>
+            </div>
+          }
+
+          @foreach (var r in _rows)
+          {
+            _roomInfos.TryGetValue(r.RoomId, out var roomInfo);
+            <div class="cal-cell room-col">
+              <div class="room-id">Room @r.RoomNumber</div>
+              @if (r.HotelId.HasValue)
+              {
+                var hotelName = _hotels.FirstOrDefault(h => h.Id == r.HotelId)?.Name;
+                <div class="room-hotel">@("Hotel: " + (hotelName ?? ("#" + r.HotelId)))</div>
+              }
+              @if (roomInfo != null)
+              {
+                <div class="room-hotel" title="Price per night">$@roomInfo.PricePerNight</div>
+              }
+            </div>
+            @for (int i = 0; i < _days; i++)
+            {
+              var day = r.Days.Count > i ? r.Days[i] : new AvailabilityDayVM { Date = _startDate.AddDays(i) };
+              var isOcc = day.IsOccupied;
+              var cls = isOcc ? "cal-cell occupied" : "cal-cell free";
+              var priceText = roomInfo != null ? ("$" + roomInfo.PricePerNight.ToString("0")) : string.Empty;
+              if (!isOcc)
+              {
+                <div class="@cls" title="@($"Free • {priceText}")" @onclick="(() => OnFreeCellClick(r.RoomId, day.Date))">@priceText</div>
+              }
+              else
+              {
+                <div class="@cls" title="Occupied"></div>
+              }
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+@code {
+  private bool _loading = true;
+  private int _days = 28;
+  private string? _selectedHotelId;
+  private DateTime _startDate = DateTime.UtcNow.Date;
+  private List<HotelReadDto> _hotels = new();
+  private List<RoomAvailabilityVM> _rows = new();
+  private Dictionary<int, RoomReadDto> _roomInfos = new();
+
+  protected override async Task OnInitializedAsync()
+  {
+    _hotels = await Api.GetAllHotels();
+    await ReloadAsync();
+  }
+
+  private async Task ReloadAsync()
+  {
+    _loading = true;
+    StateHasChanged();
+    int? hid = null;
+    if (int.TryParse(_selectedHotelId, out var parsed)) hid = parsed;
+    _startDate = DateTime.UtcNow.Date;
+    var availability = await Api.GetRoomAvailabilityAsync(_days, hid);
+    _rows = availability;
+
+    // Load room info (price per night)
+    var allRooms = await Api.GetAllRoomsAsync();
+    _roomInfos = allRooms.ToDictionary(r => r.Id, r => r);
+    _loading = false;
+  }
+
+  private void OnFreeCellClick(int roomId, DateTime date)
+  {
+    var d = date.ToString("yyyy-MM-dd");
+    Nav.NavigateTo($"/book?roomId={roomId}&date={d}");
+  }
+}
+

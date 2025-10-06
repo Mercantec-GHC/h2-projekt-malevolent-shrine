@@ -1,7 +1,144 @@
 ﻿@page "/book"
+@using DomainModels.DTOs
+@inject Blazor.Services.APIService Api
+@inject NavigationManager Nav
 
+<h1 class="site-title jp">Book a Room</h1>
+<p class="page-sub">Pick your dates and confirm your booking.</p>
 
+<div class="test-root">
+  <div class="book-card">
+    @if (_loading)
+    {
+      <Skeleton Lines="6" LineHeight="16px" />
+    }
+    else if (_error != null)
+    {
+      <div class="empty">@_error</div>
+      <a class="btn btn-ghost" href="/calendar">Back to calendar</a>
+    }
+    else if (_room == null)
+    {
+      <div class="empty">Room not found.</div>
+      <a class="btn btn-ghost" href="/calendar">Back to calendar</a>
+    }
+    else
+    {
+      <div class="room-line"><strong>Room:</strong> @_room.Number (Cap. @_room.Capacity)</div>
+      <div class="room-line"><strong>Hotel:</strong> @(_room.HotelId?.ToString() ?? "—")</div>
+      <div class="room-line"><strong>Price per night:</strong> $@_room.PricePerNight</div>
+
+      <EditForm Model="this" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
+        <div class="date-grid">
+          <div>
+            <label>Check-in</label>
+            <input type="date" @bind-value="_checkIn" @bind-value:format="yyyy-MM-dd" class="form-control" />
+          </div>
+          <div>
+            <label>Check-out</label>
+            <input type="date" @bind-value="_checkOut" @bind-value:format="yyyy-MM-dd" class="form-control" />
+          </div>
+        </div>
+        <div class="price-line">
+          <div><strong>Nights:</strong> @Nights</div>
+          <div class="spacer"></div>
+          <div><strong>Total:</strong> $@TotalPrice</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-red" type="submit" disabled="@(!CanBook)">Confirm booking</button>
+          <a class="btn btn-ghost" href="/calendar">Back</a>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(_msg))
+        {
+          <div class="msg">@_msg</div>
+        }
+      </EditForm>
+    }
+  </div>
+</div>
 
 @code {
+  [Parameter, SupplyParameterFromQuery] public int? roomId { get; set; }
+  [Parameter, SupplyParameterFromQuery] public string? date { get; set; }
 
+  private bool _loading = true;
+  private string? _error;
+  private RoomReadDto? _room;
+  private DateTime _checkIn = DateTime.UtcNow.Date;
+  private DateTime _checkOut = DateTime.UtcNow.Date.AddDays(1);
+  private int? _currentUserId;
+  private string? _msg;
+
+  private int Nights => Math.Max(1, (_checkOut - _checkIn).Days);
+  private decimal TotalPrice => _room != null ? Math.Round(_room.PricePerNight * Nights, 2) : 0m;
+  private bool CanBook => _currentUserId.HasValue && _room != null && _checkOut > _checkIn;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _error = null;
+    _room = null;
+    try
+    {
+      if (roomId == null || roomId <= 0)
+      {
+        _error = "Room id is missing.";
+        return;
+      }
+      if (DateTime.TryParse(date, out var d))
+      {
+        _checkIn = d.Date;
+        _checkOut = d.Date.AddDays(1);
+      }
+      _room = await Api.GetRoomAsync(roomId.Value);
+      var me = await Api.GetMeAsync<UserReadDto>();
+      _currentUserId = me?.Id;
+      if (_room == null)
+      {
+        _error = "Room not found.";
+      }
+    }
+    catch (Exception ex)
+    {
+      _error = $"Error: {ex.Message}";
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task OnSubmit()
+  {
+    _msg = string.Empty;
+    if (!CanBook || _room == null || !_currentUserId.HasValue) {
+      _msg = "You must be logged in and select valid dates.";
+      return;
+    }
+    if (_checkOut <= _checkIn)
+    {
+      _checkOut = _checkIn.AddDays(1);
+    }
+    var dto = new BookingCreateDto
+    {
+      UserId = _currentUserId.Value,
+      RoomId = _room.Id,
+      CheckInDate = _checkIn,
+      CheckOutDate = _checkOut,
+      TotalPrice = TotalPrice,
+      Status = "Pending"
+    };
+    var (ok, message) = await Api.CreateBookingWithMessageAsync(dto);
+    if (ok)
+    {
+      _msg = "Booked successfully.";
+      await Task.Delay(600);
+      Nav.NavigateTo("/calendar");
+    }
+    else
+    {
+      _msg = message ?? "Failed to book.";
+    }
+  }
 }

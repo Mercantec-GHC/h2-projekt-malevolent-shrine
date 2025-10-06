@@ -4,15 +4,18 @@
 @inject NavigationManager Nav
 
 <div class="hero">
-    <h1 class="site-title">MALEVOLENT SHRINE</h1>
+    <h1 class="site-title jp">MALEVOLENT SHRINE</h1>
     <div class="jp">領域展開 — Open your domain</div>
     <p class="site-sub">Pick a door. Each door is a hotel.</p>
+    <div style="margin-top:16px; display:flex; justify-content:center;">
+        <a class="btn btn-red" href="/calendar">Calendar</a>
+    </div>
 </div>
 
 <div class="container">
     @if (hotels == null)
     {
-        <div class="loading">Loading hotels...</div>
+        <Skeleton Lines="5" LineHeight="120px" />
     }
     else if (hotels.Count == 0)
     {
@@ -26,22 +29,27 @@
                 var isOpen = openingIds.Contains(h.Id);
                 <div class="door-card @(isOpen ? "open" : string.Empty)">
                     <div class="door-scene">
-                        <div class="door-frame"></div>
+                        <img src="@h.ImageUrl" alt="@h.Name" class="hotel-bg" />
+
                         <div class="door-leaf">
-                            <div class="stile"></div>
+                            <div class="door-frame"></div>
+                            <div class="stile left"></div>
+                            <div class="stile right"></div>
+                            <div class="handle"></div>
+                            <div class="rune-wrap">
+                                <img class="rune-img" src="/test/rune.svg?ts=@runeTs" alt="rune" />
+                            </div>
+                            <div class="plaque">
+                                <div class="hotel-name">@h.Name</div>
+                                <div class="hotel-addr">@h.Address</div>
+                            </div>
                         </div>
-                        <div class="handle"></div>
-                        <div class="rune-wrap">
-                            <img class="rune-img" src="/test/rune.svg?ts=@runeTs" alt="rune" />
-                        </div>
-                        <div class="plaque">
-                            <div class="hotel-name">@h.Name</div>
-                            <div class="hotel-addr">@h.Address</div>
-                        </div>
+
                         <button class="door-button" @onclick="(() => OpenHotelAnimated(h.Id))" aria-label="Open hotel @h.Name"></button>
                     </div>
                 </div>
             }
+
         </div>
     }
 </div>

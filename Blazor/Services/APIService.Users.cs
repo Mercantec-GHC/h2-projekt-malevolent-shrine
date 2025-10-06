@@ -16,17 +16,18 @@ namespace Blazor.Services
             }
 
             try { 
-            var response = await _httpClient.GetAsync("api/Users/me");
+                // Используем TryWithTokenRefresh для автообновления токена при 401
+                var response = await TryWithTokenRefresh(() => _httpClient.GetAsync("api/Users/me"));
 
-            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                throw new UnauthorizedAccessException("Unauthorized");
-            }
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    throw new UnauthorizedAccessException("Unauthorized");
+                }
 
-            response.EnsureSuccessStatusCode();
+                response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<UserReadDto>()
-                   ?? new UserReadDto();
+                return await response.Content.ReadFromJsonAsync<UserReadDto>()
+                       ?? new UserReadDto();
 
             } catch (Exception ex)
             {

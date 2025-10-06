@@ -3,14 +3,15 @@
 @using Blazor.Services
 @inject ActiveDirectoryService ADService
 @inject APIService Api
-@inject TicketHubClient Hub
 
-<h1 class="site-title">Malevolent Shrine</h1>
-<div class="jp">Ryomen Sukuna</div>
-<p class="site-sub">Admin Panel</p>
+<div class="hero">
+    <h1 class="site-title jp">MALEVOLENT SHRINE</h1>
+    <div class="jp">領域展開 — Domain of Infinite Void</div>
+    <p class="site-sub">⛩️ Admin Control Panel — Manipulate the cursed energy ⛩️</p>
+</div>
 
 <!-- Декоративная анимация в стиле "проклятой печати" -->
-<div style="position:absolute; right:20px; top:20px; width:120px; opacity:.8; pointer-events:none">
+<div style="position:fixed; right:20px; top:80px; width:140px; opacity:.6; pointer-events:none; z-index:1;">
   <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <radialGradient id="cg" cx="50%" cy="50%" r="50%">
@@ -33,58 +34,76 @@
   </svg>
 </div>
 
-<div class="test-root">
+<div class="container admin-shrine">
   <div class="actions">
-    <a class="btn btn-ghost" href="/tickets/me">My Ticket</a>
-    <a class="btn btn-ghost" href="/tickets/role">Ticket for my role</a>
+    <a class="btn btn-red" href="/tickets/me">🎫 My Tickets</a>
+    <a class="btn btn-ghost" href="/tickets/role">👥 Role Tickets</a>
   </div>
 
-  <div class="book-card">
-    <h3 class="page-title">Active Directory</h3>
-    <div class="profile-row">
+  <!-- AD Connection Card -->
+  <div class="malevolent-card">
+    <div class="card-ornament"></div>
+    <h3 class="card-title">🌐 Active Directory Connection</h3>
+    <div class="admin-section">
       <button class="btn btn-red" @onclick="TestConnection" disabled="@isLoading">
-        @if (isLoading) { <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span> }
-       Checking conection with AD
+        @if (isLoading) { <span>⏳</span> } else { <span>🔌</span> }
+        Test AD Connection
       </button>
     </div>
     @if (!string.IsNullOrEmpty(connectionStatus))
     {
-      <div class="alert @(connectionStatusOk ? "alert-success" : "alert-danger") mt-2">
-        @connectionStatus
+      <div class="status-message @(connectionStatusOk ? "status-success" : "status-error")">
+        @(connectionStatusOk ? "✅" : "❌") @connectionStatus
       </div>
     }
   </div>
 
-  <div class="book-card">
-    <h3 class="page-title">Пользователи</h3>
-    <div class="profile-row">
-      <input @bind="userSearch" @onkeypress="OnSearchKeyPress" placeholder="Поиск пользователя..." class="form-control" />
-    </div>
-    <div class="actions">
-      <button class="btn btn-ghost" @onclick="LoadUsers" disabled="@isLoading">Обновить список</button>
-      <button class="btn btn-red" @onclick="SearchUsers" disabled="@(isLoading || string.IsNullOrWhiteSpace(userSearch))">Поиск</button>
+  <!-- Users Card -->
+  <div class="malevolent-card">
+    <div class="card-ornament"></div>
+    <h3 class="card-title">👤 Sorcerer Registry (Users)</h3>
+    
+    <div class="admin-section">
+      <div class="search-bar">
+        <input @bind="userSearch" 
+               @onkeypress="OnSearchKeyPress" 
+               placeholder="🔍 Search for sorcerer..." 
+               class="admin-input" />
+      </div>
+      
+      <div class="actions" style="margin-top: 12px;">
+        <button class="btn btn-ghost" @onclick="LoadUsers" disabled="@isLoading">
+          🔄 Reload All
+        </button>
+        <button class="btn btn-red" @onclick="SearchUsers" disabled="@(isLoading || string.IsNullOrWhiteSpace(userSearch))">
+          🔎 Search
+        </button>
+      </div>
     </div>
 
     @if (isLoading && users == null)
     {
-      <div class="loading">Загрузка пользователей...</div>
+      <Skeleton Lines="6" LineHeight="20px" />
     }
     else if (users?.Count == 0)
     {
-      <div class="empty">Нет пользователей для отображения</div>
+      <div class="empty-shrine">
+        <div class="shrine-icon">🏮</div>
+        <p>No sorcerers found in the registry.</p>
+      </div>
     }
     else if (users != null)
     {
-      <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-          <thead class="table-dark">
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
             <tr>
-              <th>Name</th>
-              <th>Login</th>
-              <th>Email</th>
-              <th>Department</th>
-              <th>Job Title</th>
-              <th>Company</th>
+              <th>👤 Name</th>
+              <th>🔑 Login</th>
+              <th>📧 Email</th>
+              <th>🏢 Department</th>
+              <th>💼 Title</th>
+              <th>🏛️ Company</th>
             </tr>
           </thead>
           <tbody>
@@ -92,7 +111,7 @@
             {
               <tr>
                 <td>@(string.IsNullOrEmpty(user.Name) ? user.DisplayName : user.Name)</td>
-                <td>@user.Username</td>
+                <td><code>@user.Username</code></td>
                 <td>@user.Email</td>
                 <td>@user.Department</td>
                 <td>@user.Title</td>
@@ -101,62 +120,59 @@
             }
           </tbody>
         </table>
-        <div class="mt-2"><small class="text-muted">Найдено пользователей: @users.Count</small></div>
+        <div class="table-footer">📊 Total: @users.Count sorcerers</div>
       </div>
     }
   </div>
 
-  <div class="book-card">
-    <h3 class="page-title">Группы (разрешённые)</h3>
+  <!-- Groups Card -->
+  <div class="malevolent-card">
+    <div class="card-ornament"></div>
+    <h3 class="card-title">⛩️ Cursed Groups (Roles)</h3>
+    
     <div class="actions">
-      <button class="btn btn-ghost" @onclick="LoadGroups" disabled="@isLoading">Обновить список групп</button>
+      <button class="btn btn-ghost" @onclick="LoadGroups" disabled="@isLoading">
+        🔄 Reload Groups
+      </button>
     </div>
 
     @if (isLoading && groups == null)
     {
-      <div class="loading">Загрузка групп...</div>
+      <Skeleton Lines="5" LineHeight="18px" />
     }
     else if (FilteredGroups?.Count() == 0)
     {
-      <div class="empty">Нет групп для отображения</div>
+      <div class="empty-shrine">
+        <div class="shrine-icon">⛩️</div>
+        <p>No cursed groups detected.</p>
+      </div>
     }
     else if (FilteredGroups != null)
     {
-      <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-          <thead class="table-dark">
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
             <tr>
-              <th>Имя группы</th>
-              <th>Описание</th>
-              <th>Количество участников</th>
+              <th>⛩️ Group Name</th>
+              <th>📝 Description</th>
+              <th>👥 Members</th>
             </tr>
           </thead>
           <tbody>
             @foreach (var group in FilteredGroups)
             {
               <tr>
-                <td>@group.Name</td>
-                <td>@(string.IsNullOrEmpty(group.Description) ? "Нет описания" : group.Description)</td>
-                <td>@group.Members.Count</td>
+                <td><strong>@group.Name</strong></td>
+                <td>@(string.IsNullOrEmpty(group.Description) ? "—" : group.Description)</td>
+                <td><span class="member-badge">@group.Members.Count</span></td>
               </tr>
             }
           </tbody>
         </table>
-        <div class="mt-2"><small class="text-muted">Найдено групп: @groups?.Count</small></div>
+        <div class="table-footer">📊 Total: @groups?.Count groups (@FilteredGroups.Count() allowed)</div>
       </div>
     }
   </div>
-</div>
-
-<!-- Тосты админке: появляется в правом верхнем углу -->
-<div class="ms-toasts">
-  @foreach (var t in _toasts)
-  {
-    <div class="ms-toast @t.Level">
-      <div class="ms-toast-title">@t.Title</div>
-      <div class="ms-toast-msg">@t.Message</div>
-    </div>
-  }
 </div>
 
 @code {
@@ -174,32 +190,8 @@
 
     private IEnumerable<ADGroup> FilteredGroups => groups?.Where(g => allowedGroups.Contains(g.Name)) ?? Enumerable.Empty<ADGroup>();
 
-    private readonly List<ToastPayload> _toasts = new();
-
     protected override async Task OnInitializedAsync()
     {
-        // Подключаемся к SignalR, чтобы ловить тосты для админов/менеджеров
-        try
-        {
-            if (!Hub.IsConnected)
-            {
-                await Hub.StartAsync(Api.GetBaseAddress());
-            }
-            Hub.OnToast += async payload =>
-            {
-                _toasts.Add(payload);
-                StateHasChanged();
-                // Автоматическое скрытие через 5 секунд
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(5000);
-                    _toasts.Remove(payload);
-                    await InvokeAsync(StateHasChanged);
-                });
-            };
-        }
-        catch { /* тихо, чтобы не мешать остальной странице */ }
-
         await LoadInitialData();
     }
 
