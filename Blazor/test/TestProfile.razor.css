@@ -1,8 +1,84 @@
-﻿/* =====================
-   DELETED OLD STYLES - Now using .malevolent-card and .malevolent-modal from mshrine-tickets.css
-   
-   This file kept ONLY for component-specific overrides if needed in future.
-   All main styles moved to mshrine-tickets.css for consistency.
-====================== */
+﻿.confirm-window-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
 
-/* Если понадобятся специфичные стили только для TestProfile - добавить здесь */
+.confirm-window {
+    background-color: #1a1a1a;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(201, 42, 42, 0.5);
+    max-width: 480px;
+    width: 100%;
+    color: white;
+    z-index: 1001;
+    position: relative;
+    text-align: center;
+}
+
+.modal-text {
+    margin: 16px 0;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 24px;
+}
+.sort-title {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    color: #e0e0e0;
+    font-family: 'Cinzel Decorative', serif;
+}
+
+.select-wrapper {
+    display: inline-block;
+    position: relative;
+    width: 250px;
+    margin-bottom: 2rem;
+}
+
+    .select-wrapper::after {
+        content: "⛩️";
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        font-size: 1.1rem;
+        color: #ff4d4d;
+    }
+
+select.filter {
+    width: 100%;
+    padding: 10px 40px 10px 15px;
+    border: 2px solid #ff4d4d;
+    border-radius: 8px;
+    background-color: #1e1e1e;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1rem;
+    appearance: none;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+    select.filter:hover {
+        border-color: #ff7b7b;
+    }
+
+    select.filter:focus {
+        border-color: #ffb3b3;
+        box-shadow: 0 0 5px rgba(255, 77, 77, 0.6);
+    }

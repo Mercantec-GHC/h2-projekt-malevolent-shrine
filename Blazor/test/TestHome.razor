@@ -29,22 +29,27 @@
                 var isOpen = openingIds.Contains(h.Id);
                 <div class="door-card @(isOpen ? "open" : string.Empty)">
                     <div class="door-scene">
-                        <div class="door-frame"></div>
+                        <img src="@h.ImageUrl" alt="@h.Name" class="hotel-bg" />
+
                         <div class="door-leaf">
-                            <div class="stile"></div>
+                            <div class="door-frame"></div>
+                            <div class="stile left"></div>
+                            <div class="stile right"></div>
+                            <div class="handle"></div>
+                            <div class="rune-wrap">
+                                <img class="rune-img" src="/test/rune.svg?ts=@runeTs" alt="rune" />
+                            </div>
+                            <div class="plaque">
+                                <div class="hotel-name">@h.Name</div>
+                                <div class="hotel-addr">@h.Address</div>
+                            </div>
                         </div>
-                        <div class="handle"></div>
-                        <div class="rune-wrap">
-                            <img class="rune-img" src="/test/rune.svg?ts=@runeTs" alt="rune" />
-                        </div>
-                        <div class="plaque">
-                            <div class="hotel-name">@h.Name</div>
-                            <div class="hotel-addr">@h.Address</div>
-                        </div>
+
                         <button class="door-button" @onclick="(() => OpenHotelAnimated(h.Id))" aria-label="Open hotel @h.Name"></button>
                     </div>
                 </div>
             }
+
         </div>
     }
 </div>

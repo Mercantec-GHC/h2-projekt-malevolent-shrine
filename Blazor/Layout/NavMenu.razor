@@ -18,19 +18,29 @@
             </div>
             
             @if (isLoggedIn)
-            {
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="admin-dashboard">
-                        <i class="bi bi-gear-fill"></i> AD Dashboard (Test)
-                    </NavLink>
-                </div>
-                
+            {   
                 @* Менеджер: назначение задач уборки *@
                 @if (isManagerOrAdmin)
                 {
                     <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="admin-dashboard">
+                            <i class="bi bi-gear-fill"></i> AD Dashboard (Test)
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
                         <NavLink class="nav-link" href="assign-cleaning">
-                            <i class="bi bi-list-check"></i> Назначить уборку
+                            <i class="bi bi-list-check"></i> Assign cleaning
+                        </NavLink>
+                    </div>
+                    
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/tickets/me" Match="NavLinkMatch.Prefix">
+                            <span class="oi oi-list-rich" aria-hidden="true"></span> My tickets
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/tickets/role" Match="NavLinkMatch.Prefix">
+                            <span class="oi oi-people" aria-hidden="true"></span> Tickets for my role
                         </NavLink>
                     </div>
                 }
@@ -40,21 +50,21 @@
                 {
                     <div class="nav-item px-3">
                         <NavLink class="nav-link" href="my-tasks">
-                            <i class="bi bi-broom"></i> Мои задачи
+                            <i class="bi bi-broom"></i> My tasks
+                        </NavLink>
+                    </div>
+                    
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/tickets/me" Match="NavLinkMatch.Prefix">
+                            <span class="oi oi-list-rich" aria-hidden="true"></span> My tickets
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/tickets/role" Match="NavLinkMatch.Prefix">
+                            <span class="oi oi-people" aria-hidden="true"></span> Tickets for my role
                         </NavLink>
                     </div>
                 }
-
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/tickets/me" Match="NavLinkMatch.Prefix">
-                        <span class="oi oi-list-rich" aria-hidden="true"></span> Мои тикеты
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/tickets/role" Match="NavLinkMatch.Prefix">
-                        <span class="oi oi-people" aria-hidden="true"></span> Тикеты моей роли
-                    </NavLink>
-                </div>
             }
         </div>
 
@@ -75,7 +85,7 @@
                     <i class="bi bi-person-circle"></i> Profile
                 </NavLink>
                 <hr />
-                <NavLink class="nav-link register" @onclick="() => Logout()">
+                <NavLink class="nav-link register" style="cursor: pointer" @onclick="() => Logout()">
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </NavLink>
 
@@ -102,13 +112,19 @@
         var token = await JSRuntime.InvokeAsync<string>("auth.getToken");
         isLoggedIn = !string.IsNullOrWhiteSpace(token);
 
-        var role = await JSRuntime.InvokeAsync<string>("auth.getRole");
-        // Роли приходят как строки из JWT: Admin, Manager, Rengøring, Kunde, InfiniteVoid
+        var role = (await JSRuntime.InvokeAsync<string>("auth.getRole"))?.Trim();
+        Console.WriteLine($"[DEBUG] Role received from JS: '{role}'");
+
         isCleaner = string.Equals(role, "Rengøring", StringComparison.OrdinalIgnoreCase);
-        isManagerOrAdmin = role == "Manager" || role == "Admin" || role == "InfiniteVoid";
+        isManagerOrAdmin = string.Equals(role, "Manager", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(role, "InfiniteVoid", StringComparison.OrdinalIgnoreCase);
+
+        Console.WriteLine($"[DEBUG] isCleaner: {isCleaner}, isManagerOrAdmin: {isManagerOrAdmin}");
 
         StateHasChanged();
     }
+
 
     private async Task Logout()
     {

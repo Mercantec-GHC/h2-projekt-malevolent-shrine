@@ -1004,38 +1004,6 @@ html, body {
   flex-shrink: 0;
 }
 
-/* Модальное окно подтверждения */
-.malevolent-modal {
-  background: linear-gradient(145deg, rgba(22,22,28,0.98), rgba(11,11,13,0.98));
-  border: 3px solid var(--crimson);
-  border-radius: 20px;
-  padding: 32px;
-  max-width: 500px;
-  box-shadow: 
-    0 20px 60px rgba(0,0,0,0.8),
-    0 0 100px rgba(201,42,42,0.4),
-    inset 0 2px 0 rgba(201,42,42,0.3);
-  backdrop-filter: blur(20px);
-}
-
-.confirm-header {
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0 0 16px;
-  text-align: center;
-  color: var(--text);
-  text-shadow: 0 0 20px rgba(201,42,42,0.5);
-  letter-spacing: 1px;
-}
-
-.modal-text {
-  text-align: center;
-  color: var(--muted);
-  margin-bottom: 24px;
-  font-size: 15px;
-  line-height: 1.5;
-}
-
 .modal-actions {
   display: flex;
   gap: 12px;

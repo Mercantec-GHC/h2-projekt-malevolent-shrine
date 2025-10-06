@@ -288,7 +288,8 @@ public class BookingsController : ControllerBase
             Status = b.Status,
             CreatedAt = b.CreatedAt,
             RoomNumber = b.Room.Number,
-            HotelName = b.Room.Hotel.Name
+            HotelName = b.Room.Hotel.Name,
+            HotelId = b.Room.Hotel.Id
         }).ToList();
 
         return Ok(bookingReadDtos);

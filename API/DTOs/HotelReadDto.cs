@@ -19,7 +19,9 @@ namespace API.DTOs
         /// Hotel address.
         /// </summary>
         public string Address { get; set; } = string.Empty;
-        
+
+        public string? ImageUrl { get; set; }
+
         /// <summary>
         /// Rooms available in the hotel.
         /// </summary>
