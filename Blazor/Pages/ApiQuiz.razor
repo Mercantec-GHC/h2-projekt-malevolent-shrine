@@ -1,5 +1,5 @@
 ﻿@page "/api-quiz"
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
 <PageTitle>ASP.NET Core API Quiz</PageTitle>
 
@@ -14,6 +14,9 @@
   <div class="toc">
     <b>Разделы:</b>
     <a @onclick="@(() => ScrollToSection("map"))" style="cursor: pointer;">Карта проекта</a>
+    <a @onclick="@(() => ScrollToSection("models"))" style="cursor: pointer;">Модели (сущности) простыми словами</a>
+    <a @onclick="@(() => ScrollToSection("models-deep"))" style="cursor: pointer;">Разбор моделей по‑простому</a>
+    <a @onclick="@(() => ScrollToSection("relations"))" style="cursor: pointer;">Как связаны данные</a>
     <a @onclick="@(() => ScrollToSection("controllers"))" style="cursor: pointer;">Контроллеры и маршрутизация</a>
     <a @onclick="@(() => ScrollToSection("auth"))" style="cursor: pointer;">Роли и авторизация</a>
     <a @onclick="@(() => ScrollToSection("middleware"))" style="cursor: pointer;">Middleware и Pipeline</a>
@@ -23,6 +26,7 @@
     <a @onclick="@(() => ScrollToSection("ef"))" style="cursor: pointer;">Entity Framework Core</a>
     <a @onclick="@(() => ScrollToSection("signalr"))" style="cursor: pointer;">SignalR уведомления</a>
     <a @onclick="@(() => ScrollToSection("http"))" style="cursor: pointer;">HTTP примеры</a>
+    <a @onclick="@(() => ScrollToSection("scenarios"))" style="cursor: pointer;">Жизненные сценарии</a>
     <a @onclick="@(() => ScrollToSection("quiz"))" style="cursor: pointer;">Финальный квиз</a>
   </div>
 
@@ -45,6 +49,41 @@
       <li>Коды ответов честные: 200/201/204 — успех, 400/401/403/404/409 — ошибки ситуации, 500 — редкая беда.</li>
     </ul>
   </div>
+
+  <h2 id="models">Модели (сущности БД) простыми словами</h2>
+  <p>Это таблицы в БД. Мы храним факты. Коротко: что это и зачем.</p>
+  <ul>
+    <li><b>User</b> — человек в системе. Поля: имя/фамилия, <code>Email</code>, <code>Username</code>, <code>HashedPassword</code> (пароль в виде хеша), дата рождения (<code>IsAdult</code> вычисляется), <code>RoleId</code> (кто он), <code>IsVIP</code>, аватар. У пользователя есть <code>RefreshTokens</code> (для обновления доступа).</li>
+    <li><b>Role</b> — роль: Admin, Manager, Rengørring, Kunde, InfiniteVoid. Простой справочник. Пользователь ссылается на роль.</li>
+    <li><b>Hotel</b> — отель: имя, адрес, картинка. Имеет список комнат <code>Rooms</code>.</li>
+    <li><b>Room</b> — комната/номер: <code>Number</code> (уникален внутри отеля), вместимость, цена за ночь, этаж, доступность, описание, картинка, <code>HotelId</code>.</li>
+    <li><b>VipRoom</b> — как Room, но с особыми услугами: <code>VipServiceDescription</code> + <code>ExtraAmenities</code>. Наследуется от <code>Room</code>.</li>
+    <li><b>Booking</b> — бронь комнаты: кто (<code>UserId</code>), что (<code>RoomId</code>), заезд/выезд, цена, статус.</li>
+    <li><b>Ticket</b> — заявка/проблема: заголовок, категория (<code>Cleaning/Technical/General</code>), статус, кто создал, кому адресовано (<code>TargetRoleName</code>), кому назначено, сообщения.</li>
+    <li><b>TicketMessage</b> — сообщение внутри тикета: текст, кто отправил, к какому тикету относится.</li>
+    <li><b>CleaningTask</b> — задача по уборке: заголовок, описание, номер, кому назначили (уборщику), кто создал, дедлайн, статус.</li>
+    <li><b>RefreshToken</b> — «пропуск на продление доступа». Храним не сам токен, а <code>TokenHash</code> (безопаснее), срок годности, признак отзыва, связь с пользователем.</li>
+    <li><b>UserInfo</b> — доп. профиль пользователя (телефон, адрес, аватар). Отдельно, чтобы не раздувать <code>User</code>.</li>
+    <li><b>Common</b> — базовый класс для сущностей: <code>Id</code>, <code>CreatedAt</code>, <code>UpdatedAt</code>.</li>
+  </ul>
+  <div class="callout">
+    <div class="title">Почему такие поля?</div>
+    <ul>
+      <li><b>Room.Number</b> + <b>HotelId</b> — вместе уникальны: нельзя две комнаты «101» в одном отеле, но можно в разных.</li>
+      <li><b>RefreshToken.TokenHash</b> — храним хеш, а не токен, чтобы даже из БД нельзя было украсть «пропуск».</li>
+      <li><b>Ticket.TargetRoleName</b> — сразу понимаем, какой отдел увидит заявку (например, уборка).</li>
+      <li><b>Common.CreatedAt/UpdatedAt</b> — удобно видеть, когда запись создана/менялась.</li>
+    </ul>
+  </div>
+
+  <h2 id="relations">Как связаны данные</h2>
+  <ul>
+    <li><b>Hotel</b> 1 → N <b>Room</b> (у отеля много комнат).</li>
+    <li><b>User</b> 1 → N <b>Booking</b> (у пользователя много броней).</li>
+    <li><b>Room</b> 1 → N <b>Booking</b> (в одну комнату разные даты брони).</li>
+    <li><b>Ticket</b> 1 → N <b>TicketMessage</b> (как чат сообщениями).</li>
+    <li><b>User</b> 1 → N <b>RefreshToken</b> (несколько активных/исторических токенов).</li>
+  </ul>
 
   <h2 id="controllers">Контроллеры и маршрутизация</h2>
   <p>Основы создания API endpoints в ASP.NET Core.</p>
@@ -122,13 +161,22 @@ GET /api/Rooms/availability?days=28&amp;hotelId=1
   </ul>
 
   <h2 id="validation">Валидация и DTO</h2>
-  <p>Проверка входных данных и паттерн Data Transfer Object.</p>
+  <p>DTO — простые сумки для данных, которыми мы обмениваемся через API. Сущности — это то, как мы храним в БД. Мы никогда не отдаём наружу пароли/внутренние поля.</p>
   <ul>
-    <li>DataAnnotations: <code>[Required]</code>, <code>[StringLength]</code>, <code>[EmailAddress]</code> и т.д. — ставим на DTO.</li>
-    <li>В контроллере часто есть <code>if (!ModelState.IsValid) return BadRequest(ModelState);</code>.</li>
-    <li><code>[FromBody]</code> — брать JSON из тела запроса; <code>[FromQuery]</code> — из строки запроса.</li>
-    <li>DTO отделяют базу от API: например, <code>RoomCreateDto/RoomUpdateDto/RoomReadDto</code>.</li>
+    <li><b>RoomCreateDto / RoomUpdateDto / RoomReadDto</b> — создать/обновить/читать номер. На входе просим только нужное (номер, этаж, цена), на выходе даём Id и доп. данные.</li>
+    <li><b>BookingCreateDto / BookingUpdateDto / BookingReadDto</b> — работа с бронями (даты, цена, статус). Read-версия содержит <code>CreatedAt</code>, <code>HotelName</code>, <code>RoomNumber</code>.</li>
+    <li><b>TicketCreateDto / TicketMessageCreateDto / TicketReadDto</b> — заявки и сообщения (категория, описание, потом переписка).</li>
+    <li><b>CleaningTaskCreateDto / CleaningTaskReadDto</b> — задачи уборки (кому назначили, статус).</li>
+    <li><b>AuthDto / UserLoginDto / AuthResponseDto / RefreshTokenDto</b> — регистрация, вход, ответ с токенами, обновление токена.</li>
   </ul>
+  <div class="callout">
+    <div class="title">Как это помогает</div>
+    <ul>
+      <li>Безопасность: наружу не утекает <code>HashedPassword</code> и прочие внутренние поля.</li>
+      <li>Удобство: для создания комнаты не нужно знать всё про комнату — только важное.</li>
+      <li>Стабильность: можно менять сущности в БД, не ломая контракт API.</li>
+    </ul>
+  </div>
 
   <h2 id="ef">Entity Framework Core</h2>
   <p>ORM для работы с базами данных.</p>
@@ -137,7 +185,7 @@ GET /api/Rooms/availability?days=28&amp;hotelId=1
     <li>Уникальные индексы: <code>User.Email</code>, <code>User.Username</code>, <code>(Room.HotelId, Room.Number)</code>.</li>
     <li>Seed-данные ролей: Admin, Manager, Rengørring, Kunde, InfiniteVoid. Плюс супер-админ (Gojo).</li>
     <li>Для чтения быстрее: <code>AsNoTracking()</code> (например, в доступности комнат).</li>
-    <li>Миграции — версионирование схемы БД.</li>
+    <li>Базовый класс <code>Common</code>: даёт всем сущностям <code>Id</code>, <code>CreatedAt</code>, <code>UpdatedAt</code>.</li>
   </ul>
 
   <h2 id="signalr">SignalR: живые уведомления</h2>
@@ -172,6 +220,108 @@ POST /api/Rooms                     // Admin/Manager/InfiniteVoid
 PUT  /api/Rooms/{id}
 DEL  /api/Rooms/{id}
   </pre>
+
+  <div class="callout info">
+    <div class="title">Примеры JSON тел (DTO «как есть»)</div>
+    <p>Так выглядят данные, которые мы отправляем/получаем. Просто копируй и меняй значения.</p>
+    <pre>
+// Создать комнату (RoomCreateDto)
+{
+  "number": "101",
+  "capacity": 2,
+  "pricePerNight": 120.0,
+  "floor": 1,
+  "isAvailable": true,
+  "hotelId": 1
+}
+
+// Обновить комнату (RoomUpdateDto)
+{
+  "id": 5,
+  "number": "101",
+  "capacity": 3,
+  "pricePerNight": 140.0,
+  "floor": 1,
+  "isAvailable": false,
+  "hotelId": 1
+}
+
+// Прочитать комнату (RoomReadDto — пример ответа)
+{
+  "id": 5,
+  "number": "101",
+  "capacity": 3,
+  "pricePerNight": 140.0,
+  "floor": 1,
+  "isAvailable": false,
+  "hotelId": 1,
+  "description": "Уютный номер",
+  "imageUrl": "/img/101.jpg"
+}
+
+// Создать бронь (BookingCreateDto)
+{
+  "userId": 12,
+  "roomId": 5,
+  "checkInDate": "2025-10-10T15:00:00Z",
+  "checkOutDate": "2025-10-12T11:00:00Z",
+  "totalPrice": 280.0,
+  "status": "Pending"
+}
+
+// Создать тикет (TicketCreateDto)
+{
+  "title": "TV broken",
+  "category": 1,              // Technical
+  "description": "No signal",
+  "bookingId": null,
+  "roomId": 5
+}
+
+// Сообщение в тикете (TicketMessageCreateDto)
+{
+  "ticketId": 33,
+  "content": "Мы уже идём чинить"
+}
+
+// Задача на уборку (CleaningTaskCreateDto)
+{
+  "title": "Убраться после выезда",
+  "description": "Нужно помыть пол, заменить постель",
+  "roomId": 5,
+  "assignedToUserId": 21,
+  "dueDate": "2025-10-07T10:00:00Z"
+}
+
+// Регистрация (AuthDto)
+{
+  "username": "mario",
+  "password": "123456",
+  "email": "mario@example.com",
+  "firstName": "Mario",
+  "lastName": "Rossi"
+}
+
+// Логин (UserLoginDto)
+{
+  "email": "mario@example.com",
+  "password": "123456"
+}
+
+// Обновить токен (RefreshTokenDto)
+{
+  "refreshToken": "&lt;long-random-string&gt;"
+}
+    </pre>
+  </div>
+
+  <h2 id="scenarios">Жизненные сценарии (от запроса до ответа)</h2>
+  <ul>
+    <li><b>Гость бронирует номер:</b> создаём <code>Booking</code> через <code>POST /api/Bookings</code>. Сервис проверяет даты, считает цену, сохраняет. Ответ — <code>201 Created</code> + данные брони.</li>
+    <li><b>Сломался телевизор:</b> гость создаёт <code>Ticket</code>. Система определяет <code>TargetRoleName</code> (например, Manager/Technical). Уведомление улетает в группы роли и в конкретный тикет (SignalR).</li>
+    <li><b>Уборка:</b> менеджер создаёт <code>CleaningTask</code> и назначает сотрудника. Тот видит свои задания и отмечает статус.</li>
+    <li><b>Продление сессии:</b> фронт отправляет <code>RefreshToken</code>. На сервере сравниваем хеши (<code>TokenHash</code>), проверяем срок и «отозван ли». Если всё ок — выдаём новую пару токенов.</li>
+  </ul>
 
   <h2 id="quiz">Финальный квиз</h2>
   <p>Проверь свои знания ASP.NET Core Web API на примерах из проекта. Жми на вариант — сразу увидишь ответ.</p>
@@ -227,7 +377,7 @@ DEL  /api/Rooms/{id}
   {
       try
       {
-          await JS.InvokeVoidAsync("eval", $"document.getElementById('{sectionId}')?.scrollIntoView({{ behavior: 'smooth', block: 'start' }});");
+          await Js.InvokeVoidAsync("eval", $"document.getElementById('{sectionId}')?.scrollIntoView({{ behavior: 'smooth', block: 'start' }});");
       }
       catch (Exception ex)
       {
@@ -403,6 +553,35 @@ DEL  /api/Rooms/{id}
           Q("Что использовать, чтобы сказать клиенту ‘всё ок, но тела нет’?",
             new[]{"204 No Content", "201 Created", "409 Conflict"}, 0,
             "Например, после успешного PUT или DELETE."),
+
+          // Доп. вопросы по моделям и безопасности
+          Q("Что такое сущность (Entity) в нашем проекте?",
+            new[]{"Класс для БД (например, Room, Booking)", "Компонент UI", "Файл настроек"}, 0,
+            "Сущность — это модель данных, которая хранится в БД через EF Core."),
+
+          Q("Зачем хранить RefreshToken как TokenHash?",
+            new[]{"Чтобы даже из БД нельзя было украсть токен", "Чтобы экономить место", "Чтобы ускорить логин"}, 0,
+            "Мы храним только хеш: сравниваем по хешу, сам токен в БД не лежит — безопаснее."),
+
+          Q("Что даёт базовый класс Common?",
+            new[]{"Id, CreatedAt, UpdatedAt", "Пароль и Email", "JWT настройки"}, 0,
+            "Общие технические поля для всех сущностей."),
+
+          Q("VipRoom — это…",
+            new[]{"Наследник Room с VIP-полями", "Отдельный отель", "Роль пользователя"}, 0,
+            "VipRoom наследует Room и добавляет сервисы/удобства."),
+
+          Q("Какая связь между Hotel и Room?",
+            new[]{"1 отель → много комнат", "Много ко многим", "1 к 1"}, 0,
+            "Обычная связь 1:N: у отеля список комнат."),
+
+          Q("Что обязательно содержит TicketMessage?",
+            new[]{"TicketId, SenderUserId и Content", "RoomId и Price", "HotelId и Address"}, 0,
+            "Это сообщение в тикете: текст и ссылки на тикет и отправителя."),
+
+          Q("Чем RoomReadDto отличается от RoomCreateDto?",
+            new[]{"ReadDto содержит Id и вычисленные/доп. поля", "CreateDto всегда длиннее", "Они одинаковые"}, 0,
+            "ReadDto — для ответа (включая Id), CreateDto — только то, что нужно на входе."),
       };
   }
 

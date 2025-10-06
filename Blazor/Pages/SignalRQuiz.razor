@@ -1,110 +1,63 @@
 ﻿@page "/signalr-quiz"
 @inject IJSRuntime JS
 
-<PageTitle>SignalR Quiz</PageTitle>
+<PageTitle>SignalR — Реальное время (гайд + квиз)</PageTitle>
 
 <link href="css/jwt-learn.css" rel="stylesheet" />
 
 <div class="jwt-page">
-  <h1>SignalR Quiz — Real-time коммуникации</h1>
-  <p>
-    Тестируй знания по SignalR — технологии для двунаправленной коммуникации между клиентом и сервером в реальном времени.
-  </p>
-
+  <h1>SignalR — простыми словами + практический квиз</h1>
   <div class="toc">
     <b>Разделы:</b>
-    <a @onclick="@(() => ScrollToSection("map"))" style="cursor: pointer;">Карта проекта</a>
-    <a @onclick="@(() => ScrollToSection("basics"))" style="cursor: pointer;">Основы SignalR</a>
+    <a @onclick="@(() => ScrollToSection("idea"))" style="cursor: pointer;">Идея</a>
+    <a @onclick="@(() => ScrollToSection("map"))" style="cursor: pointer;">Карта в проекте</a>
     <a @onclick="@(() => ScrollToSection("server"))" style="cursor: pointer;">Сервер (Hub)</a>
     <a @onclick="@(() => ScrollToSection("client"))" style="cursor: pointer;">Клиент (Blazor)</a>
-    <a @onclick="@(() => ScrollToSection("groups"))" style="cursor: pointer;">Группы и broadcast</a>
-    <a @onclick="@(() => ScrollToSection("auth"))" style="cursor: pointer;">Аутентификация</a>
-    <a @onclick="@(() => ScrollToSection("flow"))" style="cursor: pointer;">Как всё работает вместе</a>
-    <a @onclick="@(() => ScrollToSection("faq"))" style="cursor: pointer;">FAQ/Ошибки</a>
+    <a @onclick="@(() => ScrollToSection("auth"))" style="cursor: pointer;">JWT и подключение</a>
     <a @onclick="@(() => ScrollToSection("quiz"))" style="cursor: pointer;">Финальный квиз</a>
   </div>
 
-  <h2 id="map">Карта проекта (где живёт SignalR)</h2>
-  <ul>
-    <li><code>API/Program.cs</code> — включаем <b>AddSignalR()</b>, настраиваем JWT для хаба, CORS с <b>AllowCredentials()</b>, мапим маршрут: <code>app.MapHub&lt;TicketHub&gt;("/hubs/tickets")</code>.</li>
-    <li><code>API/Hubs/TicketHub.cs</code> — наш <b>Hub</b> с группами: <code>role-{RoleName}</code>, <code>admins</code>, <code>ticket-{id}</code>, методами <b>JoinTicket</b>/<b>LeaveTicket</b>/<b>SendMessage</b>.</li>
-    <li><code>API/Controllers/TicketsController.cs</code> — REST-часть, рассылает события в Hub: <code>TicketCreated</code>, <code>TicketUpdated</code>, <code>toast</code>.</li>
-    <li><code>Blazor/Services/TicketHubClient.cs</code> — клиент: строит <b>HubConnection</b>, отдаёт токен через <b>AccessTokenProvider</b>, слушает события, вызывает методы.</li>
-  </ul>
-
-  <h2 id="basics">Основы SignalR</h2>
-  <p>SignalR — библиотека для real-time. Сервер шлёт события, клиенты принимают мгновенно.</p>
-  <ul>
-    <li>Транспорты: WebSockets (лучше), SSE, Long Polling — выбор автоматом.</li>
-    <li>Двусторонняя связь: клиент → сервер (вызовы методов), сервер → клиент (события).</li>
-    <li>Группы — удобно слать не всем, а нужным пользователям.</li>
-  </ul>
-
-  <h2 id="server">Сервер: наш TicketHub</h2>
-  <ul>
-    <li><b>Маршрут:</b> <code>/hubs/tickets</code> (см. <code>Program.cs</code>).</li>
-    <li><b>[Authorize]</b> на Hub — подключаться могут только с валидным JWT.</li>
-    <li><b>OnConnectedAsync</b>: подписывает по роли в <code>role-{Role}</code> и, если Admin/Manager, в <code>admins</code>.</li>
-    <li><b>JoinTicket(id)</b> — добавляет соединение в группу <code>ticket-{id}</code> (после простой проверки доступа).</li>
-    <li><b>SendMessage(id, text)</b> — пишет в БД сообщение и шлёт событие <code>NewMessage</code> в группу <code>ticket-{id}</code>.</li>
-  </ul>
+  <h2 id="idea">Главная идея</h2>
   <div class="callout info">
-    <div class="title">JWT в SignalR</div>
-    <div>В <code>Program.cs</code> настроено: JWT берём из query <code>?access_token=...</code> ТОЛЬКО для пути <code>/hubs/tickets</code> (см. <code>OnMessageReceived</code> в <b>AddJwtBearer</b>).</div>
+    <div class="title">Почему SignalR?</div>
+    <p>SignalR поддерживает постоянное соединение между браузером и сервером. Сервер может сам «толкать» события клиентам: чаты, уведомления, дашборды — всё без опросов.</p>
   </div>
 
-  <h2 id="client">Клиент Blazor: TicketHubClient</h2>
+  <h2 id="map">Карта в нашем проекте</h2>
   <ul>
-    <li>Создаёт <b>HubConnection</b> с <code>.WithUrl(base/hubs/tickets)</code>.</li>
-    <li><b>AccessTokenProvider</b> — отдаёт <code>access_token</code> (достаём из APIService).</li>
-    <li><b>WithAutomaticReconnect()</b> — пытается переподключаться сам.</li>
-    <li>Подписки на события:
+    <li><b><code>API/Program.cs</code></b> — включаем сервисы и мапим хаб: <code>app.MapHub&lt;TicketHub&gt;("/hubs/tickets")</code>.</li>
+    <li><b><code>API/Hubs/TicketHub.cs</code></b> — сам хаб: группы <code>role-...</code>, <code>admins</code>, <code>ticket-{id}</code>.</li>
+    <li><b><code>API/Controllers/TicketsController.cs</code></b> — после создания тикета рассылает <code>TicketCreated</code> в нужную группу через <code>IHubContext</code>.</li>
+    <li><b><code>Blazor/Services/TicketHubClient.cs</code></b> — клиентский <code>HubConnection</code>, <code>.On(...)</code> и <code>.InvokeAsync(...)</code>.</li>
+  </ul>
+
+  <h2 id="server">Сервер (Hub) — группы и события</h2>
+  <ul>
+    <li>Подключение: <code>OnConnectedAsync</code>, подписываем в <code>role-{Role}</code>, для Admin/Manager ещё и <code>admins</code>.</li>
+    <li>Адрес хаба: <code>/hubs/tickets</code>.</li>
+    <li>Группы: целевая доставка через <code>Clients.Group("...").SendAsync(...)</code>.</li>
+  </ul>
+
+  <h2 id="client">Клиент (Blazor)</h2>
+  <ul>
+    <li><code>HubConnectionBuilder().WithUrl(...).WithAutomaticReconnect().Build()</code></li>
+    <li>Обработчики: <code>hubConnection.On&lt;T&gt;("EventName", handler)</code></li>
+    <li>Вызовы на сервер: <code>hubConnection.InvokeAsync("Method", args...)</code></li>
+  </ul>
+
+  <h2 id="auth">JWT и подключение к хабу</h2>
+  <div class="callout info">
+    <div class="title">Тонкость с токеном</div>
+    <div>
       <ul>
-        <li><code>TicketCreated</code> — для роли (новые тикеты).</li>
-        <li><code>TicketUpdated</code> — когда тикет меняется.</li>
-        <li><code>NewMessage</code> — новые сообщения в чате тикета.</li>
-        <li><code>toast</code> — уведомления для админки.</li>
+        <li>Для WebSocket токен передаём в URL через <code>AccessTokenProvider</code> → <code>?access_token=...</code>.</li>
+        <li>На сервере в <code>AddJwtBearer</code> используем <b>OnMessageReceived</b>, чтобы брать токен из query string, если путь начинается с <code>/hubs</code>.</li>
       </ul>
-    </li>
-    <li>Вызываемые методы: <code>JoinTicket</code>, <code>LeaveTicket</code>, <code>SendMessage</code>.</li>
-  </ul>
+    </div>
+  </div>
 
-  <h2 id="groups">Группы и broadcast</h2>
-  <p>Кого куда подписываем:</p>
-  <ul>
-    <li><b>role-{RoleName}</b> — всем сотрудникам роли (получают новые тикеты).</li>
-    <li><b>admins</b> — админы и менеджеры (получают «тосты»).</li>
-    <li><b>ticket-{id}</b> — участники конкретного тикета (создатель, исполнитель, роль).</li>
-  </ul>
-  <p>REST-контроллеры тоже пушат: при создании/назначении/изменении статуса — Hub оповещает группы.</p>
-
-  <h2 id="auth">Аутентификация</h2>
-  <ul>
-    <li>Hub защищён <b>[Authorize]</b>.</li>
-    <li>Клиент передаёт токен: <code>AccessTokenProvider → ?access_token=...</code>.</li>
-    <li>CORS разрешён для наших доменов, включено <b>AllowCredentials()</b> — иначе браузер не пустит WebSocket с куками/заголовками.</li>
-  </ul>
-
-  <h2 id="flow">Как всё работает вместе (жизненный цикл)</h2>
-  <ol>
-    <li>Пользователь логинится → получает <code>access_token</code>.</li>
-    <li>Blazor создаёт <b>HubConnection</b>, подставляет токен, подключается к <code>/hubs/tickets</code>.</li>
-    <li>Hub кладёт соединение в группы по роли (<code>role-*</code>, <code>admins</code>).</li>
-    <li>Пользователь открывает тикет → клиент вызывает <code>JoinTicket(id)</code> → попадает в <code>ticket-{id}</code>.</li>
-    <li>Кто-то пишет сообщение → сервер шлёт <code>NewMessage</code> в группу <code>ticket-{id}</code> — все сразу видят.</li>
-    <li>Создан новый тикет → сервер шлёт <code>TicketCreated</code> в <code>role-{TargetRole}</code> и тост в <code>admins</code>.</li>
-  </ol>
-
-  <h2 id="faq">FAQ и типовые ошибки</h2>
-  <ul>
-    <li><b>401/не подключается</b> — нет валидного токена. Проверь логин и <code>AccessTokenProvider</code>.</li>
-    <li><b>403 в JoinTicket</b> — нет доступа к тикету (не создатель, не исполнитель, не нужная роль).</li>
-    <li><b>CORS ругается</b> — домен не в списке <code>WithOrigins(...)</code> или выключены <code>AllowCredentials()</code>.</li>
-    <li><b>События не приходят</b> — не вступили в группу: вызови <code>JoinTicket(id)</code>, проверь обработчики <code>_conn.On(...)</code>.</li>
-  </ul>
-
-  <h2 id="quiz">Финальный квиз</h2>
-  <p>Покажи свои знания SignalR!</p>
+  <h2 id="quiz">Финальный КВИЗ RU/DA</h2>
+  <p>Нажимай на варианты — сразу увидишь «Верно/Неверно». Ответы перемешаны.</p>
   <div class="quiz">
     @for (int i = 0; i < _questions.Count; i++)
     {
@@ -128,11 +81,11 @@
           {
             var isCorrect = q.SelectedIndex == q.CorrectIndex;
             <div class="feedback @(isCorrect ? "correct" : "wrong")">
-                @(isCorrect ? "Верно! ✓" : "Неверно. ✗")
+                @(isCorrect ? "Верно! / Korrekt!" : "Неверно. / Forkert.")
             </div>
             @if (!string.IsNullOrWhiteSpace(q.Explanation))
             {
-              <div class="explain"><b>Объяснение:</b> @q.Explanation</div>
+              <div class="explain"><b>Пояснение:</b> @q.Explanation</div>
             }
           }
         </div>
@@ -177,15 +130,15 @@
 
   private List<QuizQuestion> _questions = new();
   private bool _scoreVisible;
-  private readonly Random _rng = new Random();
+  private static readonly Random _rng = new Random();
   
   int CorrectCount => _questions.Count(q => q.Answered && q.SelectedIndex == q.CorrectIndex);
   string ScoreComment => CorrectCount switch
   {
-      >= 10 => "SignalR профи! ⚡",
-      >= 7 => "Отлично! 👍",
-      >= 5 => "Хорошо! 🙂",
-      _ => "Повтори материал 📚"
+      >= 10 => "Магистр SignalR! / SignalR Mester! ⚡",
+      >= 8 => "Эксперт реального времени / Realtidsekspert 👍",
+      >= 5 => "Уверенный пользователь / Sikker bruger 🙂",
+      _ => "Стоит перечитать / Bør læses igen 📚"
   };
 
   void SelectAnswer(int qi, int oi)
@@ -206,11 +159,7 @@
 
   void ResetQuiz()
   {
-      foreach (var q in _questions)
-      {
-          q.SelectedIndex = null;
-          q.Answered = false;
-      }
+      _questions = BuildQuestions();
       _scoreVisible = false;
       StateHasChanged();
   }
@@ -220,109 +169,90 @@
       if (_questions.Count == 0)
       {
           _questions = BuildQuestions();
-          // Перемешаем варианты ответов один раз при инициализации
-          foreach (var q in _questions)
-          {
-              ShuffleOptions(q);
-          }
       }
-  }
-
-  void ShuffleOptions(QuizQuestion q)
-  {
-      if (q.Options.Count <= 1) return;
-      var n = q.Options.Count;
-      var idx = Enumerable.Range(0, n).ToList();
-      for (int i = n - 1; i > 0; i--)
-      {
-          int j = _rng.Next(i + 1);
-          (idx[i], idx[j]) = (idx[j], idx[i]);
-      }
-      var newOptions = new List<string>(n);
-      for (int k = 0; k < n; k++) newOptions.Add(q.Options[idx[k]]);
-      var newCorrect = idx.IndexOf(q.CorrectIndex);
-      q.Options = newOptions;
-      q.CorrectIndex = newCorrect;
   }
 
   List<QuizQuestion> BuildQuestions()
   {
       return new List<QuizQuestion>
       {
-          Q("От какого класса наследуется SignalR Hub?",
-            new[]{"Hub или Hub<T>", "Controller", "MiddlewareBase"}, 0,
-            "Hub — базовый класс для создания SignalR хабов."),
-          
-          Q("Какой транспорт предпочтительнее для SignalR?",
-            new[]{"WebSockets", "Long Polling", "Server-Sent Events"}, 0,
-            "WebSockets обеспечивают самую низкую задержку и двунаправленную связь."),
-          
-          Q("Как отправить сообщение всем клиентам?",
-            new[]{"Clients.All.SendAsync()", "Clients.Send()", "Broadcast.All()"}, 0,
-            "Clients.All отправляет сообщение всем подключенным клиентам."),
-          
-          Q("Как передать JWT токен в SignalR?",
-            new[]{"Через query string в URL подключения", "В HTTP заголовке", "В теле сообщения"}, 0,
-            "В нашем проекте OnMessageReceived читает ?access_token=... для пути /hubs/tickets."),
-          
-          Q("Что такое ConnectionId?",
-            new[]{"Уникальный ID подключения клиента", "ID пользователя", "ID группы"}, 0,
-            "Каждое подключение получает уникальный ConnectionId."),
-          
-          Q("Как добавить клиента в группу?",
-            new[]{"Groups.AddToGroupAsync()", "Clients.AddGroup()", "Hub.JoinGroup()"}, 0,
-            "Groups.AddToGroupAsync добавляет текущее подключение в указанную группу."),
-          
-          Q("Что делает Clients.Caller?",
-            new[]{"Отправляет только вызывающему клиенту", "Отправляет всем", "Отправляет кроме вызывающего"}, 0,
-            "Clients.Caller отправляет сообщение только инициатору вызова."),
-          
-          Q("Можно ли использовать [Authorize] на Hub?",
-            new[]{"Да, для защиты всех методов Hub", "Нет, только на контроллерах", "Да, но бесполезно"}, 0,
-            "[Authorize] на Hub защищает методы от неавторизованного доступа."),
+          Q("Что такое SignalR? / Hvad er SignalR?",
+            new[]{"Технология для real-time связи (рация) / Teknologi til realtidskommunikation (walkie-talkie)","База данных / En database","Система для рисования графиков / Et system til at tegne grafer", "Новый язык программирования / Et nyt programmeringssprog"}, 0,
+            "SignalR создаёт постоянное соединение, позволяя серверу отправлять данные клиенту в любой момент."),
 
-          // Про наш проект
-          Q("Какой маршрут у нашего хаба тикетов?",
-            new[]{"/hubs/tickets", "/api/tickets", "/hubs/chat"}, 0,
-            "В Program.cs: app.MapHub<TicketHub>(\"/hubs/tickets\")."),
+          Q("От какого класса наследуется SignalR Hub? / Hvilken klasse nedarver en SignalR Hub fra?",
+            new[]{"Hub", "Controller", "MiddlewareBase", "SignalRService"}, 0,
+            "Hub — базовый класс для серверного хаба в ASP.NET Core SignalR."),
 
-          Q("Как клиент Blazor передаёт access_token в Hub?",
-            new[]{"AccessTokenProvider → ?access_token=...", "Через cookie", "В POST теле"}, 0,
-            "TicketHubClient использует WithUrl(..., options.AccessTokenProvider = ...)."),
+          Q("Как в нашем проекте клиент передаёт JWT-токен для авторизации в хабе? / Hvordan sender klienten JWT-token til hub'en?",
+            new[]{"Через параметр в URL (?access_token=...) / Via en URL-parameter (?access_token=...)","В HTTP-заголовке Authorization / I Authorization-headeren","В cookie-файле / I en cookie", "Он не передаётся / Det sendes ikke"}, 0,
+            "Для WebSocket заголовок Authorization недоступен напрямую, поэтому используем query string."),
 
-          Q("В какую группу попадёт сотрудник роли Manager при подключении?",
-            new[]{"role-Manager и admins", "admins только", "ticket-*"}, 0,
-            "OnConnectedAsync подписывает в role-{Role} и, если Admin/Manager, ещё и в admins."),
+          Q("Что делает Clients.Group(\"some-group\").SendAsync(...)? / Hvad gør Clients.Group(\"some-group\").SendAsync(...)?",
+            new[]{"Отправляет сообщение всем клиентам в группе 'some-group'","Отправляет сообщение всем клиентам, кроме 'some-group'","Создаёт новую группу","Отправляет одному случайному клиенту"}, 0,
+            "Это таргетированная рассылка по группе."),
 
-          Q("Как подписаться на сообщения конкретного тикета?",
-            new[]{"Вызвать JoinTicket(id)", "Позвонить в REST", "Это автоматически"}, 0,
-            "Нужно явно вызвать JoinTicket, чтобы попасть в группу ticket-{id}."),
+          Q("Какой метод на клиенте настраивает реакцию на сигнал от сервера? / Hvilken metode på klienten registrerer en handler?",
+            new[]{"hubConnection.On()","hubConnection.InvokeAsync()","hubConnection.SendAsync()","hubConnection.StartAsync()"}, 0,
+            "On регистрирует обработчик входящих событий."),
 
-          Q("Какое событие рассылается при новом сообщении в тикете?",
-            new[]{"NewMessage", "TicketCreated", "toast"}, 0,
+          Q("В какой момент пользователь попадает в группу ticket-{id}? / Hvornår tilføjes brugeren til gruppen ticket-{id}?",
+            new[]{"Когда вызывает метод JoinTicket(id)","Сразу после подключения","Когда пишет первое сообщение","Никогда"}, 0,
+            "Нужно явно вызвать JoinTicket на хабе."),
+
+          Q("Зачем в API/Program.cs нужна настройка OnMessageReceived для JWT? / Hvorfor OnMessageReceived i API/Program.cs?",
+            new[]{"Чтобы искать токен в URL для SignalR","Чтобы шифровать токен","Чтобы генерировать новые токены","Это для обычных HTTP-запросов"}, 0,
+            "Адаптируем аутентификацию под специфику SignalR."),
+
+          Q("Что делает hubConnection.InvokeAsync(\"MyMethod\", ...)? / Hvad gør hubConnection.InvokeAsync(\"MyMethod\", ...)?",
+            new[]{"Вызывает метод на серверном хабе","Ждёт вызова от сервера","Отключается от сервера","Обновляет страницу"}, 0,
+            "InvokeAsync — вызов метода на сервере со стороны клиента."),
+
+          Q("Кто отправляет уведомление TicketCreated в группу role-{RoleName}? / Hvem sender TicketCreated til role-{RoleName}?",
+            new[]{"TicketsController после создания тикета","Клиент, создавший тикет","TicketHub при подключении нового пользователя","Никто"}, 0,
+            "REST-контроллер использует IHubContext для рассылки после операций."),
+
+          Q("Что делает .WithAutomaticReconnect()? / Hvad gør .WithAutomaticReconnect()?",
+            new[]{"Пытается автоматически восстановить соединение","Ускоряет доставку сообщений","Включает шифрование","Ничего не делает"}, 0,
+            "Автовосстановление соединения повышает стабильность."),
+
+          Q("Какое событие рассылается при новом сообщении в тикете? / Hvilken event sendes ved ny besked i en ticket?",
+            new[]{"NewMessage","TicketCreated","toast","TicketClosed"}, 0,
             "Hub шлёт Clients.Group(\"ticket-{id}\").SendAsync(\"NewMessage\", ...)."),
 
-          Q("Куда шлётся событие о создании тикета по роли?",
-            new[]{"В группу role-{TargetRole}", "Только создателю тикета", "Всем пользователям"}, 0,
-            "REST-контроллер шлёт TicketCreated в группу role-{Role}."),
+          Q("Какой маршрут у нашего хаба тикетов? / Hvilken rute bruger ticket-hubben?",
+            new[]{"/hubs/tickets","/api/tickets","/hubs/chat","/signalr"}, 0,
+            "В Program.cs: app.MapHub<TicketHub>(\"/hubs/tickets\")."),
 
-          Q("Зачем нужен AllowCredentials() в CORS для SignalR?",
-            new[]{"Чтобы позволить куки/заголовки при WebSocket", "Чтобы включить HTTP/2", "Чтобы разрешить любые домены"}, 0,
-            "Без этого браузер может блокировать аутентифицированное соединение."),
-
-          Q("Что сделает WithAutomaticReconnect()?",
-            new[]{"Попробует переподключиться", "Ускорит сообщения", "Ничего не меняет"}, 0,
-            "Клиент переподключится при кратковременном обрыве."),
+          Q("В какую группу попадёт сотрудник роли Manager при подключении? / Hvilke grupper får Manager?",
+            new[]{"role-Manager и admins","admins только","ticket-*","Никуда"}, 0,
+            "OnConnectedAsync подписывает в role-{Role}, а для Admin/Manager — ещё и в admins."),
       };
   }
 
   static QuizQuestion Q(string text, string[] options, int correct, string? explanation = null)
   {
+      var opts = options.ToList();
+      if (opts.Count == 0) throw new ArgumentException("Options must not be empty");
+      if (correct < 0 || correct >= opts.Count) throw new ArgumentOutOfRangeException(nameof(correct));
+
+      var correctValue = opts[correct];
+
+      // Fisher–Yates shuffle
+      for (int i = opts.Count - 1; i > 0; i--)
+      {
+          int j = _rng.Next(i + 1);
+          (opts[i], opts[j]) = (opts[j], opts[i]);
+      }
+
+      var newCorrectIndex = opts.FindIndex(o => string.Equals(o, correctValue, StringComparison.Ordinal));
+      if (newCorrectIndex < 0) newCorrectIndex = 0; // на случай дубликатов
+
       return new QuizQuestion
       {
           Text = text,
-          Options = options.ToList(),
-          CorrectIndex = correct,
+          Options = opts,
+          CorrectIndex = newCorrectIndex,
           Explanation = explanation
       };
   }
