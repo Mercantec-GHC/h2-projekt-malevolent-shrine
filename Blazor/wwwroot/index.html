@@ -31,25 +31,61 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
+    
+    <!-- PWA Update Notification -->
+    <div id="pwa-update-notification" style="display: none; position: fixed; bottom: 20px; right: 20px; background: #4CAF50; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; font-family: sans-serif;">
+        <div style="margin-bottom: 8px; font-weight: 600;">New version available!</div>
+        <button onclick="window.location.reload()" style="background: white; color: #4CAF50; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600;">Update Now</button>
+        <button onclick="document.getElementById('pwa-update-notification').style.display='none'" style="background: transparent; color: white; border: 1px solid white; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-left: 8px;">Later</button>
+    </div>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="js/confetti.js"></script>
+    
+    <!-- PWA Service Worker Registration with Update Detection -->
     <script>
+        // Check if browser supports Service Workers
         if ('serviceWorker' in navigator) {
-            try {
+            window.addEventListener('load', function() {
                 navigator.serviceWorker.register('service-worker.js')
                     .then(function(registration) {
-                        console.log('Service Worker registered successfully:', registration);
+                        console.log('✅ [PWA] Service Worker registered successfully!');
+                        console.log('📦 [PWA] Scope:', registration.scope);
+                        
+                        // Check for updates every 60 seconds
+                        setInterval(() => {
+                            registration.update();
+                        }, 60000);
+                        
+                        // Detect when new service worker is waiting
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    console.log('🔄 [PWA] New version available!');
+                                    document.getElementById('pwa-update-notification').style.display = 'block';
+                                }
+                            });
+                        });
                     })
                     .catch(function(error) {
-                        console.log('Service Worker registration failed:', error);
+                        console.log('❌ [PWA] Service Worker registration failed:', error);
                     });
-            } catch (error) {
-                console.log('Service Worker registration error:', error);
-            }
+                
+                // Listen for controller change (new SW activated)
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    console.log('♻️ [PWA] New Service Worker activated!');
+                });
+            });
+        } else {
+            console.log('⚠️ [PWA] Service Workers not supported in this browser');
         }
-
+    </script>
+    
+    <script>
         function parseJwt(token) {
             try {
                 const base64Url = token.split('.')[1];
