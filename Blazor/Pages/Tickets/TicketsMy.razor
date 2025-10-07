@@ -5,37 +5,37 @@
 
 <h1 class="site-title jp">Malevolent Shrine</h1>
 <div class="jp">Ryomen Sukuna</div>
-<p class="site-sub">Мои тикеты (мои обращения)</p>
+<p class="site-sub">My tickets (my requests)</p>
 
 <div class="test-root">
   <div class="actions">
-    <button class="btn btn-red" @onclick="() => showCreate = !showCreate">@((showCreate?"Скрыть":"Создать тикет"))</button>
-    <a class="btn btn-ghost" href="/tickets/role">Тикеты моей роли</a>
+    <button class="btn btn-red" @onclick="() => showCreate = !showCreate">@((showCreate?"Hide":"Create ticket"))</button>
+    <a class="btn btn-ghost" href="/tickets/role">Tickets for my role</a>
   </div>
 
   @if (showCreate)
   {
     <div class="book-card">
-      <h3 class="page-title">Новый тикет</h3>
+      <h3 class="page-title">New ticket</h3>
       <div class="profile-row">
-        <label>Краткий заголовок</label>
-        <input class="form-control" @bind="create.Title" placeholder="Например: Шумит кондиционер" />
+        <label>Short title</label>
+        <input class="form-control" @bind="create.Title" placeholder="For example: Air conditioner is noisy" />
       </div>
       <div class="profile-row">
-        <label>Категория</label>
+        <label>Category</label>
         <select class="form-select" @bind="create.Category">
-          <option value="@TicketCategory.Cleaning">Уборка</option>
-          <option value="@TicketCategory.Technical">Техническое</option>
-          <option value="@TicketCategory.General">Общее</option>
+          <option value="@TicketCategory.Cleaning">Cleaning</option>
+          <option value="@TicketCategory.Technical">Technical</option>
+          <option value="@TicketCategory.General">General</option>
         </select>
       </div>
       <div class="profile-row">
-        <label>Описание (что случилось)</label>
-        <textarea class="form-control" @bind="create.Description" rows="4" placeholder="Опишите проблему простыми словами"></textarea>
+        <label>Description (what happened)</label>
+        <textarea class="form-control" @bind="create.Description" rows="4" placeholder="Describe the problem in simple words"></textarea>
       </div>
       <div class="actions">
-        <button class="btn btn-red" @onclick="CreateAsync">Создать</button>
-        <button class="btn btn-ghost" @onclick="() => showCreate=false">Отмена</button>
+        <button class="btn btn-red" @onclick="CreateAsync">Create</button>
+        <button class="btn btn-ghost" @onclick="() => showCreate=false">Cancel</button>
       </div>
     </div>
   }
@@ -46,7 +46,7 @@
   }
   else if (items.Count == 0)
   {
-    <div class="empty">У вас пока нет тикетов. Нажмите "Создать тикет".</div>
+    <div class="empty">You have no tickets yet. Click "Create ticket".</div>
   }
   else
   {
@@ -61,7 +61,7 @@
           </div>
           <div class="plaque">
             <div class="door-name">@t.Title</div>
-            <div class="door-addr">Статус: @t.Status | Для роли: @t.TargetRoleName</div>
+            <div class="door-addr">Status: @t.Status | For role: @t.TargetRoleName</div>
           </div>
         </div>
       }

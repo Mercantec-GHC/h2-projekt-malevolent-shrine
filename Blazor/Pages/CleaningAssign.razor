@@ -3,7 +3,7 @@
 @inject Blazor.Services.APIService Api
 @using DomainModels.DTOs
 
-<h4>Назначить задание уборщику</h4>
+<h4>Assign cleaning task</h4>
 
 @if (error != null)
 {
@@ -16,16 +16,16 @@
 
 @if (!loaded)
 {
-    <div>Загрузка...</div>
+    <div>Loading...</div>
 }
 else
 {
     <EditForm Model="model" OnValidSubmit="AssignAsync">
         <DataAnnotationsValidator />
         <div class="mb-3">
-            <label class="form-label">Уборщик (Rengøring)</label>
+            <label class="form-label">Cleaner (Rengøring)</label>
             <select class="form-select" @bind="model.AssignedToUserId">
-                <option value="0">— выберите уборщика —</option>
+                <option value="0">— choose cleaner —</option>
                 @foreach (var c in cleaners)
                 {
                     <option value="@c.Id">@c.FirstName @c.LastName (@c.Email)</option>
@@ -33,25 +33,25 @@ else
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Заголовок</label>
-            <input class="form-control" @bind="model.Title" placeholder="Например: Уборка комнаты 213" />
+            <label class="form-label">Title</label>
+            <input class="form-control" @bind="model.Title" placeholder="For example: Clean room 213" />
         </div>
         <div class="mb-3">
-            <label class="form-label">Описание (список работ)</label>
-            <textarea class="form-control" rows="4" @bind="model.Description" placeholder="Пылесос, сменить белье, вытереть пыль..."></textarea>
+            <label class="form-label">Description (work list)</label>
+            <textarea class="form-control" rows="4" @bind="model.Description" placeholder="Vacuum, change sheets, wipe dust..."></textarea>
         </div>
         <div class="row g-3">
             <div class="col-md-4">
-                <label class="form-label">ID комнаты (необязательно)</label>
+                <label class="form-label">Room ID (optional)</label>
                 <input class="form-control" type="number" @bind="roomIdInput" />
             </div>
             <div class="col-md-4">
-                <label class="form-label">Срок (необязательно)</label>
+                <label class="form-label">Due date (optional)</label>
                 <input class="form-control" type="date" @bind="dueDateInput" />
             </div>
         </div>
         <div class="mt-3">
-            <button class="btn btn-primary" type="submit" disabled="@(busy)">Назначить</button>
+            <button class="btn btn-primary" type="submit" disabled="@(busy)">Assign</button>
         </div>
     </EditForm>
 }
@@ -70,14 +70,14 @@ else
     protected override async Task OnInitializedAsync()
     {
         var token = await JS.InvokeAsync<string>("localStorage.getItem", "access_token");
-        if (string.IsNullOrWhiteSpace(token)) { error = "Требуется вход"; return; }
+        if (string.IsNullOrWhiteSpace(token)) { error = "Login required"; return; }
         try
         {
             cleaners = await Api.GetUsersByRoleAsync("Rengøring", token);
         }
         catch (Exception ex)
         {
-            error = "Не удалось загрузить уборщиков: " + ex.Message;
+            error = "Failed to load cleaners: " + ex.Message;
         }
         finally
         {
@@ -92,22 +92,22 @@ else
         try
         {
             var token = await JS.InvokeAsync<string>("localStorage.getItem", "access_token");
-            if (string.IsNullOrWhiteSpace(token)) { error = "Требуется вход"; return; }
+            if (string.IsNullOrWhiteSpace(token)) { error = "Login required"; return; }
 
             model.RoomId = roomIdInput;
             model.DueDate = dueDateInput;
-            if (model.AssignedToUserId <= 0) { error = "Выберите уборщика"; return; }
-            if (string.IsNullOrWhiteSpace(model.Title)) { error = "Заполните заголовок"; return; }
+            if (model.AssignedToUserId <= 0) { error = "Choose a cleaner"; return; }
+            if (string.IsNullOrWhiteSpace(model.Title)) { error = "Enter a title"; return; }
 
             var ok = await Api.CreateCleaningTaskAsync(model, token);
             if (ok)
             {
-                success = "Задание отправлено";
+                success = "Task sent";
                 model = new(); roomIdInput = null; dueDateInput = null;
             }
             else
             {
-                error = "Не удалось создать задание";
+                error = "Failed to create task";
             }
         }
         catch (Exception ex)

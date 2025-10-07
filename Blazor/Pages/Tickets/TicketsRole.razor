@@ -6,11 +6,11 @@
 
 <h1 class="site-title jp">Malevolent Shrine</h1>
 <div class="jp">Ryomen Sukuna</div>
-<p class="site-sub">Тикеты моей роли (для сотрудников)</p>
+<p class="site-sub">Tickets for my role (staff)</p>
 
 <div class="test-root">
   <div class="actions">
-    <a class="btn btn-ghost" href="/tickets/me">Мои тикеты</a>
+    <a class="btn btn-ghost" href="/tickets/me">My tickets</a>
   </div>
 
   @if (loading)
@@ -19,7 +19,7 @@
   }
   else if (items.Count == 0)
   {
-    <div class="empty">Для вашей роли пока нет тикетов.</div>
+    <div class="empty">No tickets for your role yet.</div>
   }
   else
   {
@@ -34,7 +34,7 @@
           </div>
           <div class="plaque">
             <div class="door-name">@t.Title</div>
-            <div class="door-addr">Статус: @t.Status | Для роли: @t.TargetRoleName</div>
+            <div class="door-addr">Status: @t.Status | For role: @t.TargetRoleName</div>
           </div>
         </div>
       }

@@ -6,7 +6,7 @@
 
 <h1 class="site-title jp">Malevolent Shrine</h1>
 <div class="jp">Ryomen Sukuna</div>
-<p class="site-sub">Чат тикета (переписка по проблеме)</p>
+<p class="site-sub">Ticket chat (talk about the problem)</p>
 
 @if (loading)
 {
@@ -14,28 +14,28 @@
 }
 else if (data == null)
 {
-  <div class="empty">Тикет не найден.</div>
+  <div class="empty">Ticket not found.</div>
 }
 else
 {
   <div class="test-root">
     <div class="book-card">
       <h3 class="page-title">@data.Ticket.Title</h3>
-      <div class="room-line">Категория: @data.Ticket.Category | Статус: <b>@data.Ticket.Status</b></div>
-      <div class="room-line">Для роли: @data.Ticket.TargetRoleName</div>
+      <div class="room-line">Category: @data.Ticket.Category | Status: <b>@data.Ticket.Status</b></div>
+      <div class="room-line">For role: @data.Ticket.TargetRoleName</div>
       <div class="actions">
-        <button class="btn btn-red" @onclick="AssignAsync">Взять в работу</button>
-        <button class="btn btn-ghost" @onclick="() => SetStatusAsync(TicketStatus.Resolved)">Отметить "Решено"</button>
-        <button class="btn btn-ghost" @onclick="() => SetStatusAsync(TicketStatus.Closed)">Закрыть</button>
-        <a class="btn btn-ghost" href="/tickets/me">Назад</a>
+        <button class="btn btn-red" @onclick="AssignAsync">Take ticket</button>
+        <button class="btn btn-ghost" @onclick="() => SetStatusAsync(TicketStatus.Resolved)">Mark as Resolved</button>
+        <button class="btn btn-ghost" @onclick="() => SetStatusAsync(TicketStatus.Closed)">Close</button>
+        <a class="btn btn-ghost" href="/tickets/me">Back</a>
       </div>
     </div>
 
     <div class="book-card">
-      <h4 class="page-title">Сообщения</h4>
+      <h4 class="page-title">Messages</h4>
       @if (messages.Count == 0)
       {
-        <div class="empty">Пока нет сообщений. Напишите первое ниже.</div>
+        <div class="empty">No messages yet. Write the first one below.</div>
       }
       else
       {
@@ -43,7 +43,7 @@ else
           @foreach (var m in messages)
           {
             <div class="booking-item">
-              <div><b>Пользователь #@m.SenderUserId</b> написал:</div>
+              <div><b>User #@m.SenderUserId</b> wrote:</div>
               <div>@m.Content</div>
               <div class="room-addr" style="color:var(--muted);font-size:12px;">@m.CreatedAt.ToLocalTime()</div>
             </div>
@@ -51,11 +51,11 @@ else
         </div>
       }
       <div class="profile-row">
-        <label>Ваше сообщение</label>
-        <textarea class="form-control" @bind="newMessage" rows="3" placeholder="Напишите коротко и понятно"></textarea>
+        <label>Your message</label>
+        <textarea class="form-control" @bind="newMessage" rows="3" placeholder="Write short and clear"></textarea>
       </div>
       <div class="actions">
-        <button class="btn btn-red" @onclick="SendAsync">Отправить</button>
+        <button class="btn btn-red" @onclick="SendAsync">Send</button>
       </div>
     </div>
   </div>
