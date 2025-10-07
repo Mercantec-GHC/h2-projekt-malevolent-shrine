@@ -166,8 +166,8 @@ public class BookingsController : ControllerBase
         await _context.SaveChangesAsync();
         
         // Уведомления
-        await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "Новая бронь", Message = $"Бронь #{booking.Id} комната {booking.RoomId} с {booking.CheckInDate:d}", Level = "info", Ts = DateTime.UtcNow });
-        await _notifier.SendAsync($"📅 Новая бронь #{booking.Id} — Комната {booking.RoomId}, с {booking.CheckInDate:d} по {booking.CheckOutDate:d}, сумма: {totalPrice:C}");
+        await _hub.Clients.Group("admins").SendAsync("toast", new { Title = "New booking", Message = $"Booking #{booking.Id} room {booking.RoomId} from {booking.CheckInDate:d}", Level = "info", Ts = DateTime.UtcNow });
+        await _notifier.SendAsync($"📅 New Booking #{booking.Id} — Room {booking.RoomId}, from {booking.CheckInDate:d} to {booking.CheckOutDate:d}, sum: {totalPrice:C}");
 
         var bookingReadDto = new BookingReadDto
         {
